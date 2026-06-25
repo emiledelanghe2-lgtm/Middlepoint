@@ -1,0 +1,14 @@
+[build]
+  publish = "public"
+  functions = "functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Lange AI-analyses krijgen meer tijd via background functions
+# (bestandsnamen die eindigen op -background.js mogen tot 15 min lopen)
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 404
