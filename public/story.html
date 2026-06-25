@@ -42,6 +42,8 @@ function render(data) {
 
   if (!round1Done) {
     renderStoryForm();
+  } else if (session.status === 'veiligheid_gestopt') {
+    renderCrisisMessage();
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
@@ -79,6 +81,19 @@ function render(data) {
   }
 }
 
+function renderCrisisMessage() {
+  app.innerHTML = `
+    <span class="label">Belangrijk</span>
+    <h1>Dit overstijgt wat wij kunnen helpen oplossen</h1>
+    <p style="color:var(--ink-soft)">Op basis van wat er geschreven is, denken we dat professionele of gespecialiseerde hulp nu belangrijker is dan een document. Je staat er niet alleen voor.</p>
+    <div class="status-box" style="text-align:left">
+      <p><strong>Zelfmoordlijn (BE):</strong> 1813 — <a href="https://www.zelfmoord1813.be" target="_blank">zelfmoord1813.be</a></p>
+      <p><strong>1712 — Geweld, Misbruik, Kindermishandeling (BE):</strong> 1712 — <a href="https://www.1712.be" target="_blank">1712.be</a></p>
+      <p><strong>Internationaal overzicht:</strong> <a href="https://findahelpline.com" target="_blank">findahelpline.com</a></p>
+      <p style="margin-top:16px;color:var(--ink-soft);font-size:.85rem">Als je in direct gevaar bent, bel de noodnummers (112/101).</p>
+    </div>`;
+}
+
 function renderStoryForm() {
   app.innerHTML = `
     <span class="label">Jouw kant van het verhaal</span>
@@ -87,7 +102,8 @@ function renderStoryForm() {
     <div id="error" class="error-box" style="display:none"></div>
     <form id="storyForm">
       <div class="field">
-        <textarea id="storyText" required placeholder="Begin maar..."></textarea>
+        <textarea id="storyText" required maxlength="2000" placeholder="Begin maar..."></textarea>
+        <div class="help" id="charCount">0 / 2000 tekens</div>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="anon">
@@ -95,6 +111,10 @@ function renderStoryForm() {
       </div>
       <button type="submit" class="btn clay" style="width:100%;padding:14px">Verhaal versturen</button>
     </form>`;
+
+  document.getElementById('storyText').addEventListener('input', (e) => {
+    document.getElementById('charCount').textContent = `${e.target.value.length} / 2000 tekens`;
+  });
 
   document.getElementById('storyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
