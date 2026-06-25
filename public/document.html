@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jullie document — Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+</nav>
+
+<div class="app-wrap" id="app" style="max-width:760px">
+  <div class="status-box">Even laden...</div>
+</div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+const app = document.getElementById('app');
+
+async function load() {
+  const res = await fetch(`/.netlify/functions/get-document?token=${token}`);
+  const data = await res.json();
+  if (!res.ok) { app.innerHTML = `<div class="error-box">${data.error}</div>`; return; }
+
+  if (!data.documents.length) {
+    app.innerHTML = `<div class="status-box">Het document wordt nog opgesteld. Deze pagina herlaadt zelf.</div>`;
+    setTimeout(load, 8000);
+    return;
+  }
+
+  renderDoc(data);
+}
+
+function renderDoc(data, displayVersion) {
+  const allVersions = data.documents;
+  const doc = displayVersion ? allVersions.find(d => d.version === displayVersion) : allVersions[0];
+  const mostRecentVersion = allVersions[0].version;
+  const myName = data.myName;
+
+  const perspectiveEntries = Object.entries(doc.perspectives || {});
+  const tipEntries = Object.entries(doc.tips || {});
+  const questionEntries = Object.entries(doc.questions_to_ask || {});
+  const phraseEntries = Object.entries(doc.suggested_phrases || {});
+
+  const versionPicker = allVersions.length > 1 ? `
+    <div class="field" style="max-width:280px">
+      <label>Versie bekijken</label>
+      <select id="versionSelect">
+        ${allVersions.map(d => `<option value="${d.version}" ${d.version === doc.version ? 'selected' : ''}>Versie ${d.version}${d.version === mostRecentVersion ? ' (meest recent)' : ''}</option>`).join('')}
+      </select>
+    </div>` : '';
+
+  app.innerHTML = `
+    <span class="label">Versie ${doc.version}${allVersions.length > 1 ? ` van ${allVersions.length}` : ''}</span>
+    <h1>Jullie document</h1>
+    ${versionPicker}
+
+    <div class="doc-section">
+      <span class="label">Objectief overzicht</span>
+      <h3>Wat er speelt</h3>
+      <p>${doc.shared_summary}</p>
+    </div>
+
+    <div class="doc-section">
+      <span class="label">Gedeelde grond</span>
+      <h3>Waar jullie het al over eens zijn</h3>
+      <p>${doc.common_ground}</p>
+    </div>
+
+    <div class="doc-section">
+      <span class="label">Perspectief</span>
+      <h3>Hoe de ander het ziet</h3>
+      ${perspectiveEntries.map(([name, p]) => `
+        <div class="person-block">
+          <div class="who">Over ${name}</div>
+          <p><strong>Wat ${name} voelt/bedoelt:</strong> ${p.explanation}</p>
+          <p><strong>Wat goed gaat:</strong> ${p.strengths}</p>
+          <p><strong>Waar groei mogelijk is:</strong> ${p.growth_areas}</p>
+        </div>`).join('')}
+    </div>
+
+    <div class="doc-section">
+      <span class="label">Voor jezelf</span>
+      <h3>Tips per persoon</h3>
+      ${tipEntries.map(([name, tips]) => `
+        <div class="person-block">
+          <div class="who">Voor ${name}</div>
+          <ul class="tip-list">${tips.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>`).join('')}
+    </div>
+
+    <div class="doc-section">
+      <span class="label">Gesprek openen</span>
+      <h3>Vragen om aan elkaar te stellen</h3>
+      ${questionEntries.map(([name, qs]) => `
+        <div class="person-block">
+          <div class="who">${name} kan vragen</div>
+          <ul class="tip-list">${qs.map(q => `<li>${q}</li>`).join('')}</ul>
+        </div>`).join('')}
+    </div>
+
+    <div class="doc-section">
+      <span class="label">Op weg naar een oplossing</span>
+      <h3>Wat je zou kunnen zeggen</h3>
+      ${phraseEntries.map(([name, phrases]) => `
+        <div class="person-block">
+          <div class="who">${name} zou kunnen zeggen</div>
+          <ul class="tip-list">${phrases.map(p => `<li>"${p}"</li>`).join('')}</ul>
+        </div>`).join('')}
+    </div>
+
+    <div class="doc-section" style="text-align:center;border-bottom:none">
+      <span class="label">Groeidocument</span>
+      <h3>Kom later terug</h3>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een nieuwe check-in starten — beiden vullen opnieuw aan, en er komt een nieuwe versie van het document.</p>
+      <button id="startRoundBtn" class="btn clay">Start een nieuwe check-in</button>
+      <div id="roundMsg" style="margin-top:12px;color:var(--sage);font-size:.9rem"></div>
+    </div>
+  `;
+
+  if (allVersions.length > 1) {
+    document.getElementById('versionSelect').addEventListener('change', (e) => {
+      renderDoc(data, parseInt(e.target.value, 10));
+    });
+  }
+
+  document.getElementById('startRoundBtn').addEventListener('click', async () => {
+    const res = await fetch('/.netlify/functions/start-new-round', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+    });
+    const result = await res.json();
+    const msg = document.getElementById('roundMsg');
+    if (!res.ok) { msg.style.color = '#8A4222'; msg.textContent = result.error; return; }
+    msg.textContent = 'Nieuwe ronde gestart! Ga terug naar je eigen link om aan te vullen.';
+  });
+}
+
+load();
+</script>
+</body>
+</html>
