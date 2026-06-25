@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nieuw gesprek starten — Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+</nav>
+
+<div class="app-wrap">
+  <span class="label">Stap 1 van 1</span>
+  <h1>Start een nieuw gesprek</h1>
+  <p style="color:var(--ink-soft)">Vul dit kort in. Daarna krijg je links om door te sturen naar iedereen die moet deelnemen.</p>
+
+  <div id="error" class="error-box" style="display:none"></div>
+
+  <form id="newSessionForm">
+    <div class="field">
+      <label for="category">Soort situatie</label>
+      <select id="category" required>
+        <option value="koppel">Koppel / relatie</option>
+        <option value="familie">Familie</option>
+        <option value="vrienden">Vrienden</option>
+        <option value="buren">Buren</option>
+        <option value="werk">Werk / collega's</option>
+        <option value="school">School</option>
+        <option value="algemeen">Anders</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="organizerName">Jouw naam</label>
+      <input type="text" id="organizerName" required placeholder="bv. Sarah">
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="isThirdParty">
+      <label for="isThirdParty">Ik neem zelf niet deel aan het conflict (bv. ik ben HR, leerkracht of therapeut)</label>
+    </div>
+
+    <div class="field" id="organizerRoleField" style="display:none">
+      <label for="organizerRole">Jouw rol</label>
+      <select id="organizerRole">
+        <option value="hr">HR</option>
+        <option value="leerkracht">Leerkracht</option>
+        <option value="therapeut">Therapeut</option>
+        <option value="advocaat">Advocaat</option>
+        <option value="anders">Anders</option>
+      </select>
+      <div class="checkbox-row" style="margin-top:14px">
+        <input type="checkbox" id="organizerSeesDocument" checked>
+        <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Naam/namen van de andere deelnemer(s)</label>
+      <div id="participantInputs">
+        <input type="text" class="participant-name" placeholder="bv. Tom" style="margin-bottom:10px">
+      </div>
+      <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem">+ Nog een deelnemer toevoegen</button>
+      <div class="help">Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
+    </div>
+
+    <button type="submit" class="btn clay" style="width:100%;padding:14px">Sessie aanmaken</button>
+  </form>
+
+  <div id="result" style="display:none;margin-top:32px">
+    <h3>Klaar! Stuur deze links door:</h3>
+    <div id="linksList"></div>
+  </div>
+</div>
+
+<script>
+document.getElementById('isThirdParty').addEventListener('change', (e) => {
+  document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
+});
+
+document.getElementById('addParticipant').addEventListener('click', () => {
+  const wrap = document.getElementById('participantInputs');
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'participant-name';
+  input.placeholder = 'Naam';
+  input.style.marginBottom = '10px';
+  wrap.appendChild(input);
+});
+
+document.getElementById('newSessionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errorBox = document.getElementById('error');
+  errorBox.style.display = 'none';
+
+  const category = document.getElementById('category').value;
+  const organizerName = document.getElementById('organizerName').value.trim();
+  const isThirdParty = document.getElementById('isThirdParty').checked;
+  const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
+  const participantNames = Array.from(document.querySelectorAll('.participant-name'))
+    .map(i => i.value.trim()).filter(Boolean);
+
+  if (!organizerName || participantNames.length === 0) {
+    errorBox.textContent = 'Vul je naam en minstens één deelnemer in.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch('/.netlify/functions/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category, organizerName, participantNames, organizerRole, organizerSeesDocument }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
+
+    document.getElementById('newSessionForm').style.display = 'none';
+    const list = document.getElementById('linksList');
+    list.innerHTML = '';
+    data.participants.forEach(p => {
+      const block = document.createElement('div');
+      block.className = 'person-block';
+      const fullLink = window.location.origin + p.accessLink;
+      block.innerHTML = `<div class="who">${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
+        <input type="text" readonly value="${fullLink}" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.82rem">`;
+      list.appendChild(block);
+    });
+    document.getElementById('result').style.display = 'block';
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
