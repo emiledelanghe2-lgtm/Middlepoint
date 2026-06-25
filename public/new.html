@@ -60,10 +60,18 @@
     <div class="field">
       <label>Naam/namen van de andere deelnemer(s)</label>
       <div id="participantInputs">
-        <input type="text" class="participant-name" placeholder="bv. Tom" style="margin-bottom:10px">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" class="participant-name" placeholder="bv. Tom" style="flex:1">
+          <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">
+        </div>
       </div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem">+ Nog een deelnemer toevoegen</button>
       <div class="help">Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
+    </div>
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="sendInvites">
+      <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar deelnemers waarvan ik een e-mailadres invulde (handig als de ander nog niet weet dat dit gesprek bestaat)</label>
     </div>
 
     <button type="submit" class="btn clay" style="width:100%;padding:14px">Sessie aanmaken</button>
@@ -72,6 +80,7 @@
   <div id="result" style="display:none;margin-top:32px">
     <h3>Klaar! Stuur deze links door:</h3>
     <div id="linksList"></div>
+    <div id="inviteStatus" style="margin-top:16px;font-size:.85rem;color:var(--ink-soft)"></div>
   </div>
 </div>
 
@@ -82,12 +91,14 @@ document.getElementById('isThirdParty').addEventListener('change', (e) => {
 
 document.getElementById('addParticipant').addEventListener('click', () => {
   const wrap = document.getElementById('participantInputs');
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'participant-name';
-  input.placeholder = 'Naam';
-  input.style.marginBottom = '10px';
-  wrap.appendChild(input);
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.gap = '8px';
+  row.style.marginBottom = '10px';
+  row.innerHTML = `
+    <input type="text" class="participant-name" placeholder="Naam" style="flex:1">
+    <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">`;
+  wrap.appendChild(row);
 });
 
 document.getElementById('newSessionForm').addEventListener('submit', async (e) => {
@@ -100,8 +111,12 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   const isThirdParty = document.getElementById('isThirdParty').checked;
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
-  const participantNames = Array.from(document.querySelectorAll('.participant-name'))
-    .map(i => i.value.trim()).filter(Boolean);
+  const sendInvites = document.getElementById('sendInvites').checked;
+
+  const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
+  const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
+  const participantNames = nameInputs.map(i => i.value.trim()).filter(Boolean);
+  const participantEmails = nameInputs.map((_, i) => emailInputs[i] ? emailInputs[i].value.trim() : '');
 
   if (!organizerName || participantNames.length === 0) {
     errorBox.textContent = 'Vul je naam en minstens één deelnemer in.';
@@ -121,14 +136,38 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     document.getElementById('newSessionForm').style.display = 'none';
     const list = document.getElementById('linksList');
     list.innerHTML = '';
-    data.participants.forEach(p => {
+    const inviteMessages = [];
+
+    for (let i = 0; i < data.participants.length; i++) {
+      const p = data.participants[i];
       const block = document.createElement('div');
       block.className = 'person-block';
       const fullLink = window.location.origin + p.accessLink;
       block.innerHTML = `<div class="who">${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
         <input type="text" readonly value="${fullLink}" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.82rem">`;
       list.appendChild(block);
-    });
+
+      // Stuur automatisch een uitnodiging als er een e-mailadres is ingevuld voor deze naam
+      if (sendInvites && !p.isOrganizer) {
+        const matchIndex = participantNames.indexOf(p.name);
+        const email = matchIndex !== -1 ? participantEmails[matchIndex] : '';
+        if (email) {
+          try {
+            const inviteRes = await fetch('/.netlify/functions/send-invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ toEmail: email, fromName: organizerName, toName: p.name, accessLink: fullLink, category }),
+            });
+            const inviteData = await inviteRes.json();
+            inviteMessages.push(inviteRes.ok ? `✓ Mail verstuurd naar ${p.name}` : `✗ Mail naar ${p.name} mislukt: ${inviteData.error}`);
+          } catch (err) {
+            inviteMessages.push(`✗ Mail naar ${p.name} mislukt: ${err.message}`);
+          }
+        }
+      }
+    }
+
+    document.getElementById('inviteStatus').innerHTML = inviteMessages.join('<br>');
     document.getElementById('result').style.display = 'block';
   } catch (err) {
     errorBox.textContent = err.message;
