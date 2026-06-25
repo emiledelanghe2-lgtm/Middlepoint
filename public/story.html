@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jouw verhaal — Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+</nav>
+
+<div class="app-wrap" id="app">
+  <div class="status-box">Even laden...</div>
+</div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+const app = document.getElementById('app');
+
+async function load() {
+  if (!token) { app.innerHTML = '<div class="error-box">Geen geldige link. Vraag de organisator om de link opnieuw te sturen.</div>'; return; }
+  const res = await fetch(`/.netlify/functions/get-session?token=${token}`);
+  const data = await res.json();
+  if (!res.ok) { app.innerHTML = `<div class="error-box">${data.error}</div>`; return; }
+  render(data);
+}
+
+function render(data) {
+  const { participant, session, myEntries, myFollowups } = data;
+  const round1Done = myEntries.some(e => e.round === 1);
+  const round2Done = myEntries.some(e => e.round === 2);
+
+  if (participant.isOrganizer) {
+    app.innerHTML = `<span class="label">${session.category}</span>
+      <h1>Hallo ${participant.name}</h1>
+      <p style="color:var(--ink-soft)">Jij bent organisator van dit gesprek. Je hoeft zelf geen verhaal in te vullen — volg de status, en bekijk straks het document.</p>
+      <a href="/document.html?token=${token}" class="btn clay">Bekijk document</a>`;
+    return;
+  }
+
+  if (!round1Done) {
+    renderStoryForm();
+  } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
+    app.innerHTML = `<span class="label">${session.category}</span>
+      <h1>Bedankt, ${participant.name}</h1>
+      <div class="status-box">We bekijken jullie beide verhalen en bereiden gerichte vervolgvragen voor.<br>Dit duurt meestal 1-2 minuten. Deze pagina herlaadt zelf.</div>`;
+    setTimeout(load, 8000);
+  } else if (session.status === 'wachten_op_vervolgvragen' && myFollowups && !round2Done) {
+    renderFollowupForm(myFollowups);
+  } else if (session.status === 'wachten_op_vervolgvragen' && !myFollowups) {
+    app.innerHTML = `<div class="status-box">Vervolgvragen worden nog voorbereid. Even geduld.</div>`;
+    setTimeout(load, 5000);
+  } else if (round2Done && (session.status === 'wachten_op_vervolgvragen' || session.status === 'document_genereren')) {
+    app.innerHTML = `<span class="label">${session.category}</span>
+      <h1>Bedankt, ${participant.name}</h1>
+      <div class="status-box">We wachten nog op de andere deelnemer(s), of het document wordt nu opgesteld. Dit duurt meestal even.</div>`;
+    setTimeout(load, 8000);
+  } else if (session.status === 'klaar') {
+    app.innerHTML = `<span class="label">${session.category}</span>
+      <h1>Jullie document is klaar</h1>
+      <p style="color:var(--ink-soft)">Het eerlijke, neutrale rapport staat klaar om te bekijken.</p>
+      <a href="/document.html?token=${token}" class="btn clay">Bekijk document</a>`;
+  } else if ((session.status || '').startsWith('nieuwe_ronde_')) {
+    const round = parseInt(session.status.split('_').pop(), 10);
+    const alreadyDone = myEntries.some(e => e.round === round);
+    if (alreadyDone) {
+      app.innerHTML = `<span class="label">${session.category}</span>
+        <h1>Bedankt voor de aanvulling</h1>
+        <div class="status-box">We wachten nog op de andere deelnemer(s). Dit duurt meestal even.</div>`;
+      setTimeout(load, 8000);
+    } else {
+      renderCheckinForm(round);
+    }
+  } else {
+    app.innerHTML = `<div class="status-box">Bezig...</div>`;
+    setTimeout(load, 6000);
+  }
+}
+
+function renderStoryForm() {
+  app.innerHTML = `
+    <span class="label">Jouw kant van het verhaal</span>
+    <h1>Vertel wat er gebeurd is</h1>
+    <p style="color:var(--ink-soft)">Schrijf zo eerlijk en volledig mogelijk. Niemand anders ziet dit totdat het verwerkt is tot het rapport.</p>
+    <div id="error" class="error-box" style="display:none"></div>
+    <form id="storyForm">
+      <div class="field">
+        <textarea id="storyText" required placeholder="Begin maar..."></textarea>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="anon">
+        <label for="anon">Vermeld mijn naam niet bij dit specifieke verhaal in het document (anoniem)</label>
+      </div>
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Verhaal versturen</button>
+    </form>`;
+
+  document.getElementById('storyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = document.getElementById('storyText').value.trim();
+    const isAnonymous = document.getElementById('anon').checked;
+    const errorBox = document.getElementById('error');
+    try {
+      const res = await fetch('/.netlify/functions/submit-story', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content, isAnonymous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      load();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+}
+
+function renderFollowupForm(questions) {
+  app.innerHTML = `
+    <span class="label">Nog wat dieper</span>
+    <h1>Een paar vervolgvragen</h1>
+    <p style="color:var(--ink-soft)">Op basis van beide verhalen willen we nog wat dingen beter begrijpen.</p>
+    <div id="error" class="error-box" style="display:none"></div>
+    <form id="followupForm">
+      ${questions.map((q, i) => `
+        <div class="field">
+          <label>${q}</label>
+          <textarea data-q="${i}" required></textarea>
+        </div>`).join('')}
+      <div class="checkbox-row">
+        <input type="checkbox" id="anon2">
+        <label for="anon2">Vermeld mijn naam niet bij deze antwoorden (anoniem)</label>
+      </div>
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Antwoorden versturen</button>
+    </form>`;
+
+  document.getElementById('followupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const answers = Array.from(document.querySelectorAll('[data-q]'))
+      .map(t => `Vraag: ${questions[t.dataset.q]}\nAntwoord: ${t.value.trim()}`)
+      .join('\n\n');
+    const isAnonymous = document.getElementById('anon2').checked;
+    const errorBox = document.getElementById('error');
+    try {
+      const res = await fetch('/.netlify/functions/submit-followups', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content: answers, isAnonymous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      load();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+}
+
+function renderCheckinForm(round) {
+  app.innerHTML = `
+    <span class="label">Check-in</span>
+    <h1>Hoe staat het er nu voor?</h1>
+    <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer.</p>
+    <div id="error" class="error-box" style="display:none"></div>
+    <form id="checkinForm">
+      <div class="field">
+        <textarea id="checkinText" required placeholder="Wat is er veranderd sinds de vorige keer?"></textarea>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="anon3">
+        <label for="anon3">Vermeld mijn naam niet bij deze aanvulling (anoniem)</label>
+      </div>
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Aanvulling versturen</button>
+    </form>`;
+
+  document.getElementById('checkinForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = document.getElementById('checkinText').value.trim();
+    const isAnonymous = document.getElementById('anon3').checked;
+    const errorBox = document.getElementById('error');
+    try {
+      const res = await fetch('/.netlify/functions/submit-checkin', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content, isAnonymous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      load();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+}
+
+load();
+</script>
+</body>
+</html>
