@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prijzen — Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.pricing-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:40px; }
+@media (max-width:1000px){ .pricing-grid{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:680px){ .pricing-grid{ grid-template-columns:1fr; } }
+.plan-card{ background:var(--white); border:1px solid var(--line); border-radius:14px; padding:28px; display:flex; flex-direction:column; }
+.plan-card.highlight{ border-color:var(--clay); box-shadow:0 8px 24px rgba(199,111,70,.12); }
+.plan-name{ font-family:'Fraunces',serif; font-size:1.2rem; margin-bottom:6px; }
+.plan-price{ font-size:2rem; font-weight:600; margin-bottom:4px; }
+.plan-price span{ font-size:1rem; color:var(--ink-soft); font-weight:400; }
+.plan-desc{ color:var(--ink-soft); font-size:.9rem; margin-bottom:20px; min-height:48px; }
+.plan-features{ list-style:none; padding:0; margin:0 0 24px; font-size:.88rem; color:var(--ink); flex-grow:1; }
+.plan-features li{ padding:6px 0; border-bottom:1px solid var(--line); }
+.plan-features li:last-child{ border-bottom:none; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links">
+    <a href="/new.html" class="btn">Start een gesprek</a>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="section-head">
+    <span class="label">Prijzen</span>
+    <h2>Begin gratis, betaal pas als het werkt voor jou</h2>
+  </div>
+  <div class="pricing-grid" id="pricingGrid"></div>
+  <p style="margin-top:32px;color:var(--ink-soft);font-size:.85rem">Alle prijzen zijn indicatief en kunnen nog wijzigen voor de definitieve lancering.</p>
+</section>
+
+<footer class="footer">middlepoint — gebouwd om twee kanten samen te brengen.</footer>
+
+<script src="/pricing-config.js"></script>
+<script>
+const grid = document.getElementById('pricingGrid');
+PRICING_CONFIG.plans.forEach(plan => {
+  const card = document.createElement('div');
+  card.className = 'plan-card' + (plan.highlight ? ' highlight' : '');
+  const priceLabel = plan.price === 0 ? 'Gratis' : `${PRICING_CONFIG.currency}${plan.price}`;
+  card.innerHTML = `
+    <div class="plan-name">${plan.name}</div>
+    <div class="plan-price">${priceLabel} ${plan.period ? `<span>${plan.period}</span>` : ''}</div>
+    <div class="plan-desc">${plan.description}</div>
+    <ul class="plan-features">
+      <li>Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>
+      <li>${plan.sessionsIncluded === null ? 'Onbeperkt aantal gesprekken' : plan.sessionsIncluded + ' gesprek(ken)'}</li>
+      <li>${plan.includesFollowups ? '✓' : '—'} AI-vervolgvragen</li>
+      <li>${plan.includesCheckins ? '✓' : '—'} Groeidocument / check-ins</li>
+    </ul>
+    ${plan.ctaLink
+      ? `<a href="${plan.ctaLink}" class="btn ${plan.highlight ? 'clay' : 'outline'}" style="text-align:center">${plan.cta}</a>`
+      : `<button class="btn outline" disabled style="opacity:.6;cursor:default">${plan.cta}</button>`}
+  `;
+  grid.appendChild(card);
+});
+</script>
+</body>
+</html>
