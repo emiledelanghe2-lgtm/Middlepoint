@@ -16,6 +16,8 @@ Ga naar je Netlify site → **Site configuration → Environment variables**, en
 ## 3. Deployen via GitHub
 Upload deze map naar een GitHub-repository, en koppel die repository aan je Netlify-project (Project configuration → Build & deploy → Link repository). Netlify herkent automatisch `netlify.toml`.
 
+**Belangrijk:** deze structuur is bewust maximaal 1 map diep gehouden (bv. `public/`, `functions/`) zodat slepen-en-neerzetten in de browser de mapstructuur niet kapot maakt.
+
 ## 4. Testen
 1. Ga naar `/new.html`, maak een testsessie aan met 2 namen
 2. Open beide gegenereerde links (2 verschillende browsers/incognito)
@@ -23,6 +25,14 @@ Upload deze map naar een GitHub-repository, en koppel die repository aan je Netl
 4. Vul bij beide de vervolgvragen in → wacht 1-2 min → document op `/document.html`
 
 ## Nog niet gebouwd
-- Automatische e-mailnotificaties
+- Stripe-koppeling (prijspagina staat klaar, knoppen zijn nog placeholders)
 - Live chatbot-variant
 - Geboortedatum/astrologie (bewust niet gebouwd)
+
+## Nieuw: veiligheidscheck en e-mailuitnodiging
+
+**Veiligheidscheck**: voer `migration-001-safety.sql` uit in Supabase (SQL Editor) als je de database al had aangemaakt vóór deze update. Nieuwe installaties hebben dit al via `schema.sql`.
+
+**E-mailuitnodiging**: vereist een Resend-account. Voeg deze environment variables toe op Netlify:
+- `RESEND_API_KEY` (van resend.com → API Keys)
+- `RESEND_FROM_EMAIL` (optioneel, anders gebruikt het Resend's test-adres)
