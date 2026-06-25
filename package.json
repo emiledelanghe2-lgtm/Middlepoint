@@ -1,0 +1,9 @@
+{
+  "name": "middlepoint",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Twee kanten van het verhaal, één eerlijk beeld.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
