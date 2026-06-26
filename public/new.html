@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nieuw gesprek starten — Middlepoint</title>
+<title>Nieuw gesprek starten, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -15,6 +15,10 @@
   <span class="label">Stap 1 van 1</span>
   <h1>Start een nieuw gesprek</h1>
   <p style="color:var(--ink-soft)">Vul dit kort in. Daarna krijg je links om door te sturen naar iedereen die moet deelnemen.</p>
+
+  <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px">
+    <p style="margin:0;font-size:.9rem">Starten is gratis (proefversie, tot 2.000 tekens per verhaal). Voor het volledige traject inclusief vervolgvragen en groeidocument, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
+  </div>
 
   <div id="error" class="error-box" style="display:none"></div>
 
@@ -28,8 +32,14 @@
         <option value="buren">Buren</option>
         <option value="werk">Werk / collega's</option>
         <option value="school">School</option>
-        <option value="algemeen">Anders</option>
+        <option value="andere">Iets anders, namelijk...</option>
       </select>
+    </div>
+
+    <div class="field" id="categoryOtherField" style="display:none">
+      <label for="categoryOther">Omschrijf kort jouw situatie</label>
+      <input type="text" id="categoryOther" placeholder="bv. een conflict met mijn huisbaas">
+      <div class="help">Middlepoint past de vragen en toon van het document aan op basis van je omschrijving.</div>
     </div>
 
     <div class="field">
@@ -51,6 +61,11 @@
         <option value="advocaat">Advocaat</option>
         <option value="anders">Anders</option>
       </select>
+      <div style="margin-top:14px">
+        <label for="organizerEmail">Jouw e-mailadres (verplicht als derde partij)</label>
+        <input type="email" id="organizerEmail" placeholder="jij@bedrijf.be">
+        <div class="help">Nodig zodat we je kunnen laten weten wanneer het document klaar is.</div>
+      </div>
       <div class="checkbox-row" style="margin-top:14px">
         <input type="checkbox" id="organizerSeesDocument" checked>
         <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
@@ -66,7 +81,7 @@
         </div>
       </div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem">+ Nog een deelnemer toevoegen</button>
-      <div class="help">Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
+      <div class="help">Jij krijgt hieronder gewoon je eigen link te zien, daarvoor is geen e-mailadres nodig. Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
     </div>
 
     <div class="checkbox-row">
@@ -85,8 +100,13 @@
 </div>
 
 <script>
+document.getElementById('category').addEventListener('change', (e) => {
+  document.getElementById('categoryOtherField').style.display = e.target.value === 'andere' ? 'block' : 'none';
+});
+
 document.getElementById('isThirdParty').addEventListener('change', (e) => {
   document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
+  document.getElementById('organizerEmail').required = e.target.checked;
 });
 
 document.getElementById('addParticipant').addEventListener('click', () => {
@@ -106,12 +126,29 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   const errorBox = document.getElementById('error');
   errorBox.style.display = 'none';
 
-  const category = document.getElementById('category').value;
+  let category = document.getElementById('category').value;
+  if (category === 'andere') {
+    const custom = document.getElementById('categoryOther').value.trim();
+    if (!custom) {
+      errorBox.textContent = 'Omschrijf kort je situatie bij "Iets anders".';
+      errorBox.style.display = 'block';
+      return;
+    }
+    category = custom;
+  }
+
   const organizerName = document.getElementById('organizerName').value.trim();
   const isThirdParty = document.getElementById('isThirdParty').checked;
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  const organizerEmail = document.getElementById('organizerEmail').value.trim();
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
+
+  if (isThirdParty && !organizerEmail) {
+    errorBox.textContent = 'Als derde partij (HR, leerkracht, therapeut, advocaat) is jouw e-mailadres verplicht.';
+    errorBox.style.display = 'block';
+    return;
+  }
 
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
@@ -128,7 +165,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, organizerName, participantNames, organizerRole, organizerSeesDocument }),
+      body: JSON.stringify({ category, organizerName, participantNames, organizerRole, organizerEmail, organizerSeesDocument }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
@@ -147,7 +184,6 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
         <input type="text" readonly value="${fullLink}" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.82rem">`;
       list.appendChild(block);
 
-      // Stuur automatisch een uitnodiging als er een e-mailadres is ingevuld voor deze naam
       if (sendInvites && !p.isOrganizer) {
         const matchIndex = participantNames.indexOf(p.name);
         const email = matchIndex !== -1 ? participantEmails[matchIndex] : '';
@@ -159,9 +195,9 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
               body: JSON.stringify({ toEmail: email, fromName: organizerName, toName: p.name, accessLink: fullLink, category }),
             });
             const inviteData = await inviteRes.json();
-            inviteMessages.push(inviteRes.ok ? `✓ Mail verstuurd naar ${p.name}` : `✗ Mail naar ${p.name} mislukt: ${inviteData.error}`);
+            inviteMessages.push(inviteRes.ok ? `Mail verstuurd naar ${p.name}.` : `Mail naar ${p.name} mislukt: ${inviteData.error}`);
           } catch (err) {
-            inviteMessages.push(`✗ Mail naar ${p.name} mislukt: ${err.message}`);
+            inviteMessages.push(`Mail naar ${p.name} mislukt: ${err.message}`);
           }
         }
       }
