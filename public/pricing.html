@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prijzen — Middlepoint</title>
+<title>Prijzen, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 <style>
 .pricing-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:40px; }
@@ -24,6 +24,7 @@
 <nav class="nav">
   <a href="/" class="brand">middle<span>point</span></a>
   <div class="nav-links">
+    <a href="/why.html">Waarom Middlepoint</a>
     <a href="/new.html" class="btn">Start een gesprek</a>
   </div>
 </nav>
@@ -53,7 +54,7 @@
     </div>
     <div class="card">
       <h3>Groeidocument / check-ins</h3>
-      <p>Een afgerond gesprek blijft bewaard. Na weken of maanden kan je samen een nieuwe "check-in" starten: jullie vullen opnieuw aan, en er verschijnt een nieuwe versie van het document — zo zie je hoe de relatie evolueert.</p>
+      <p>Een afgerond gesprek blijft bewaard. Na weken of maanden kan je samen een nieuwe "check-in" starten: jullie vullen opnieuw aan, en er verschijnt een nieuwe versie van het document, zo zie je hoe de relatie evolueert.</p>
     </div>
     <div class="card">
       <h3>Onbeperkt aantal gesprekken</h3>
@@ -70,7 +71,7 @@
   </div>
 </section>
 
-<footer class="footer">middlepoint — gebouwd om twee kanten samen te brengen.</footer>
+<footer class="footer">middlepoint, gebouwd om twee kanten samen te brengen.</footer>
 
 <script src="/pricing-config.js"></script>
 <script>
@@ -86,8 +87,8 @@ PRICING_CONFIG.plans.forEach(plan => {
     <ul class="plan-features">
       <li>Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>
       <li>${plan.sessionsIncluded === null ? 'Onbeperkt aantal gesprekken' : plan.sessionsIncluded + ' gesprek(ken)'}</li>
-      <li>${plan.includesFollowups ? '✓' : '—'} AI-vervolgvragen</li>
-      <li>${plan.includesCheckins ? '✓' : '—'} Groeidocument / check-ins</li>
+      <li>${plan.includesFollowups ? '✓' : 'niet inbegrepen'} AI-vervolgvragen</li>
+      <li>${plan.includesCheckins ? '✓' : 'niet inbegrepen'} Groeidocument / check-ins</li>
     </ul>
     ${plan.ctaLink
       ? `<a href="${plan.ctaLink}" class="btn ${plan.highlight ? 'clay' : 'outline'}" style="text-align:center">${plan.cta}</a>`
