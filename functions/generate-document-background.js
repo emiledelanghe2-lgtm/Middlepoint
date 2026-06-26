@@ -52,8 +52,8 @@ exports.handler = async (event) => {
               : e.round === 2
                 ? 'Antwoorden op vervolgvragen'
                 : `Check-in aanvulling (ronde ${e.round})`;
-            const anonTag = e.is_anonymous ? ' (deze persoon wil hier anoniem blijven -- vermeld nooit de naam bij dit specifieke punt in het document)' : '';
-            return `### ${naam} -- ${label}${anonTag}:\n${e.content}`;
+            const anonTag = e.is_anonymous ? ' (deze persoon wil hier anoniem blijven, vermeld nooit de naam bij dit specifieke punt in het document)' : '';
+            return `### ${naam}, ${label}${anonTag}:\n${e.content}`;
           })
           .join('\n\n');
       })
@@ -65,11 +65,13 @@ exports.handler = async (event) => {
 
 Bouw het rapport met exact deze onderdelen:
 1. shared_summary: een objectieve samenvatting van het conflict, gecombineerd uit beide verhalen, in neutrale taal.
-2. common_ground: wat beide partijen gemeenschappelijk hebben of waar ze het al over eens zijn -- dit komt altijd EERST getoond worden voor de verschillen, om de-escalatie te bevorderen.
+2. common_ground: wat beide partijen gemeenschappelijk hebben of waar ze het al over eens zijn, dit komt altijd EERST getoond worden voor de verschillen, om de-escalatie te bevorderen.
 3. perspectives: per persoon, een uitleg van het standpunt van de ANDERE persoon, herschreven in toegankelijke taal specifiek gericht aan deze persoon ("Wat [naam van de ander] vooral voelt/bedoelt is..."), plus wat die ander persoon goed doet en waar die ander persoon kan groeien.
 4. tips: per persoon, concrete, niet-beschuldigende tips wat ZIJZELF beter kunnen doen.
 5. questions_to_ask: per persoon, 2-4 concrete vragen die ze aan de ander kunnen stellen om beter te begrijpen en het gesprek te openen.
 6. suggested_phrases: per persoon, 1-3 concrete zinnen die ze zouden kunnen zeggen om het conflict te helpen oplossen.
+
+Belangrijk: gebruik in de volledige tekst nooit het lange streepje (—). Schrijf in volledige zinnen met punten, komma's of "en"/"maar" in plaats van een streepje.
 
 Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
