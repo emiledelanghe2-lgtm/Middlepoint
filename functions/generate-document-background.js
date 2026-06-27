@@ -23,6 +23,35 @@ async function callClaude(systemPrompt, userPrompt) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
+async function sendDocumentReadyEmail(toEmail, toName, link) {
+  if (!process.env.RESEND_API_KEY || !toEmail) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
+        to: toEmail,
+        subject: 'Jullie document staat klaar',
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
+            <p>Het document is klaar. Je kan het nu rustig samen bekijken.</p>
+            <p style="margin:28px 0">
+              <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk het document</a>
+            </p>
+            <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang tot het gesprek.</p>
+          </div>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Kon document-klaar-mail niet versturen:', err);
+  }
+}
+
 exports.handler = async (event) => {
   try {
     const { sessionId } = JSON.parse(event.body || '{}');
@@ -31,7 +60,7 @@ exports.handler = async (event) => {
     const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single();
     const { data: participants } = await supabase
       .from('participants')
-      .select('id, display_name, is_organizer')
+      .select('id, display_name, is_organizer, email, access_token')
       .eq('session_id', sessionId);
     const realParticipants = participants.filter(p => !p.is_organizer);
 
@@ -113,6 +142,14 @@ Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit exacte formaat:
       .from('sessions')
       .update({ status: 'klaar', updated_at: new Date().toISOString() })
       .eq('id', sessionId);
+
+    // Iedereen met een e-mailadres laten weten dat het document klaar is
+    const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
+    await Promise.all(
+      participants
+        .filter(p => p.email)
+        .map(p => sendDocumentReadyEmail(p.email, p.display_name, `${siteUrl}/document.html?token=${p.access_token}`))
+    );
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {
