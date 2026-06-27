@@ -7,11 +7,17 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}');
-    const { category, organizerName, participantNames, organizerRole, organizerSeesDocument } = body;
+    const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument } = body;
 
     if (!category || !organizerName || !Array.isArray(participantNames) || participantNames.length < 1) {
       return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName en minstens 1 participantNames zijn verplicht.' }) };
     }
+
+    if (organizerRole && !organizerEmail) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'organizerEmail is verplicht wanneer er een organizerRole is (derde partij).' }) };
+    }
+
+    const emails = Array.isArray(participantEmails) ? participantEmails : [];
 
     const supabase = getSupabase();
 
@@ -20,6 +26,7 @@ exports.handler = async (event) => {
       .insert({
         category,
         organizer_role: organizerRole || null,
+        organizer_email: organizerEmail || null,
         organizer_sees_document: organizerSeesDocument !== false,
       })
       .select()
@@ -27,22 +34,32 @@ exports.handler = async (event) => {
 
     if (sessionError) throw sessionError;
 
-    const isOrganizerAlsoParticipant = !organizerRole;
-    const allNames = isOrganizerAlsoParticipant
-      ? [organizerName, ...participantNames]
-      : participantNames;
+    // De aanmaker is standaard ook deelnemer, tenzij hij puur organisator is (bv. HR/therapeut
+    // die zelf geen partij is in het conflict)
+    const isOrganizerAlsoParticipant = !organizerRole; // bv. koppel/familie: jij bent zelf partij
 
-    const participantsToInsert = allNames.map((name, i) => ({
-      session_id: session.id,
-      display_name: name,
-      is_organizer: isOrganizerAlsoParticipant ? i === 0 : false,
-    }));
-
-    if (!isOrganizerAlsoParticipant) {
+    let participantsToInsert;
+    if (isOrganizerAlsoParticipant) {
+      participantsToInsert = [organizerName, ...participantNames].map((name, i) => ({
+        session_id: session.id,
+        display_name: name,
+        is_organizer: i === 0,
+        email: i === 0 ? (organizerEmail || null) : (emails[i - 1] || null),
+      }));
+    } else {
+      participantsToInsert = participantNames.map((name, i) => ({
+        session_id: session.id,
+        display_name: name,
+        is_organizer: false,
+        email: emails[i] || null,
+      }));
+      // Als er een puur-organisator-rol is (HR/therapeut), maken we een apart organisator-record aan
+      // zonder dat die zelf een verhaal moet invullen.
       participantsToInsert.push({
         session_id: session.id,
         display_name: organizerName,
         is_organizer: true,
+        email: organizerEmail || null,
       });
     }
 
