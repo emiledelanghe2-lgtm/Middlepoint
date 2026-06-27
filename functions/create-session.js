@@ -9,12 +9,8 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body || '{}');
     const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument } = body;
 
-    if (!category || !organizerName || !Array.isArray(participantNames) || participantNames.length < 1) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName en minstens 1 participantNames zijn verplicht.' }) };
-    }
-
-    if (organizerRole && !organizerEmail) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'organizerEmail is verplicht wanneer er een organizerRole is (derde partij).' }) };
+    if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
     }
 
     const emails = Array.isArray(participantEmails) ? participantEmails : [];
