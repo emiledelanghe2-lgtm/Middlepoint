@@ -41,7 +41,9 @@ function render(data) {
   const round1Done = myEntries.some(e => e.round === 1);
   const round2Done = myEntries.some(e => e.round === 2);
 
-  if (participant.isOrganizer) {
+  const isPureThirdParty = participant.isOrganizer && !!session.organizer_role;
+
+  if (isPureThirdParty) {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Hallo ${participant.name}</h1>
       <p style="color:var(--ink-soft)">Jij bent organisator van dit gesprek. Je hoeft zelf geen verhaal in te vullen. Status: <strong>${statusLabel(session.status)}</strong>.</p>
@@ -156,6 +158,17 @@ function renderStoryForm(name) {
         </select>
       </div>
       <div class="field">
+        <button type="button" id="toggleHints" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-bottom:12px">Hulp nodig om te beginnen?</button>
+        <div id="hintChips" style="display:none;margin-bottom:14px">
+          <p class="help" style="margin-bottom:8px">Klik op een vraag om ze toe te voegen, en beantwoord ze in het tekstveld hieronder. Allemaal optioneel.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <button type="button" class="hint-chip">Wat is er precies gebeurd?</button>
+            <button type="button" class="hint-chip">Hoe voelde jij je daarbij?</button>
+            <button type="button" class="hint-chip">Wat denk je dat de ander voelde?</button>
+            <button type="button" class="hint-chip">Wat zou je willen dat er verandert?</button>
+            <button type="button" class="hint-chip">Wat heb je zelf al geprobeerd?</button>
+          </div>
+        </div>
         <textarea id="storyText" required maxlength="2000" placeholder="Begin maar..."></textarea>
         <div class="help" id="charCount">0 / 2000 tekens</div>
       </div>
@@ -168,6 +181,21 @@ function renderStoryForm(name) {
 
   document.getElementById('storyText').addEventListener('input', (e) => {
     document.getElementById('charCount').textContent = `${e.target.value.length} / 2000 tekens`;
+  });
+
+  document.getElementById('toggleHints').addEventListener('click', () => {
+    const box = document.getElementById('hintChips');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('.hint-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const textarea = document.getElementById('storyText');
+      const addition = (textarea.value.trim() ? '\n\n' : '') + chip.textContent + '\n';
+      textarea.value = (textarea.value + addition).slice(0, 2000);
+      textarea.dispatchEvent(new Event('input'));
+      textarea.focus();
+    });
   });
 
   document.getElementById('storyForm').addEventListener('submit', async (e) => {
