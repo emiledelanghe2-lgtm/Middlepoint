@@ -169,7 +169,7 @@ function renderStoryForm(name) {
             <button type="button" class="hint-chip">Wat heb je zelf al geprobeerd?</button>
           </div>
         </div>
-        <textarea id="storyText" required maxlength="2000" placeholder="Begin maar..."></textarea>
+        <div id="storyText" class="editable-field" contenteditable="true" data-placeholder="Begin maar..."></div>
         <div class="help" id="charCount">0 / 2000 tekens</div>
       </div>
       <div class="checkbox-row">
@@ -179,9 +179,15 @@ function renderStoryForm(name) {
       <button type="submit" class="btn clay" style="width:100%;padding:14px">Verhaal versturen</button>
     </form>`;
 
-  document.getElementById('storyText').addEventListener('input', (e) => {
-    document.getElementById('charCount').textContent = `${e.target.value.length} / 2000 tekens`;
-  });
+  const storyText = document.getElementById('storyText');
+
+  function updateCharCount() {
+    const len = storyText.innerText.trim().length;
+    document.getElementById('charCount').textContent = `${len} / 2000 tekens`;
+    document.getElementById('charCount').style.color = len > 2000 ? '#8A4222' : '';
+  }
+
+  storyText.addEventListener('input', updateCharCount);
 
   document.getElementById('toggleHints').addEventListener('click', () => {
     const box = document.getElementById('hintChips');
@@ -190,21 +196,39 @@ function renderStoryForm(name) {
 
   document.querySelectorAll('.hint-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      const textarea = document.getElementById('storyText');
-      const addition = (textarea.value.trim() ? '\n\n' : '') + chip.textContent + '\n';
-      textarea.value = (textarea.value + addition).slice(0, 2000);
-      textarea.dispatchEvent(new Event('input'));
-      textarea.focus();
+      const strong = document.createElement('strong');
+      strong.textContent = chip.textContent;
+      storyText.appendChild(strong);
+      storyText.appendChild(document.createElement('br'));
+      storyText.appendChild(document.createElement('br'));
+      updateCharCount();
+      storyText.focus();
+      const range = document.createRange();
+      range.selectNodeContents(storyText);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
     });
   });
 
   document.getElementById('storyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const duration = document.getElementById('duration').value;
-    const rawContent = document.getElementById('storyText').value.trim();
+    const rawContent = storyText.innerText.trim();
+    const errorBox = document.getElementById('error');
+    if (!rawContent) {
+      errorBox.textContent = 'Schrijf eerst je verhaal voor je het verstuurt.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    if (rawContent.length > 2000) {
+      errorBox.textContent = 'Je verhaal is te lang (max 2.000 tekens in deze gratis versie).';
+      errorBox.style.display = 'block';
+      return;
+    }
     const content = `Dit speelt al: ${duration}.\n\n${rawContent}`;
     const isAnonymous = document.getElementById('anon').checked;
-    const errorBox = document.getElementById('error');
     try {
       const res = await fetch('/.netlify/functions/submit-story', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
