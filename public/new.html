@@ -10,6 +10,9 @@
 <header class="nav-bar">
 <nav class="nav">
   <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links">
+    <a href="/find-link.html">Link kwijt?</a>
+  </div>
 </nav>
 </header>
 
@@ -50,9 +53,9 @@
     </div>
 
     <div class="field">
-      <label for="organizerEmail" id="organizerEmailLabel">Jouw e-mailadres (optioneel)</label>
-      <input type="email" id="organizerEmail" placeholder="jij@email.be">
-      <div class="help" id="organizerEmailHelp">Niet verplicht, maar handig: zo kunnen we je verwittigen als het document klaar is, en kan je je link later terugvinden via <a href="/find-link.html">deze pagina</a> als je hem verliest.</div>
+      <label for="organizerEmail">Jouw e-mailadres (verplicht)</label>
+      <input type="email" id="organizerEmail" required placeholder="jij@email.be">
+      <div class="help">Zo kunnen we je laten weten wanneer het document klaar is, en kan je je link later terugvinden via <a href="/find-link.html">deze pagina</a> als je hem verliest.</div>
     </div>
 
     <div class="checkbox-row">
@@ -112,11 +115,6 @@ document.getElementById('category').addEventListener('change', (e) => {
 
 document.getElementById('isThirdParty').addEventListener('change', (e) => {
   document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
-  document.getElementById('organizerEmail').required = e.target.checked;
-  document.getElementById('organizerEmailLabel').textContent = e.target.checked ? 'Jouw e-mailadres (verplicht als derde partij)' : 'Jouw e-mailadres (optioneel)';
-  document.getElementById('organizerEmailHelp').textContent = e.target.checked
-    ? 'Verplicht: zo kunnen we je laten weten wanneer het document klaar is.'
-    : 'Niet verplicht, maar handig: zo kunnen we je verwittigen als het document klaar is, en kan je je link later terugvinden als je hem verliest.';
 });
 
 document.getElementById('addParticipant').addEventListener('click', () => {
@@ -134,7 +132,7 @@ document.getElementById('addParticipant').addEventListener('click', () => {
 function copyLink(btn, link) {
   navigator.clipboard.writeText(link).then(() => {
     const old = btn.textContent;
-    btn.textContent = 'Gekopieerd!';
+    btn.textContent = '✓';
     setTimeout(() => { btn.textContent = old; }, 1500);
   });
 }
@@ -162,8 +160,8 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
 
-  if (isThirdParty && !organizerEmail) {
-    errorBox.textContent = 'Als derde partij (HR, leerkracht, therapeut, advocaat) is jouw e-mailadres verplicht.';
+  if (!organizerEmail) {
+    errorBox.textContent = 'Jouw e-mailadres is verplicht.';
     errorBox.style.display = 'block';
     return;
   }
@@ -198,14 +196,15 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
       const block = document.createElement('div');
       block.className = 'person-block';
       const fullLink = window.location.origin + p.accessLink;
+      const mainButtonLabel = isThirdParty && p.isOrganizer ? 'Bekijk status' : 'Vul mijn document in';
       block.innerHTML = `<div class="who">${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="text" readonly value="${fullLink}" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.8rem">
-          <button type="button" class="btn outline" style="padding:10px 14px;font-size:.85rem;white-space:nowrap">Kopieer</button>
+          <button type="button" class="icon-btn" title="Kopieer link">📋</button>
         </div>
-        ${p.isOrganizer ? `<a href="${p.accessLink}" class="btn clay" style="margin-top:10px;display:inline-block">Ga naar mijn pagina</a>` : ''}`;
+        ${p.isOrganizer ? `<a href="${p.accessLink}" class="btn clay" style="margin-top:10px;display:inline-block">${mainButtonLabel}</a>` : ''}`;
       list.appendChild(block);
-      block.querySelector('button').addEventListener('click', (e) => copyLink(e.target, fullLink));
+      block.querySelector('button').addEventListener('click', (e) => copyLink(e.currentTarget, fullLink));
 
       if (sendInvites && !p.isOrganizer) {
         const matchIndex = participantNames.indexOf(p.name);
