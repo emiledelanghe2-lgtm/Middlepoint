@@ -72,4 +72,46 @@ exports.handler = async (event) => {
       .join('\n\n');
 
     // Veiligheidscheck eerst -- enkel stoppen bij ondubbelzinnige, acute ernst
-    const safety = await
+    const safety = await checkSafety(storiesText);
+    if (safety.stop) {
+      await supabase
+        .from('sessions')
+        .update({
+          status: 'veiligheid_gestopt',
+          safety_category: safety.categorie,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sessionId);
+
+      return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
+    }
+
+    const systemPrompt = `Je bent een neutrale, empathische conflictbemiddelaar. Je leest het verhaal van meerdere mensen over hetzelfde conflict (categorie: ${session.category}). Je taak: per persoon 2-4 scherpe, niet-beschuldigende vervolgvragen formuleren die helpen om dieper te graven naar de werkelijke kern van het probleem, vaak is wat iemand eerst vertelt slechts het topje van de ijsberg. Gebruik vooral tegenstellingen, onduidelijkheden, of dingen die in het verhaal van de ANDERE persoon staan maar niet in dat van deze persoon, om gerichte vragen te stellen. Toon: warm, nieuwsgierig, niet rechterlijk. Gebruik in je tekst nooit het lange streepje (—); schrijf in volledige zinnen met punten en komma's. Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit formaat: {"vragen_per_persoon": [{"naam": "...", "vragen": ["...", "..."]}]}`;
+
+    const userPrompt = `Hier zijn de verhalen:\n\n${storiesText}\n\nGeef per persoon hun vervolgvragen.`;
+
+    const aiResponse = await callClaude(systemPrompt, userPrompt);
+    const cleaned = aiResponse.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    for (const item of parsed.vragen_per_persoon) {
+      const participant = realParticipants.find(p => p.display_name === item.naam);
+      if (!participant) continue;
+      await supabase.from('followup_questions').insert({
+        session_id: sessionId,
+        participant_id: participant.id,
+        questions: item.vragen,
+      });
+    }
+
+    await supabase
+      .from('sessions')
+      .update({ status: 'wachten_op_vervolgvragen', updated_at: new Date().toISOString() })
+      .eq('id', sessionId);
+
+    return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+  } catch (err) {
+    console.error(err);
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+  }
+};
