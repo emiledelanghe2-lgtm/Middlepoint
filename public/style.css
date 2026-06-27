@@ -219,6 +219,24 @@ a{ color:var(--navy); text-decoration:none; }
   color: var(--ink);
 }
 .field textarea{ min-height:160px; resize:vertical; }
+.editable-field{
+  width:100%;
+  min-height:160px;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-family:'Karla', sans-serif;
+  font-size:.96rem;
+  background:var(--white);
+  color:var(--ink);
+  line-height:1.6;
+  overflow-y:auto;
+}
+.editable-field:empty::before{
+  content:attr(data-placeholder);
+  color:var(--ink-soft);
+}
+.editable-field strong{ color:var(--clay); }
 .field .help{ color:var(--ink-soft); font-size:.85rem; margin-top:6px; }
 .checkbox-row{ display:flex; align-items:center; gap:10px; margin-bottom:20px; }
 .checkbox-row input{ width:18px; height:18px; }
