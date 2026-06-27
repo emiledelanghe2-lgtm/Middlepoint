@@ -12,6 +12,7 @@ create table sessions (
   organizer_role text, -- bv. 'hr', 'therapeut', 'leerkracht', null als geen derde partij
   organizer_sees_document boolean default true,
   safety_category text,
+  organizer_email text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -23,6 +24,7 @@ create table participants (
   display_name text not null,
   access_token text not null unique default replace(uuid_generate_v4()::text, '-', ''),
   is_organizer boolean default false,
+  email text,
   created_at timestamptz default now()
 );
 
@@ -60,4 +62,20 @@ create table documents (
   created_at timestamptz default now()
 );
 
-create index
+create index idx_participants_session on participants(session_id);
+create index idx_entries_session on entries(session_id);
+create index idx_documents_session on documents(session_id);
+
+-- Row Level Security: voor MVP gebruiken we de access_token als poort (geen Supabase Auth nodig)
+-- Alle toegang loopt via onze Netlify Functions met de service role key, dus we zetten RLS aan
+-- en laten enkel de service role schrijven/lezen. De anon key wordt dus NIET gebruikt om
+-- rechtstreeks vanuit de browser te connecteren, alles gaat via onze functions.
+
+alter table sessions enable row level security;
+alter table participants enable row level security;
+alter table entries enable row level security;
+alter table followup_questions enable row level security;
+alter table documents enable row level security;
+
+-- Geen policies toevoegen = enkel service_role (gebruikt in onze functions) heeft toegang.
+-- De browser gebruikt nooit de Supabase client rechtstreeks voor data, enkel onze eigen API.
