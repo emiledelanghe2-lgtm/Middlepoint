@@ -6,11 +6,11 @@
 <title>Prijzen, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 <style>
-.pricing-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:40px; }
+.pricing-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:32px; }
 @media (max-width:1000px){ .pricing-grid{ grid-template-columns:repeat(2, 1fr); } }
 @media (max-width:680px){ .pricing-grid{ grid-template-columns:1fr; } }
 .plan-card{ background:var(--white); border:1px solid var(--line); border-radius:14px; padding:28px; display:flex; flex-direction:column; }
-.plan-card.highlight{ border-color:var(--clay); box-shadow:0 8px 24px rgba(199,111,70,.12); }
+.plan-card.highlight{ border-color:var(--clay); box-shadow:0 8px 24px rgba(201,113,75,.12); }
 .plan-name{ font-family:'Fraunces',serif; font-size:1.2rem; margin-bottom:6px; }
 .plan-price{ font-size:2rem; font-weight:600; margin-bottom:4px; }
 .plan-price span{ font-size:1rem; color:var(--ink-soft); font-weight:400; }
@@ -21,13 +21,17 @@
 </style>
 </head>
 <body>
+<header class="nav-bar">
 <nav class="nav">
   <a href="/" class="brand">middle<span>point</span></a>
   <div class="nav-links">
+    <a href="/">Home</a>
     <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html" class="current">Prijzen</a>
     <a href="/new.html" class="btn">Start een gesprek</a>
   </div>
 </nav>
+</header>
 
 <section class="section">
   <div class="section-head">
@@ -35,7 +39,7 @@
     <h2>Begin gratis, betaal pas als het werkt voor jou</h2>
   </div>
   <div class="pricing-grid" id="pricingGrid"></div>
-  <p style="margin-top:32px;color:var(--ink-soft);font-size:.85rem">Alle prijzen zijn indicatief en kunnen nog wijzigen voor de definitieve lancering.</p>
+  <p style="margin-top:32px;color:var(--ink-soft);font-size:.85rem">Alle prijzen zijn indicatief en kunnen nog wijzigen voor de definitieve lancering. Betalen is momenteel nog niet actief; dat komt eraan vóór de lancering.</p>
 </section>
 
 <section class="section" style="padding-top:0">
@@ -46,15 +50,15 @@
   <div class="grid-3">
     <div class="card">
       <h3>Eén gesprek</h3>
-      <p>Het volledige traject voor één conflict: beide kanten schrijven hun verhaal, beantwoorden gerichte vervolgvragen, en krijgen samen één neutraal document met inzichten en tips.</p>
+      <p>Het volledige traject voor één conflict: beide kanten schrijven hun verhaal, beantwoorden gerichte vervolgvragen, en krijgen samen één objectief overzicht met inzichten en tips.</p>
     </div>
     <div class="card">
-      <h3>AI-vervolgvragen</h3>
+      <h3>Vervolgvragen</h3>
       <p>Na het eerste verhaal stelt Middlepoint elke persoon gerichte extra vragen, juist op de punten waar de twee verhalen verschillen. Dat brengt vaak het échte probleem naar boven.</p>
     </div>
     <div class="card">
       <h3>Groeidocument / check-ins</h3>
-      <p>Een afgerond gesprek blijft bewaard. Na weken of maanden kan je samen een nieuwe "check-in" starten: jullie vullen opnieuw aan, en er verschijnt een nieuwe versie van het document, zo zie je hoe de relatie evolueert.</p>
+      <p>Een afgerond gesprek blijft bewaard. Na weken of maanden kan je samen een nieuwe "check-in" starten: jullie vullen opnieuw aan, en er verschijnt een nieuwe versie van het overzicht, zo zie je hoe de relatie evolueert.</p>
     </div>
     <div class="card">
       <h3>Onbeperkt aantal gesprekken</h3>
@@ -62,16 +66,19 @@
     </div>
     <div class="card">
       <h3>Organisator-dashboard (Pro)</h3>
-      <p>Voor therapeuten, HR-medewerkers, leerkrachten en advocaten: meerdere cases tegelijk beheren, vragenlijsten vooraf doorsturen naar cliënten, en zelf kiezen of je het volledige document inziet.</p>
+      <p>Voor therapeuten, HR-medewerkers, leerkrachten en advocaten: meerdere cases tegelijk beheren, vragenlijsten vooraf doorsturen naar cliënten, en zelf kiezen of je het volledige overzicht inziet.</p>
     </div>
     <div class="card">
       <h3>Anonimiteit</h3>
-      <p>Beschikbaar in elk plan: bij meer dan 2 deelnemers kan iedereen per opmerking kiezen om die zonder naam te delen in het document.</p>
+      <p>Beschikbaar in elk plan: bij meer dan 2 deelnemers kan iedereen per opmerking kiezen om die zonder naam te delen.</p>
     </div>
   </div>
 </section>
 
-<footer class="footer">middlepoint, gebouwd om twee kanten samen te brengen.</footer>
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">Eén plek om elkaar weer te verstaan.</p>
+  <p style="margin:0;font-size:.82rem">Vragen of feedback? <a href="mailto:hello@middlepoint.net">hello@middlepoint.net</a></p>
+</footer>
 
 <script src="/pricing-config.js"></script>
 <script>
@@ -87,7 +94,7 @@ PRICING_CONFIG.plans.forEach(plan => {
     <ul class="plan-features">
       <li>Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>
       <li>${plan.sessionsIncluded === null ? 'Onbeperkt aantal gesprekken' : plan.sessionsIncluded + ' gesprek(ken)'}</li>
-      <li>${plan.includesFollowups ? '✓' : 'niet inbegrepen'} AI-vervolgvragen</li>
+      <li>${plan.includesFollowups ? '✓' : 'niet inbegrepen'} Vervolgvragen</li>
       <li>${plan.includesCheckins ? '✓' : 'niet inbegrepen'} Groeidocument / check-ins</li>
     </ul>
     ${plan.ctaLink
