@@ -37,7 +37,10 @@ exports.handler = async (event) => {
       .from('participants')
       .select('id, is_organizer')
       .eq('session_id', participant.session_id);
-    const requiredIds = allParticipants.filter(p => !p.is_organizer).map(p => p.id);
+    const sessionOrganizerRole = participant.sessions.organizer_role;
+    const requiredIds = allParticipants
+      .filter(p => !(p.is_organizer && sessionOrganizerRole))
+      .map(p => p.id);
 
     const { data: roundEntries } = await supabase
       .from('entries')
