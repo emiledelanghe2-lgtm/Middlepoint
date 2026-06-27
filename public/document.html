@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jullie document — Middlepoint</title>
+<title>Jullie document, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<header class="nav-bar">
 <nav class="nav">
   <a href="/" class="brand">middle<span>point</span></a>
 </nav>
+</header>
 
 <div class="app-wrap" id="app" style="max-width:760px">
   <div class="status-box">Even laden...</div>
@@ -34,7 +36,7 @@ async function load() {
 }
 
 function renderDoc(data, displayVersion) {
-  const allVersions = data.documents;
+  const allVersions = data.documents; // altijd gesorteerd, hoogste versie eerst
   const doc = displayVersion ? allVersions.find(d => d.version === displayVersion) : allVersions[0];
   const mostRecentVersion = allVersions[0].version;
   const myName = data.myName;
@@ -114,9 +116,10 @@ function renderDoc(data, displayVersion) {
     <div class="doc-section" style="text-align:center;border-bottom:none">
       <span class="label">Groeidocument</span>
       <h3>Kom later terug</h3>
-      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een nieuwe check-in starten — beiden vullen opnieuw aan, en er komt een nieuwe versie van het document.</p>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een nieuwe check-in starten. Beiden vullen opnieuw aan, en er komt een nieuwe versie van het document.</p>
       <button id="startRoundBtn" class="btn clay">Start een nieuwe check-in</button>
       <div id="roundMsg" style="margin-top:12px;color:var(--sage);font-size:.9rem"></div>
+      <div style="margin-top:24px"><a href="/" class="btn outline">Terug naar startpagina</a></div>
     </div>
   `;
 
