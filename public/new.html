@@ -7,9 +7,11 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<header class="nav-bar">
 <nav class="nav">
   <a href="/" class="brand">middle<span>point</span></a>
 </nav>
+</header>
 
 <div class="app-wrap">
   <span class="label">Stap 1 van 1</span>
@@ -17,7 +19,7 @@
   <p style="color:var(--ink-soft)">Vul dit kort in. Daarna krijg je links om door te sturen naar iedereen die moet deelnemen.</p>
 
   <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px">
-    <p style="margin:0;font-size:.9rem">Starten is gratis (proefversie, tot 2.000 tekens per verhaal). Voor het volledige traject inclusief vervolgvragen en groeidocument, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
+    <p style="margin:0;font-size:.9rem">Starten is gratis (proefversie, tot 2.000 tekens per verhaal). Voor het volledige traject inclusief vervolgvragen en groeidocument, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>. Je kiest en betaalt daar, niet in dit formulier.</p>
   </div>
 
   <div id="error" class="error-box" style="display:none"></div>
@@ -47,6 +49,12 @@
       <input type="text" id="organizerName" required placeholder="bv. Sarah">
     </div>
 
+    <div class="field">
+      <label for="organizerEmail" id="organizerEmailLabel">Jouw e-mailadres (optioneel)</label>
+      <input type="email" id="organizerEmail" placeholder="jij@email.be">
+      <div class="help" id="organizerEmailHelp">Niet verplicht, maar handig: zo kunnen we je verwittigen als het document klaar is, en kan je je link later terugvinden via <a href="/find-link.html">deze pagina</a> als je hem verliest.</div>
+    </div>
+
     <div class="checkbox-row">
       <input type="checkbox" id="isThirdParty">
       <label for="isThirdParty">Ik neem zelf niet deel aan het conflict (bv. ik ben HR, leerkracht of therapeut)</label>
@@ -61,11 +69,6 @@
         <option value="advocaat">Advocaat</option>
         <option value="anders">Anders</option>
       </select>
-      <div style="margin-top:14px">
-        <label for="organizerEmail">Jouw e-mailadres (verplicht als derde partij)</label>
-        <input type="email" id="organizerEmail" placeholder="jij@bedrijf.be">
-        <div class="help">Nodig zodat we je kunnen laten weten wanneer het document klaar is.</div>
-      </div>
       <div class="checkbox-row" style="margin-top:14px">
         <input type="checkbox" id="organizerSeesDocument" checked>
         <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
@@ -81,7 +84,7 @@
         </div>
       </div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem">+ Nog een deelnemer toevoegen</button>
-      <div class="help">Jij krijgt hieronder gewoon je eigen link te zien, daarvoor is geen e-mailadres nodig. Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
+      <div class="help">Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
     </div>
 
     <div class="checkbox-row">
@@ -93,9 +96,12 @@
   </form>
 
   <div id="result" style="display:none;margin-top:32px">
-    <h3>Klaar! Stuur deze links door:</h3>
+    <h3>Klaar! Hieronder jullie links</h3>
     <div id="linksList"></div>
-    <div id="inviteStatus" style="margin-top:16px;font-size:.85rem;color:var(--ink-soft)"></div>
+    <div id="inviteStatus" style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)"></div>
+    <div style="margin-top:24px">
+      <a href="/" class="btn outline">Terug naar startpagina</a>
+    </div>
   </div>
 </div>
 
@@ -107,6 +113,10 @@ document.getElementById('category').addEventListener('change', (e) => {
 document.getElementById('isThirdParty').addEventListener('change', (e) => {
   document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
   document.getElementById('organizerEmail').required = e.target.checked;
+  document.getElementById('organizerEmailLabel').textContent = e.target.checked ? 'Jouw e-mailadres (verplicht als derde partij)' : 'Jouw e-mailadres (optioneel)';
+  document.getElementById('organizerEmailHelp').textContent = e.target.checked
+    ? 'Verplicht: zo kunnen we je laten weten wanneer het document klaar is.'
+    : 'Niet verplicht, maar handig: zo kunnen we je verwittigen als het document klaar is, en kan je je link later terugvinden als je hem verliest.';
 });
 
 document.getElementById('addParticipant').addEventListener('click', () => {
@@ -120,6 +130,14 @@ document.getElementById('addParticipant').addEventListener('click', () => {
     <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">`;
   wrap.appendChild(row);
 });
+
+function copyLink(btn, link) {
+  navigator.clipboard.writeText(link).then(() => {
+    const old = btn.textContent;
+    btn.textContent = 'Gekopieerd!';
+    setTimeout(() => { btn.textContent = old; }, 1500);
+  });
+}
 
 document.getElementById('newSessionForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -138,9 +156,9 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   }
 
   const organizerName = document.getElementById('organizerName').value.trim();
+  const organizerEmail = document.getElementById('organizerEmail').value.trim();
   const isThirdParty = document.getElementById('isThirdParty').checked;
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
-  const organizerEmail = document.getElementById('organizerEmail').value.trim();
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
 
@@ -165,7 +183,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, organizerName, participantNames, organizerRole, organizerEmail, organizerSeesDocument }),
+      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
@@ -181,8 +199,13 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
       block.className = 'person-block';
       const fullLink = window.location.origin + p.accessLink;
       block.innerHTML = `<div class="who">${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
-        <input type="text" readonly value="${fullLink}" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.82rem">`;
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" readonly value="${fullLink}" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.8rem">
+          <button type="button" class="btn outline" style="padding:10px 14px;font-size:.85rem;white-space:nowrap">Kopieer</button>
+        </div>
+        ${p.isOrganizer ? `<a href="${p.accessLink}" class="btn clay" style="margin-top:10px;display:inline-block">Ga naar mijn pagina</a>` : ''}`;
       list.appendChild(block);
+      block.querySelector('button').addEventListener('click', (e) => copyLink(e.target, fullLink));
 
       if (sendInvites && !p.isOrganizer) {
         const matchIndex = participantNames.indexOf(p.name);
@@ -205,6 +228,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
 
     document.getElementById('inviteStatus').innerHTML = inviteMessages.join('<br>');
     document.getElementById('result').style.display = 'block';
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.style.display = 'block';
