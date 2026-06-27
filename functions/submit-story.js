@@ -15,7 +15,7 @@ exports.handler = async (event) => {
 
     const { data: participant, error: pError } = await supabase
       .from('participants')
-      .select('*')
+      .select('*, sessions(*)')
       .eq('access_token', token)
       .single();
 
@@ -23,7 +23,8 @@ exports.handler = async (event) => {
       return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
     }
 
-    if (participant.is_organizer) {
+    const isPureThirdParty = participant.is_organizer && !!participant.sessions.organizer_role;
+    if (isPureThirdParty) {
       return { statusCode: 400, body: JSON.stringify({ error: 'De organisator vult zelf geen verhaal in.' }) };
     }
 
@@ -35,12 +36,16 @@ exports.handler = async (event) => {
       is_anonymous: !!isAnonymous,
     });
 
+    // Check of alle echte deelnemers (dus niet de pure derde partij) nu hun ronde-1-verhaal hebben ingediend
     const { data: allParticipants } = await supabase
       .from('participants')
       .select('id, is_organizer')
       .eq('session_id', participant.session_id);
 
-    const requiredIds = allParticipants.filter(p => !p.is_organizer).map(p => p.id);
+    const sessionOrganizerRole = participant.sessions.organizer_role;
+    const requiredIds = allParticipants
+      .filter(p => !(p.is_organizer && sessionOrganizerRole))
+      .map(p => p.id);
 
     const { data: round1Entries } = await supabase
       .from('entries')
@@ -57,6 +62,8 @@ exports.handler = async (event) => {
         .update({ status: 'verhalen_klaar_vervolgvragen_genereren', updated_at: new Date().toISOString() })
         .eq('id', participant.session_id);
 
+      // Trigger de achtergrondfunctie die de AI-vervolgvragen genereert.
+      // We wachten niet op het resultaat (fire-and-forget) zodat deze call snel teruggeeft.
       const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
       fetch(`${siteUrl}/.netlify/functions/generate-followups-background`, {
         method: 'POST',
