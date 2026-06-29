@@ -21,6 +21,11 @@
 const token = new URLSearchParams(window.location.search).get('token');
 const app = document.getElementById('app');
 
+function draftKey(suffix) { return `mp_draft_${suffix}_${token}`; }
+function saveDraft(suffix, value) { try { localStorage.setItem(draftKey(suffix), value); } catch (e) {} }
+function loadDraft(suffix) { try { return localStorage.getItem(draftKey(suffix)) || ''; } catch (e) { return ''; } }
+function clearDraft(suffix) { try { localStorage.removeItem(draftKey(suffix)); } catch (e) {} }
+
 async function load() {
   if (!token) { app.innerHTML = '<div class="error-box">Geen geldige link. Vraag de organisator om de link opnieuw te sturen, of <a href="/find-link.html">vraag je link hier opnieuw op</a>.</div>'; return; }
   const res = await fetch(`/.netlify/functions/get-session?token=${token}`);
@@ -138,12 +143,14 @@ function renderCrisisMessage() {
 }
 
 function renderStoryForm(name) {
+  const existingDraft = loadDraft('story');
   app.innerHTML = `
     <span class="label">Jouw kant van het verhaal</span>
     <h1>Vertel wat er gebeurd is</h1>
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>. Is dit niet jouw naam? Sluit deze pagina en vraag de juiste link op bij wie het gesprek startte, of <a href="/find-link.html">vraag je eigen link hier op</a>.
     </div>
+    ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
     <p style="color:var(--ink-soft)">Schrijf zo eerlijk en volledig mogelijk. Niemand anders ziet dit totdat het verwerkt is tot het rapport.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="storyForm">
@@ -169,14 +176,18 @@ function renderStoryForm(name) {
             <button type="button" class="hint-chip">Wat heb je zelf al geprobeerd?</button>
           </div>
         </div>
-        <div id="storyText" class="editable-field" contenteditable="true" data-placeholder="Begin maar..."></div>
+        <div id="storyText" class="editable-field" contenteditable="true" data-placeholder="Begin maar...">${existingDraft}</div>
         <div class="help" id="charCount">0 / 2000 tekens</div>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="anon">
         <label for="anon">Vermeld mijn naam niet bij dit specifieke verhaal in het document (anoniem)</label>
       </div>
-      <button type="submit" class="btn clay" style="width:100%;padding:14px">Verhaal versturen</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit" class="btn clay" style="flex:1;padding:14px">Verhaal versturen</button>
+        <button type="button" id="saveDraftBtn" class="btn outline" style="padding:14px 18px">Bewaar als concept</button>
+      </div>
+      <div id="draftSavedMsg" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel. Kom later terug op deze link om verder te werken.</div>
     </form>`;
 
   const storyText = document.getElementById('storyText');
@@ -188,6 +199,14 @@ function renderStoryForm(name) {
   }
 
   storyText.addEventListener('input', updateCharCount);
+  updateCharCount();
+
+  document.getElementById('saveDraftBtn').addEventListener('click', () => {
+    saveDraft('story', storyText.innerHTML);
+    const msg = document.getElementById('draftSavedMsg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  });
 
   document.getElementById('toggleHints').addEventListener('click', () => {
     const box = document.getElementById('hintChips');
@@ -236,6 +255,7 @@ function renderStoryForm(name) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      clearDraft('story');
       load();
     } catch (err) {
       errorBox.textContent = err.message;
@@ -245,26 +265,48 @@ function renderStoryForm(name) {
 }
 
 function renderFollowupForm(questions, name) {
+  const draftRaw = loadDraft('followup');
+  let draftAnswers = {};
+  try { draftAnswers = draftRaw ? JSON.parse(draftRaw) : {}; } catch (e) {}
+
   app.innerHTML = `
     <span class="label">Nog wat dieper</span>
     <h1>Een paar vervolgvragen</h1>
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>.
     </div>
+    ${draftRaw ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
     <p style="color:var(--ink-soft)">Op basis van beide verhalen willen we nog wat dingen beter begrijpen.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="followupForm">
       ${questions.map((q, i) => `
         <div class="field">
           <label>${q}</label>
-          <textarea data-q="${i}" required></textarea>
+          <textarea data-q="${i}" required>${draftAnswers[i] || ''}</textarea>
         </div>`).join('')}
       <div class="checkbox-row">
         <input type="checkbox" id="anon2">
         <label for="anon2">Vermeld mijn naam niet bij deze antwoorden (anoniem)</label>
       </div>
-      <button type="submit" class="btn clay" style="width:100%;padding:14px">Antwoorden versturen</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit" class="btn clay" style="flex:1;padding:14px">Antwoorden versturen</button>
+        <button type="button" id="saveDraftBtn2" class="btn outline" style="padding:14px 18px">Bewaar als concept</button>
+      </div>
+      <div id="draftSavedMsg2" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel.</div>
     </form>`;
+
+  function collectDraftAnswers() {
+    const obj = {};
+    document.querySelectorAll('[data-q]').forEach(t => { obj[t.dataset.q] = t.value; });
+    return obj;
+  }
+
+  document.getElementById('saveDraftBtn2').addEventListener('click', () => {
+    saveDraft('followup', JSON.stringify(collectDraftAnswers()));
+    const msg = document.getElementById('draftSavedMsg2');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  });
 
   document.getElementById('followupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -280,6 +322,7 @@ function renderFollowupForm(questions, name) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      clearDraft('followup');
       load();
     } catch (err) {
       errorBox.textContent = err.message;
@@ -289,24 +332,38 @@ function renderFollowupForm(questions, name) {
 }
 
 function renderCheckinForm(round, name) {
+  const draftSuffix = `checkin_${round}`;
+  const existingDraft = loadDraft(draftSuffix);
   app.innerHTML = `
     <span class="label">Check-in</span>
     <h1>Hoe staat het er nu voor?</h1>
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>.
     </div>
+    ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
     <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="checkinForm">
       <div class="field">
-        <textarea id="checkinText" required placeholder="Wat is er veranderd sinds de vorige keer?"></textarea>
+        <textarea id="checkinText" required placeholder="Wat is er veranderd sinds de vorige keer?">${existingDraft}</textarea>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="anon3">
         <label for="anon3">Vermeld mijn naam niet bij deze aanvulling (anoniem)</label>
       </div>
-      <button type="submit" class="btn clay" style="width:100%;padding:14px">Aanvulling versturen</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit" class="btn clay" style="flex:1;padding:14px">Aanvulling versturen</button>
+        <button type="button" id="saveDraftBtn3" class="btn outline" style="padding:14px 18px">Bewaar als concept</button>
+      </div>
+      <div id="draftSavedMsg3" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel.</div>
     </form>`;
+
+  document.getElementById('saveDraftBtn3').addEventListener('click', () => {
+    saveDraft(draftSuffix, document.getElementById('checkinText').value);
+    const msg = document.getElementById('draftSavedMsg3');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  });
 
   document.getElementById('checkinForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -320,6 +377,7 @@ function renderCheckinForm(round, name) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      clearDraft(draftSuffix);
       load();
     } catch (err) {
       errorBox.textContent = err.message;
