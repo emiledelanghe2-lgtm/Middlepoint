@@ -26,8 +26,8 @@ const PRICING_CONFIG = {
       includesFollowups: true,
       includesCheckins: true,
       description: '1 volledig gesprek met vervolgvragen en check-ins. Geen abonnement, geen verplichtingen.',
-      cta: 'Binnenkort beschikbaar',
-      ctaLink: null,
+      cta: 'Start nu',
+      ctaLink: 'https://buy.stripe.com/00w8wP1sw3Du6w9djRaVa0b',
     },
     {
       id: 'starter',
@@ -39,8 +39,8 @@ const PRICING_CONFIG = {
       includesFollowups: true,
       includesCheckins: true,
       description: '3 volledige gesprekken per maand, inclusief vervolgvragen en check-ins. Voor wie af en toe iets wil uitklaren.',
-      cta: 'Binnenkort beschikbaar',
-      ctaLink: null,
+      cta: 'Start nu',
+      ctaLink: 'https://buy.stripe.com/28E6oH3AE2zq7AdfrZaVa0c',
     },
     {
       id: 'plus',
@@ -52,8 +52,8 @@ const PRICING_CONFIG = {
       includesFollowups: true,
       includesCheckins: true,
       description: '10 volledige gesprekken per maand, inclusief vervolgvragen en check-ins. Voor wie Middlepoint regelmatig gebruikt.',
-      cta: 'Binnenkort beschikbaar',
-      ctaLink: null,
+      cta: 'Start nu',
+      ctaLink: 'https://buy.stripe.com/14AbJ1b365LC7Ad5RpaVa0d',
       highlight: true,
     },
     {
