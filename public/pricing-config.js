@@ -1,7 +1,6 @@
 // Centrale configuratie voor prijzen en limieten.
 // Pas deze waarden hier aan -- ze worden gebruikt op de prijspagina en (later) bij de Stripe-koppeling.
 // Tip: verander hier de cijfers, niet in pricing.html zelf.
-
 const PRICING_CONFIG = {
   currency: '€',
   plans: [
@@ -14,7 +13,7 @@ const PRICING_CONFIG = {
       sessionsIncluded: 1,
       includesFollowups: false,
       includesCheckins: false,
-      description: 'Probeer Middlepoint één keer, met een beperkte verhaallengte.',
+      description: 'Eén volledig document, om kennis te maken. Geen vervolgvragen en geen latere check-ins (groeidocument) bij dit plan.',
       cta: 'Start gratis',
       ctaLink: '/new.html',
     },
@@ -27,7 +26,7 @@ const PRICING_CONFIG = {
       sessionsIncluded: 1,
       includesFollowups: true,
       includesCheckins: true,
-      description: 'Volledige toegang voor één conflict, inclusief vervolgvragen en groeidocument.',
+      description: 'Volledige toegang voor één conflict: vervolgvragen, het volledige document, en nadien check-ins (groeidocument) zijn inbegrepen.',
       cta: 'Binnenkort beschikbaar',
       ctaLink: null, // wordt een Stripe-checkout-link
     },
@@ -40,7 +39,7 @@ const PRICING_CONFIG = {
       sessionsIncluded: null, // null = onbeperkt
       includesFollowups: true,
       includesCheckins: true,
-      description: 'Voor wie Middlepoint structureel wil gebruiken -- onbeperkt aantal gesprekken.',
+      description: 'Voor wie Middlepoint structureel wil gebruiken: onbeperkt aantal gesprekken, vervolgvragen en check-ins.',
       cta: 'Binnenkort beschikbaar',
       ctaLink: null,
       highlight: true,
@@ -60,5 +59,4 @@ const PRICING_CONFIG = {
     },
   ],
 };
-
 if (typeof module !== 'undefined') module.exports = PRICING_CONFIG;
