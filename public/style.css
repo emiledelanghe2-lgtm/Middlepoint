@@ -73,7 +73,7 @@ a{ color:var(--navy); text-decoration:none; }
   border-bottom:1px solid var(--line);
 }
 .nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 24px; max-width:1080px; margin:0 auto; flex-wrap:wrap; gap:12px; }
-.nav .brand{ font-family:'Fraunces', serif; font-weight:600; font-size:1.25rem; }
+.nav .brand{ font-family:'Fraunces', serif; font-weight:600; font-size:1.25rem; flex-shrink:0; }
 .nav .brand span{ color:var(--clay); }
 .nav-links{ display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
 .nav-links a{ color:var(--ink); font-size:.92rem; }
@@ -94,6 +94,10 @@ a{ color:var(--navy); text-decoration:none; }
 .btn.clay{ background:var(--clay); }
 .btn.outline{ background:transparent; color:var(--navy); border:1.5px solid var(--line); }
 .btn.outline:hover{ border-color:var(--navy); }
+.btn.whatsapp{ background:#3FA34D; color:var(--white); }
+.btn.whatsapp:hover{ box-shadow:0 6px 16px rgba(63,163,77,.25); }
+.btn.ghost{ background:transparent; color:var(--ink-soft); padding:8px 4px; font-weight:500; }
+.btn.ghost:hover{ color:var(--clay); transform:none; box-shadow:none; }
 
 /* --- Hero: zachte, elegante intro --- */
 .hero{ padding:56px 24px 72px; max-width:1080px; margin:0 auto; }
@@ -154,7 +158,6 @@ a{ color:var(--navy); text-decoration:none; }
   .balance .side.right p{ text-align:left; }
   .balance .side.left{ border-radius:18px 18px 0 0; }
   .hero-actions{ flex-direction:column; align-items:center; }
-  .nav{ justify-content:center; text-align:center; }
 }
 
 /* --- Sections --- */
@@ -202,13 +205,15 @@ a{ color:var(--navy); text-decoration:none; }
 
 /* --- Footer --- */
 .footer{ border-top:1px solid var(--line); padding:40px 24px; text-align:center; color:var(--ink-soft); font-size:.88rem; }
+.footer a{ color:var(--ink-soft); }
+.footer a:hover{ color:var(--clay); }
 
 /* --- Forms (app pages) --- */
 .app-wrap{ max-width:640px; margin:0 auto; padding:48px 24px 96px; }
 .app-wrap h1{ font-size:1.8rem; }
 .field{ margin-bottom:20px; }
 .field label{ display:block; margin-bottom:6px; font-weight:500; font-size:.92rem; }
-.field input[type=text], .field textarea, .field select{
+.field input[type=text], .field input[type=email], .field textarea, .field select{
   width:100%;
   padding:12px 14px;
   border:1px solid var(--line);
@@ -257,6 +262,15 @@ a{ color:var(--navy); text-decoration:none; }
   margin-bottom:20px;
   font-size:.9rem;
 }
+.draft-notice{
+  border:1px solid var(--sage);
+  background:#EFF4ED;
+  color:#4C5B45;
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:18px;
+  font-size:.88rem;
+}
 
 /* --- Document weergave --- */
 .doc-section{ margin-bottom:36px; padding-bottom:36px; border-bottom:1px solid var(--line); }
@@ -268,12 +282,31 @@ a{ color:var(--navy); text-decoration:none; }
 .person-block{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px; margin-bottom:16px; }
 .person-block .who{ font-family:'IBM Plex Mono', monospace; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--clay); margin-bottom:12px; }
 
+/* --- Testimonials --- */
+.testimonial-card{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:26px; margin-bottom:18px; }
+.testimonial-card p.quote{ font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; margin:0 0 12px; }
+.testimonial-card .author{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+
 /* --- Mobiel --- */
 @media (max-width:480px){
   .section{ padding:40px 16px; }
   .app-wrap{ padding:32px 16px 72px; }
   .hero{ padding:40px 16px 56px; }
   .balance .side{ padding:22px 18px; }
-  .nav{ padding:14px 16px; }
   .section-head h2{ font-size:1.7rem; }
+
+  /* Nav: alles op 1 lijn houden, niet laten doorbreken naar een nieuwe regel */
+  .nav{
+    flex-wrap:nowrap;
+    padding:12px 14px;
+    gap:8px;
+    overflow-x:auto;
+    -ms-overflow-style:none;
+    scrollbar-width:none;
+  }
+  .nav::-webkit-scrollbar{ display:none; }
+  .nav .brand{ font-size:1.05rem; }
+  .nav-links{ gap:12px; flex-wrap:nowrap; flex-shrink:0; }
+  .nav-links a{ font-size:.78rem; white-space:nowrap; }
+  .nav-links a.btn{ padding:8px 14px; font-size:.78rem; }
 }
