@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nieuw gesprek starten, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
+<script src="/pricing-config.js"></script>
 </head>
 <body>
 <header class="nav-bar">
@@ -26,13 +27,28 @@
   <h1>Start een nieuw gesprek</h1>
   <p style="color:var(--ink-soft)">Vul dit kort in. Daarna krijg je links om door te sturen naar iedereen die moet deelnemen.</p>
 
-  <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px">
-    <p style="margin:0;font-size:.9rem">Starten is gratis (proefversie). Je krijgt dan één volledig document, maar nog geen vervolgvragen en geen latere check-ins (groeidocument). Voor het volledige traject, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>. Je kiest en betaalt daar, niet in dit formulier.</p>
-  </div>
-
   <div id="error" class="error-box" style="display:none"></div>
 
   <form id="newSessionForm">
+
+    <!-- PLAN KIEZEN -->
+    <div class="field">
+      <label>Kies je plan</label>
+      <div id="planSelector" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
+    </div>
+
+    <div id="paidNotice" style="display:none;margin-bottom:20px">
+      <div class="card" style="background:var(--clay-soft);border:none;padding:16px">
+        <p style="margin:0;font-size:.9rem">Na het invullen stuur je door naar de betaalpagina. Je ontvangt je links zodra de betaling afgerond is.</p>
+      </div>
+    </div>
+
+    <div id="freeNotice" style="margin-bottom:20px">
+      <div class="card" style="background:var(--clay-soft);border:none;padding:16px">
+        <p style="margin:0;font-size:.9rem">Starten is gratis (proefversie). Je krijgt dan één volledig document, maar nog geen vervolgvragen en geen latere check-ins. Voor het volledige traject, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
+      </div>
+    </div>
+
     <div class="field">
       <label for="category">Soort situatie</label>
       <select id="category" required>
@@ -97,10 +113,10 @@
 
     <div class="checkbox-row">
       <input type="checkbox" id="sendInvites">
-      <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar deelnemers waarvan ik een e-mailadres invulde (handig als de ander nog niet weet dat dit gesprek bestaat)</label>
+      <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar deelnemers waarvan ik een e-mailadres invulde</label>
     </div>
 
-    <button type="submit" class="btn clay" style="width:100%;padding:14px">Sessie aanmaken</button>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Sessie aanmaken</button>
   </form>
 
   <div id="result" style="display:none;margin-top:32px">
@@ -115,6 +131,45 @@
 </div>
 
 <script>
+// Plan selector opbouwen vanuit pricing-config.js
+const planSelector = document.getElementById('planSelector');
+let selectedPlanId = 'gratis';
+
+PRICING_CONFIG.plans.forEach(plan => {
+  const row = document.createElement('label');
+  row.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;transition:border-color .15s';
+  row.innerHTML = `
+    <input type="radio" name="plan" value="${plan.id}" ${plan.id === 'gratis' ? 'checked' : ''} style="margin-top:3px;flex-shrink:0">
+    <div style="flex:1">
+      <div style="font-weight:600;font-size:.95rem">${plan.name}
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--clay);margin-left:8px">
+          ${plan.price === 0 ? 'Gratis' : `€${plan.price.toFixed(2).replace('.',',')} ${plan.period}`}
+        </span>
+      </div>
+      <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">${plan.description}</div>
+    </div>`;
+  planSelector.appendChild(row);
+
+  const radio = row.querySelector('input[type=radio]');
+  radio.addEventListener('change', () => {
+    // Reset alle borders
+    planSelector.querySelectorAll('label').forEach(l => l.style.borderColor = 'var(--line)');
+    row.style.borderColor = 'var(--clay)';
+    selectedPlanId = plan.id;
+    updatePlanNotice();
+  });
+
+  // Highlight gratis standaard
+  if (plan.id === 'gratis') row.style.borderColor = 'var(--clay)';
+});
+
+function updatePlanNotice() {
+  const isFree = selectedPlanId === 'gratis';
+  document.getElementById('freeNotice').style.display = isFree ? 'block' : 'none';
+  document.getElementById('paidNotice').style.display = isFree ? 'none' : 'block';
+  document.getElementById('submitBtn').textContent = isFree ? 'Sessie aanmaken' : 'Verder naar betaling';
+}
+
 document.getElementById('category').addEventListener('change', (e) => {
   document.getElementById('categoryOtherField').style.display = e.target.value === 'andere' ? 'block' : 'none';
 });
@@ -188,6 +243,33 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     return;
   }
 
+  // Als betaald plan: sla formulierdata op in sessionStorage en stuur door naar Stripe
+  if (selectedPlanId !== 'gratis') {
+    const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
+    if (!selectedPlan || !selectedPlan.ctaLink) {
+      errorBox.textContent = 'Dit plan is nog niet beschikbaar.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    // Sla alle formulierdata op zodat we die na betaling kunnen herstellen
+    sessionStorage.setItem('mp_pending_session', JSON.stringify({
+      category, organizerName, organizerEmail, organizerRole,
+      organizerSeesDocument, sendInvites, participantNames, participantEmails,
+      selectedPlanId
+    }));
+
+    // Stuur door naar Stripe
+    window.location.href = selectedPlan.ctaLink;
+    return;
+  }
+
+  // Gratis plan: meteen sessie aanmaken
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty });
+});
+
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty }) {
+  const errorBox = document.getElementById('error');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
@@ -219,7 +301,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
           <a href="${waLink}" target="_blank" class="btn whatsapp">Verstuur via WhatsApp</a>
         </div>`;
       list.appendChild(block);
-      block.querySelector('button').addEventListener('click', (e) => copyLink(e.currentTarget, fullLink));
+      block.querySelector('button').addEventListener('click', (ev) => copyLink(ev.currentTarget, fullLink));
 
       if (sendInvites && !p.isOrganizer) {
         const matchIndex = participantNames.indexOf(p.name);
@@ -246,6 +328,29 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.style.display = 'block';
+  }
+}
+
+// Na terugkeer van Stripe: herstel formulierdata en maak sessie aan
+window.addEventListener('DOMContentLoaded', async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const pending = sessionStorage.getItem('mp_pending_session');
+
+  if (urlParams.get('paid') === 'true' && pending) {
+    sessionStorage.removeItem('mp_pending_session');
+    const data = JSON.parse(pending);
+
+    // Toon een laadbericht
+    document.getElementById('newSessionForm').style.display = 'none';
+    document.getElementById('error').style.display = 'none';
+    const app = document.querySelector('.app-wrap');
+    const loader = document.createElement('div');
+    loader.className = 'status-box';
+    loader.textContent = 'Betaling ontvangen, je sessie wordt aangemaakt...';
+    app.appendChild(loader);
+
+    await createSession(data);
+    loader.remove();
   }
 });
 </script>
