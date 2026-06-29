@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Getuigenissen, Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html">Prijzen</a>
+    <a href="/testimonials.html" class="current">Getuigenissen</a>
+    <a href="/new.html" class="btn">Start een gesprek</a>
+  </div>
+</nav>
+</header>
+
+<section class="section" style="max-width:720px">
+  <span class="label">Getuigenissen</span>
+  <h1 style="font-size:2.2rem;margin-bottom:16px">Verhalen van mensen die elkaar terugvonden</h1>
+  <p style="color:var(--ink-soft);margin-bottom:32px">Heeft Middlepoint jou geholpen? Deel je verhaal hieronder. Je kiest zelf of je naam erbij staat, of dat je anoniem blijft. We lezen elke inzending voor ze hier verschijnt.</p>
+
+  <div id="formBox" class="card" style="margin-bottom:48px">
+    <h3 style="margin-bottom:16px">Deel jouw verhaal</h3>
+    <div id="formMsg" style="display:none;margin-bottom:16px"></div>
+    <form id="testimonialForm">
+      <div class="field">
+        <label for="content">Jouw getuigenis</label>
+        <textarea id="content" required placeholder="Hoe heeft Middlepoint jou geholpen?"></textarea>
+      </div>
+      <div class="field">
+        <label for="displayName">Jouw naam (optioneel)</label>
+        <input type="text" id="displayName" placeholder="bv. Sarah, of laat leeg">
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="isAnonymous">
+        <label for="isAnonymous">Ik wil anoniem blijven (mijn naam wordt niet getoond)</label>
+      </div>
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Versturen ter goedkeuring</button>
+    </form>
+  </div>
+
+  <span class="label">Wat anderen schreven</span>
+  <div id="testimonialsList" style="margin-top:16px">
+    <p style="color:var(--ink-soft)">Even laden...</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <p style="margin:0;font-size:.82rem">Vragen? <a href="mailto:hello@middlepoint.net">hello@middlepoint.net</a></p>
+</footer>
+
+<script>
+async function loadTestimonials() {
+  const list = document.getElementById('testimonialsList');
+  try {
+    const res = await fetch('/.netlify/functions/get-testimonials');
+    const data = await res.json();
+    if (!data.testimonials || data.testimonials.length === 0) {
+      list.innerHTML = '<p style="color:var(--ink-soft)">Nog geen getuigenissen, wees de eerste!</p>';
+      return;
+    }
+    list.innerHTML = data.testimonials.map(t => `
+      <div class="testimonial-card">
+        <p class="quote">"${t.content}"</p>
+        <div class="author">${t.is_anonymous || !t.display_name ? 'Anoniem' : t.display_name}</div>
+      </div>`).join('');
+  } catch (err) {
+    list.innerHTML = '<p style="color:var(--ink-soft)">Kon getuigenissen niet laden.</p>';
+  }
+}
+
+document.getElementById('testimonialForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const content = document.getElementById('content').value.trim();
+  const displayName = document.getElementById('displayName').value.trim();
+  const isAnonymous = document.getElementById('isAnonymous').checked;
+  const msgBox = document.getElementById('formMsg');
+  try {
+    const res = await fetch('/.netlify/functions/submit-testimonial', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, displayName, isAnonymous }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    document.getElementById('testimonialForm').style.display = 'none';
+    msgBox.style.display = 'block';
+    msgBox.style.color = 'var(--sage)';
+    msgBox.textContent = 'Bedankt! We lezen je verhaal en plaatsen het zo snel mogelijk.';
+  } catch (err) {
+    msgBox.style.display = 'block';
+    msgBox.style.color = '#8A4222';
+    msgBox.textContent = err.message;
+  }
+});
+
+loadTestimonials();
+</script>
+</body>
+</html>
