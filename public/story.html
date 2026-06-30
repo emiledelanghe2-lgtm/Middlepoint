@@ -68,7 +68,7 @@ function render(data) {
     const wie = otherNames(data) || 'de andere deelnemer(s)';
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
-      <div class="status-box">Jouw verhaal is opgeslagen. We wachten nu op het verhaal van <strong>${wie}</strong>. Zodra die er is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>`;
+      <div class="status-box">Jouw verhaal is ingediend. We wachten nu op het verhaal van <strong>${wie}</strong>. Zodra die er is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>`;
     setTimeout(load, 10000);
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
@@ -151,7 +151,7 @@ function renderStoryForm(name) {
       Je vult dit in als <strong>${name}</strong>. Is dit niet jouw naam? Sluit deze pagina en vraag de juiste link op bij wie het gesprek startte, of <a href="/find-link.html">vraag je eigen link hier op</a>.
     </div>
     ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
-    <p style="color:var(--ink-soft)">Schrijf zo eerlijk en volledig mogelijk. Niemand anders ziet dit totdat het verwerkt is tot het rapport.</p>
+    <p style="color:var(--ink-soft)">Schrijf zo eerlijk en volledig mogelijk. Niemand anders ziet dit totdat het verwerkt is tot het rapport. Je kan dit rustig opbouwen: bewaar tussentijds als concept, en dien pas in als je echt klaar bent. Na het indienen kan je dit verhaal niet meer aanpassen.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="storyForm">
       <div class="field">
@@ -184,11 +184,22 @@ function renderStoryForm(name) {
         <label for="anon">Vermeld mijn naam niet bij dit specifieke verhaal in het document (anoniem)</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button type="submit" class="btn clay" style="flex:1;padding:14px">Verhaal versturen</button>
-        <button type="button" id="saveDraftBtn" class="btn outline" style="padding:14px 18px">Bewaar als concept</button>
+        <button type="button" id="saveDraftBtn" class="btn outline" style="flex:1;padding:14px">Bewaar als concept</button>
+        <button type="button" id="submitFinalBtn" class="btn clay" style="flex:1;padding:14px">Definitief indienen</button>
       </div>
       <div id="draftSavedMsg" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel. Kom later terug op deze link om verder te werken.</div>
-    </form>`;
+    </form>
+
+    <div id="confirmSubmitModal" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
+        <h3 style="margin-bottom:12px">Definitief indienen?</h3>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je dit verhaal niet meer aanpassen. Weet je zeker dat je klaar bent?</p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="cancelSubmit" class="btn outline" style="flex:1">Nog even wachten</button>
+          <button type="button" id="confirmSubmit" class="btn clay" style="flex:1">Ja, indienen</button>
+        </div>
+      </div>
+    </div>`;
 
   const storyText = document.getElementById('storyText');
 
@@ -231,13 +242,12 @@ function renderStoryForm(name) {
     });
   });
 
-  document.getElementById('storyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const duration = document.getElementById('duration').value;
+  function validateAndOpenModal() {
     const rawContent = storyText.innerText.trim();
     const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
     if (!rawContent) {
-      errorBox.textContent = 'Schrijf eerst je verhaal voor je het verstuurt.';
+      errorBox.textContent = 'Schrijf eerst je verhaal voor je het indient.';
       errorBox.style.display = 'block';
       return;
     }
@@ -246,8 +256,21 @@ function renderStoryForm(name) {
       errorBox.style.display = 'block';
       return;
     }
+    document.getElementById('confirmSubmitModal').style.display = 'flex';
+  }
+
+  document.getElementById('submitFinalBtn').addEventListener('click', validateAndOpenModal);
+  document.getElementById('cancelSubmit').addEventListener('click', () => {
+    document.getElementById('confirmSubmitModal').style.display = 'none';
+  });
+
+  document.getElementById('confirmSubmit').addEventListener('click', async () => {
+    const duration = document.getElementById('duration').value;
+    const rawContent = storyText.innerText.trim();
     const content = `Dit speelt al: ${duration}.\n\n${rawContent}`;
     const isAnonymous = document.getElementById('anon').checked;
+    const errorBox = document.getElementById('error');
+    document.getElementById('confirmSubmitModal').style.display = 'none';
     try {
       const res = await fetch('/.netlify/functions/submit-story', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -276,7 +299,7 @@ function renderFollowupForm(questions, name) {
       Je vult dit in als <strong>${name}</strong>.
     </div>
     ${draftRaw ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
-    <p style="color:var(--ink-soft)">Op basis van beide verhalen willen we nog wat dingen beter begrijpen.</p>
+    <p style="color:var(--ink-soft)">Op basis van beide verhalen willen we nog wat dingen beter begrijpen. Na het indienen kan je je antwoorden niet meer aanpassen.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="followupForm">
       ${questions.map((q, i) => `
@@ -289,11 +312,22 @@ function renderFollowupForm(questions, name) {
         <label for="anon2">Vermeld mijn naam niet bij deze antwoorden (anoniem)</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button type="submit" class="btn clay" style="flex:1;padding:14px">Antwoorden versturen</button>
-        <button type="button" id="saveDraftBtn2" class="btn outline" style="padding:14px 18px">Bewaar als concept</button>
+        <button type="button" id="saveDraftBtn2" class="btn outline" style="flex:1;padding:14px">Bewaar als concept</button>
+        <button type="button" id="submitFinalBtn2" class="btn clay" style="flex:1;padding:14px">Definitief indienen</button>
       </div>
       <div id="draftSavedMsg2" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel.</div>
-    </form>`;
+    </form>
+
+    <div id="confirmSubmitModal2" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
+        <h3 style="margin-bottom:12px">Definitief indienen?</h3>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je deze antwoorden niet meer aanpassen. Weet je zeker dat je klaar bent?</p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="cancelSubmit2" class="btn outline" style="flex:1">Nog even wachten</button>
+          <button type="button" id="confirmSubmit2" class="btn clay" style="flex:1">Ja, indienen</button>
+        </div>
+      </div>
+    </div>`;
 
   function collectDraftAnswers() {
     const obj = {};
@@ -308,13 +342,30 @@ function renderFollowupForm(questions, name) {
     setTimeout(() => { msg.style.display = 'none'; }, 4000);
   });
 
-  document.getElementById('followupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  function validateAndOpenModal2() {
+    const allFilled = Array.from(document.querySelectorAll('[data-q]')).every(t => t.value.trim());
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+    if (!allFilled) {
+      errorBox.textContent = 'Beantwoord eerst alle vragen voor je indient.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    document.getElementById('confirmSubmitModal2').style.display = 'flex';
+  }
+
+  document.getElementById('submitFinalBtn2').addEventListener('click', validateAndOpenModal2);
+  document.getElementById('cancelSubmit2').addEventListener('click', () => {
+    document.getElementById('confirmSubmitModal2').style.display = 'none';
+  });
+
+  document.getElementById('confirmSubmit2').addEventListener('click', async () => {
     const answers = Array.from(document.querySelectorAll('[data-q]'))
       .map(t => `Vraag: ${questions[t.dataset.q]}\nAntwoord: ${t.value.trim()}`)
       .join('\n\n');
     const isAnonymous = document.getElementById('anon2').checked;
     const errorBox = document.getElementById('error');
+    document.getElementById('confirmSubmitModal2').style.display = 'none';
     try {
       const res = await fetch('/.netlify/functions/submit-followups', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -341,7 +392,7 @@ function renderCheckinForm(round, name) {
       Je vult dit in als <strong>${name}</strong>.
     </div>
     ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
-    <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer.</p>
+    <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer. Na het indienen kan je dit niet meer aanpassen.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="checkinForm">
       <div class="field">
@@ -352,11 +403,22 @@ function renderCheckinForm(round, name) {
         <label for="anon3">Vermeld mijn naam niet bij deze aanvulling (anoniem)</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button type="submit" class="btn clay" style="flex:1;padding:14px">Aanvulling versturen</button>
-        <button type="button" id="saveDraftBtn3" class="btn outline" style="padding:14px 18px">Bewaar als concept</button>
+        <button type="button" id="saveDraftBtn3" class="btn outline" style="flex:1;padding:14px">Bewaar als concept</button>
+        <button type="button" id="submitFinalBtn3" class="btn clay" style="flex:1;padding:14px">Definitief indienen</button>
       </div>
       <div id="draftSavedMsg3" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel.</div>
-    </form>`;
+    </form>
+
+    <div id="confirmSubmitModal3" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
+        <h3 style="margin-bottom:12px">Definitief indienen?</h3>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je deze aanvulling niet meer aanpassen.</p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="cancelSubmit3" class="btn outline" style="flex:1">Nog even wachten</button>
+          <button type="button" id="confirmSubmit3" class="btn clay" style="flex:1">Ja, indienen</button>
+        </div>
+      </div>
+    </div>`;
 
   document.getElementById('saveDraftBtn3').addEventListener('click', () => {
     saveDraft(draftSuffix, document.getElementById('checkinText').value);
@@ -365,11 +427,26 @@ function renderCheckinForm(round, name) {
     setTimeout(() => { msg.style.display = 'none'; }, 4000);
   });
 
-  document.getElementById('checkinForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  document.getElementById('submitFinalBtn3').addEventListener('click', () => {
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+    if (!document.getElementById('checkinText').value.trim()) {
+      errorBox.textContent = 'Schrijf eerst je aanvulling voor je indient.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    document.getElementById('confirmSubmitModal3').style.display = 'flex';
+  });
+
+  document.getElementById('cancelSubmit3').addEventListener('click', () => {
+    document.getElementById('confirmSubmitModal3').style.display = 'none';
+  });
+
+  document.getElementById('confirmSubmit3').addEventListener('click', async () => {
     const content = document.getElementById('checkinText').value.trim();
     const isAnonymous = document.getElementById('anon3').checked;
     const errorBox = document.getElementById('error');
+    document.getElementById('confirmSubmitModal3').style.display = 'none';
     try {
       const res = await fetch('/.netlify/functions/submit-checkin', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
