@@ -113,6 +113,14 @@ function renderDoc(data, displayVersion) {
         </div>`).join('')}
     </div>
 
+    ${!doc.includes_followups ? `
+    <div class="doc-section" style="background:var(--clay-soft);border-radius:var(--radius);padding:28px;border-bottom:none">
+      <span class="label">Wil je dieper gaan?</span>
+      <h3>Dit is jullie eerste, vrije inzicht</h3>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 0 18px">Dit document is gebaseerd op jullie eerste verhalen. Met vervolgvragen gaat Middlepoint nog een stap dieper, juist op de punten waar jullie verhalen verschillen. En met check-ins kan je later terugkomen om te zien hoe het evolueert.</p>
+      <a href="/pricing.html" class="btn clay">Bekijk de volledige mogelijkheden</a>
+    </div>` : ''}
+
     <div class="doc-section" style="text-align:center;border-bottom:none">
       <span class="label">Groeidocument</span>
       <h3>Kom later terug</h3>
