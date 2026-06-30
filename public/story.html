@@ -41,6 +41,27 @@ function otherNames(data) {
     .join(' en ');
 }
 
+function attachLinksButton(tok) {
+  const btn = document.getElementById('showLinksBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const box = document.getElementById('linksBox');
+    box.innerHTML = '<p style="color:var(--ink-soft);font-size:.85rem">Even laden...</p>';
+    try {
+      const res = await fetch(`/.netlify/functions/get-session-links?token=${tok}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      box.innerHTML = data.links.map(l => `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <span style="font-size:.82rem;color:var(--ink-soft);min-width:90px">${l.name}${l.isOrganizer ? ' (jij)' : ''}</span>
+          <input type="text" readonly value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
+        </div>`).join('');
+    } catch (err) {
+      box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
+    }
+  });
+}
+
 function render(data) {
   const { participant, session, myEntries, myFollowups } = data;
   const round1Done = myEntries.some(e => e.round === 1);
@@ -56,7 +77,9 @@ function render(data) {
         <a href="/document.html?token=${token}" class="btn clay">Naar het document</a>
         <a href="/" class="btn outline">Terug naar startpagina</a>
       </div>
+      <div style="margin-top:16px"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>
       <p style="margin-top:20px;font-size:.85rem;color:var(--ink-soft)">Bewaar deze pagina (of je e-mail met deze link) om later terug te keren.</p>`;
+    attachLinksButton(token);
     return;
   }
 
@@ -68,8 +91,10 @@ function render(data) {
     const wie = otherNames(data) || 'de andere deelnemer(s)';
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
-      <div class="status-box">Jouw verhaal is ingediend. We wachten nu op het verhaal van <strong>${wie}</strong>. Zodra die er is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>`;
+      <div class="status-box">Jouw verhaal is ingediend. We wachten nu op het verhaal van <strong>${wie}</strong>. Zodra die er is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>
+      ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}`;
     setTimeout(load, 10000);
+    if (participant.isOrganizer) attachLinksButton(token);
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
