@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mijn gesprekken, Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html">Prijzen</a>
+    <a href="/testimonials.html">Getuigenissen</a>
+    <a href="/find-link.html">Link kwijt?</a>
+    <a href="/new.html" class="btn">Start een gesprek</a>
+  </div>
+</nav>
+</header>
+
+<div class="app-wrap" id="app">
+  <div class="status-box">Even laden...</div>
+</div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+const app = document.getElementById('app');
+
+function statusLabel(status) {
+  const labels = {
+    wachten_op_verhalen: 'Wachten op verhalen',
+    verhalen_klaar_vervolgvragen_genereren: 'Vervolgvragen worden voorbereid',
+    wachten_op_vervolgvragen: 'Wachten op vervolgvragen',
+    document_genereren: 'Document wordt opgesteld',
+    klaar: 'Klaar',
+    veiligheid_gestopt: 'Gestopt om veiligheidsredenen',
+  };
+  if ((status || '').startsWith('nieuwe_ronde_')) return 'Check-in bezig';
+  return labels[status] || status;
+}
+
+function planLabel(plan) {
+  const labels = {
+    gratis: 'Gratis',
+    los: 'Eén gesprek',
+    starter: 'Starter',
+    plus: 'Plus',
+    pro: 'Pro',
+  };
+  return labels[plan] || plan;
+}
+
+async function load() {
+  if (!token) {
+    app.innerHTML = `
+      <span class="label">Mijn gesprekken</span>
+      <h1>Inloggen vereist</h1>
+      <p style="color:var(--ink-soft)">Gebruik de link uit je e-mail om je gesprekken te bekijken, of vraag een nieuwe link op.</p>
+      <a href="/login.html" class="btn clay">Naar inlogpagina</a>`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`/.netlify/functions/get-my-sessions?token=${token}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      app.innerHTML = `
+        <span class="label">Fout</span>
+        <h1>Link ongeldig of verlopen</h1>
+        <p style="color:var(--ink-soft)">${data.error}</p>
+        <a href="/login.html" class="btn clay">Vraag een nieuwe link op</a>`;
+      return;
+    }
+
+    if (data.sessions.length === 0) {
+      app.innerHTML = `
+        <span class="label">Mijn gesprekken</span>
+        <h1>Geen gesprekken gevonden</h1>
+        <p style="color:var(--ink-soft)">We vonden geen gesprekken gekoppeld aan ${data.email}.</p>
+        <a href="/new.html" class="btn clay">Start een nieuw gesprek</a>`;
+      return;
+    }
+
+    app.innerHTML = `
+      <span class="label">Mijn gesprekken</span>
+      <h1>Welkom terug</h1>
+      <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong>${data.email}</strong></p>
+      <div style="margin-bottom:32px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
+      </div>
+      <div id="sessionsList"></div>
+      <div style="margin-top:32px">
+        <a href="/new.html" class="btn outline">Start een nieuw gesprek</a>
+      </div>`;
+
+    const list = document.getElementById('sessionsList');
+    data.sessions.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'person-block';
+      card.style.marginBottom = '16px';
+
+      const isKlaar = s.status === 'klaar';
+      const statusText = statusLabel(s.status);
+
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <div>
+            <div class="who">${s.category}</div>
+            <div style="font-size:.85rem;color:var(--ink-soft);margin-top:4px">
+              ${new Date(s.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+          </div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:4px 10px;border-radius:999px;background:${isKlaar ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar ? 'var(--sage)' : 'var(--clay)'}">
+            ${statusText}
+          </span>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="${s.accessLink}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
+          ${isKlaar ? `<a href="${s.documentLink}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
+        </div>`;
+      list.appendChild(card);
+    });
+
+  } catch (err) {
+    app.innerHTML = `<div class="error-box">Er ging iets mis: ${err.message}</div>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
