@@ -10,17 +10,26 @@
 <header class="nav-bar">
 <nav class="nav">
   <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html">Prijzen</a>
+    <a href="/testimonials.html">Getuigenissen</a>
+    <a href="/login.html">Mijn gesprekken</a>
+    <a href="/new.html" class="btn">Start een gesprek</a>
+  </div>
 </nav>
 </header>
-
 <div class="app-wrap">
+  <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
   <span class="label">Link verloren?</span>
   <h1>Vraag je link opnieuw op</h1>
   <p style="color:var(--ink-soft)">Vul het e-mailadres in dat je gebruikte bij het starten of invullen van een gesprek. We sturen je een overzicht van je actieve gesprekken.</p>
-
+  <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px">
+    <p style="margin:0;font-size:.9rem">Heb je al een account? <a href="/login.html" style="font-weight:600">Log in via je e-mailadres</a> om al je gesprekken en documenten terug te vinden.</p>
+  </div>
   <div id="error" class="error-box" style="display:none"></div>
   <div id="success" class="status-box" style="display:none">Als dit e-mailadres bij ons gekend is, ontvang je binnen enkele minuten een mail met je link(s). Geen mail ontvangen? Dan is dit adres mogelijk niet gebruikt bij een gesprek, of vond je gesprek plaats zonder e-mailadres in te vullen.</div>
-
   <form id="findForm">
     <div class="field">
       <label for="email">Jouw e-mailadres</label>
@@ -29,7 +38,6 @@
     <button type="submit" class="btn clay" style="width:100%;padding:14px">Stuur mijn link(s)</button>
   </form>
 </div>
-
 <script>
 document.getElementById('findForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -38,7 +46,6 @@ document.getElementById('findForm').addEventListener('submit', async (e) => {
   errorBox.style.display = 'none';
   successBox.style.display = 'none';
   const email = document.getElementById('email').value.trim();
-
   try {
     const res = await fetch('/.netlify/functions/find-link', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
