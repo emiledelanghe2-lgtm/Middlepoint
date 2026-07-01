@@ -1,22 +1,16 @@
 const { getSupabase } = require('./_supabase');
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
-
   try {
     const body = JSON.parse(event.body || '{}');
-    const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument } = body;
-
+    const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan } = body;
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
       return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
     }
-
     const emails = Array.isArray(participantEmails) ? participantEmails : [];
-
     const supabase = getSupabase();
-
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
       .insert({
@@ -24,16 +18,13 @@ exports.handler = async (event) => {
         organizer_role: organizerRole || null,
         organizer_email: organizerEmail || null,
         organizer_sees_document: organizerSeesDocument !== false,
+        plan: plan || 'gratis',
       })
       .select()
       .single();
-
     if (sessionError) throw sessionError;
 
-    // De aanmaker is standaard ook deelnemer, tenzij hij puur organisator is (bv. HR/therapeut
-    // die zelf geen partij is in het conflict)
-    const isOrganizerAlsoParticipant = !organizerRole; // bv. koppel/familie: jij bent zelf partij
-
+    const isOrganizerAlsoParticipant = !organizerRole;
     let participantsToInsert;
     if (isOrganizerAlsoParticipant) {
       participantsToInsert = [organizerName, ...participantNames].map((name, i) => ({
@@ -49,8 +40,6 @@ exports.handler = async (event) => {
         is_organizer: false,
         email: emails[i] || null,
       }));
-      // Als er een puur-organisator-rol is (HR/therapeut), maken we een apart organisator-record aan
-      // zonder dat die zelf een verhaal moet invullen.
       participantsToInsert.push({
         session_id: session.id,
         display_name: organizerName,
@@ -58,14 +47,11 @@ exports.handler = async (event) => {
         email: organizerEmail || null,
       });
     }
-
     const { data: participants, error: participantsError } = await supabase
       .from('participants')
       .insert(participantsToInsert)
       .select();
-
     if (participantsError) throw participantsError;
-
     return {
       statusCode: 200,
       body: JSON.stringify({
