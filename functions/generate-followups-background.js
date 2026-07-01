@@ -23,9 +23,6 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-// Strenge maar terughoudende veiligheidscheck: enkel reageren op ONDUBBELZINNIGE, acute
-// ernst. Gewone conflicten (een klap, verwijten, ontrouw, ruzie) zijn GEEN reden om te
-// stoppen -- dat is precies waar dit product wel bij moet helpen. Bij twijfel: niet stoppen.
 async function checkSafety(storiesText) {
   const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest verhalen van mensen over een conflict. Je taak: enkel signaleren bij ONDUBBELZINNIGE, ACUTE ernst -- niet bij gewone relationele/fysieke conflicten.
 
@@ -63,7 +60,6 @@ exports.handler = async (event) => {
       .eq('session_id', sessionId)
       .eq('round', 1);
 
-    // Bouw een overzicht van alle verhalen, met naam, voor de AI
     const storiesText = realParticipants
       .map(p => {
         const entry = entries.find(e => e.participant_id === p.id);
@@ -71,7 +67,7 @@ exports.handler = async (event) => {
       })
       .join('\n\n');
 
-    // Veiligheidscheck eerst -- enkel stoppen bij ondubbelzinnige, acute ernst
+    // Veiligheidscheck eerst
     const safety = await checkSafety(storiesText);
     if (safety.stop) {
       await supabase
@@ -82,10 +78,32 @@ exports.handler = async (event) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', sessionId);
-
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
+    // PLAN-ONDERSCHEID: gratis plan slaat vervolgvragen over en gaat direct naar document genereren
+    const sessionPlan = session.plan || 'gratis';
+    if (sessionPlan === 'gratis') {
+      // Geen vervolgvragen bij gratis plan, direct document genereren
+      await supabase
+        .from('sessions')
+        .update({ status: 'document_genereren', updated_at: new Date().toISOString() })
+        .eq('id', sessionId);
+
+      const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
+      try {
+        await fetch(`${siteUrl}/.netlify/functions/generate-document-background`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        });
+      } catch (e) {
+        console.error('Kon document-background niet triggeren:', e);
+      }
+      return { statusCode: 200, body: JSON.stringify({ ok: true, skippedFollowups: true }) };
+    }
+
+    // Betaald plan: vervolgvragen genereren zoals normaal
     const systemPrompt = `Je bent een neutrale, empathische conflictbemiddelaar. Je leest het verhaal van meerdere mensen over hetzelfde conflict (categorie: ${session.category}). Je taak: per persoon 2-4 scherpe, niet-beschuldigende vervolgvragen formuleren die helpen om dieper te graven naar de werkelijke kern van het probleem, vaak is wat iemand eerst vertelt slechts het topje van de ijsberg. Gebruik vooral tegenstellingen, onduidelijkheden, of dingen die in het verhaal van de ANDERE persoon staan maar niet in dat van deze persoon, om gerichte vragen te stellen. Toon: warm, nieuwsgierig, niet rechterlijk. Gebruik in je tekst nooit het lange streepje (—); schrijf in volledige zinnen met punten en komma's. Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit formaat: {"vragen_per_persoon": [{"naam": "...", "vragen": ["...", "..."]}]}`;
 
     const userPrompt = `Hier zijn de verhalen:\n\n${storiesText}\n\nGeef per persoon hun vervolgvragen.`;
