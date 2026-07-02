@@ -16,7 +16,7 @@
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
-    <a href="/find-link.html">Link kwijt?</a>
+    <a href="/login.html">Mijn gesprekken</a>
   </div>
 </nav>
 </header>
@@ -31,7 +31,6 @@
 
   <form id="newSessionForm">
 
-    <!-- PLAN KIEZEN -->
     <div class="field">
       <label>Kies je plan</label>
       <div id="planSelector" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
@@ -76,7 +75,7 @@
     <div class="field">
       <label for="organizerEmail">Jouw e-mailadres (verplicht)</label>
       <input type="email" id="organizerEmail" required placeholder="jij@email.be">
-      <div class="help">Zo kunnen we je laten weten wanneer het document klaar is, en kan je je link later terugvinden via <a href="/find-link.html">deze pagina</a> als je hem verliest.</div>
+      <div class="help">Zo kunnen we je laten weten wanneer het document klaar is, en kan je je gesprekken later terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
     </div>
 
     <div class="checkbox-row">
@@ -131,7 +130,6 @@
 </div>
 
 <script>
-// Plan selector opbouwen vanuit pricing-config.js
 const planSelector = document.getElementById('planSelector');
 let selectedPlanId = 'gratis';
 
@@ -152,14 +150,12 @@ PRICING_CONFIG.plans.forEach(plan => {
 
   const radio = row.querySelector('input[type=radio]');
   radio.addEventListener('change', () => {
-    // Reset alle borders
     planSelector.querySelectorAll('label').forEach(l => l.style.borderColor = 'var(--line)');
     row.style.borderColor = 'var(--clay)';
     selectedPlanId = plan.id;
     updatePlanNotice();
   });
 
-  // Highlight gratis standaard
   if (plan.id === 'gratis') row.style.borderColor = 'var(--clay)';
 });
 
@@ -243,7 +239,6 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     return;
   }
 
-  // Als betaald plan: sla formulierdata op in sessionStorage en stuur door naar Stripe
   if (selectedPlanId !== 'gratis') {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (!selectedPlan || !selectedPlan.ctaLink) {
@@ -251,30 +246,25 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
       errorBox.style.display = 'block';
       return;
     }
-
-    // Sla alle formulierdata op zodat we die na betaling kunnen herstellen
     sessionStorage.setItem('mp_pending_session', JSON.stringify({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, sendInvites, participantNames, participantEmails,
       selectedPlanId
     }));
-
-    // Stuur door naar Stripe
     window.location.href = selectedPlan.ctaLink;
     return;
   }
 
-  // Gratis plan: meteen sessie aanmaken
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId });
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan }) {
   const errorBox = document.getElementById('error');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument }),
+      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
@@ -331,7 +321,6 @@ async function createSession({ category, organizerName, organizerEmail, organize
   }
 }
 
-// Na terugkeer van Stripe: herstel formulierdata en maak sessie aan
 window.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const pending = sessionStorage.getItem('mp_pending_session');
@@ -340,9 +329,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     sessionStorage.removeItem('mp_pending_session');
     const data = JSON.parse(pending);
 
-    // Toon een laadbericht
     document.getElementById('newSessionForm').style.display = 'none';
-    document.getElementById('error').style.display = 'none';
     const app = document.querySelector('.app-wrap');
     const loader = document.createElement('div');
     loader.className = 'status-box';
