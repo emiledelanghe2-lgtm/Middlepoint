@@ -44,7 +44,7 @@
 
     <div id="freeNotice" style="margin-bottom:20px">
       <div class="card" style="background:var(--clay-soft);border:none;padding:16px">
-        <p style="margin:0;font-size:.9rem">Starten is gratis (proefversie). Je krijgt dan één volledig document, maar nog geen vervolgvragen en geen latere check-ins. Voor het volledige traject, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
+        <p style="margin:0;font-size:.9rem">Starten is gratis. Je krijgt een eerste eerlijk overzicht (samenvatting en gedeelde grond). Voor het volledige document met inzichten, tips en concrete gesprekshulp, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
       </div>
     </div>
 
@@ -101,13 +101,26 @@
     <div class="field">
       <label>Naam/namen van de andere deelnemer(s)</label>
       <div id="participantInputs">
-        <div style="display:flex;gap:8px;margin-bottom:10px">
+        <div style="display:flex;gap:8px;margin-bottom:4px">
           <input type="text" class="participant-name" placeholder="bv. Tom" style="flex:1">
           <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">
         </div>
+        <div class="participant-email-warning" style="display:none;font-size:.82rem;color:var(--clay);margin-bottom:8px">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>
       </div>
-      <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem">+ Nog een deelnemer toevoegen</button>
+      <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:6px">+ Nog een deelnemer toevoegen</button>
       <div class="help">Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
+    </div>
+
+    <div id="followupOption" style="display:none;margin-bottom:20px">
+      <div class="card" style="padding:18px">
+        <div class="checkbox-row" style="margin-bottom:0">
+          <input type="checkbox" id="includeFollowups" checked>
+          <label for="includeFollowups">
+            <strong>Diepgaand traject met vervolgvragen</strong>
+            <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">Na de eerste verhalen stelt Middlepoint elk gerichte vervolgvragen om dieper te graven. Vink uit als je enkel een snel overzicht wil.</div>
+          </label>
+        </div>
+      </div>
     </div>
 
     <div class="checkbox-row">
@@ -163,6 +176,7 @@ function updatePlanNotice() {
   const isFree = selectedPlanId === 'gratis';
   document.getElementById('freeNotice').style.display = isFree ? 'block' : 'none';
   document.getElementById('paidNotice').style.display = isFree ? 'none' : 'block';
+  document.getElementById('followupOption').style.display = isFree ? 'none' : 'block';
   document.getElementById('submitBtn').textContent = isFree ? 'Sessie aanmaken' : 'Verder naar betaling';
 }
 
@@ -174,16 +188,32 @@ document.getElementById('isThirdParty').addEventListener('change', (e) => {
   document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
 });
 
-document.getElementById('addParticipant').addEventListener('click', () => {
-  const wrap = document.getElementById('participantInputs');
+function addParticipantRow(wrap) {
+  const wrapper = document.createElement('div');
   const row = document.createElement('div');
-  row.style.display = 'flex';
-  row.style.gap = '8px';
-  row.style.marginBottom = '10px';
+  row.style.cssText = 'display:flex;gap:8px;margin-bottom:4px';
   row.innerHTML = `
     <input type="text" class="participant-name" placeholder="Naam" style="flex:1">
     <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">`;
-  wrap.appendChild(row);
+  const warning = document.createElement('div');
+  warning.className = 'participant-email-warning';
+  warning.style.cssText = 'display:none;font-size:.82rem;color:var(--clay);margin-bottom:8px';
+  warning.textContent = 'Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.';
+  wrapper.appendChild(row);
+  wrapper.appendChild(warning);
+  wrap.appendChild(wrapper);
+
+  row.querySelector('.participant-email').addEventListener('blur', (e) => {
+    warning.style.display = e.target.value.trim() ? 'none' : 'block';
+  });
+}
+
+document.getElementById('participantInputs').querySelector('.participant-email').addEventListener('blur', (e) => {
+  document.querySelector('.participant-email-warning').style.display = e.target.value.trim() ? 'none' : 'block';
+});
+
+document.getElementById('addParticipant').addEventListener('click', () => {
+  addParticipantRow(document.getElementById('participantInputs'));
 });
 
 function copyLink(btn, link) {
@@ -221,6 +251,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
+  const includeFollowups = selectedPlanId === 'gratis' ? false : document.getElementById('includeFollowups').checked;
 
   if (!organizerEmail) {
     errorBox.textContent = 'Jouw e-mailadres is verplicht.';
@@ -249,22 +280,22 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     sessionStorage.setItem('mp_pending_session', JSON.stringify({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, sendInvites, participantNames, participantEmails,
-      selectedPlanId
+      selectedPlanId, includeFollowups
     }));
     window.location.href = selectedPlan.ctaLink;
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId, includeFollowups });
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan, includeFollowups }) {
   const errorBox = document.getElementById('error');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan }),
+      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan, includeFollowups }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
@@ -328,14 +359,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (urlParams.get('paid') === 'true' && pending) {
     sessionStorage.removeItem('mp_pending_session');
     const data = JSON.parse(pending);
-
     document.getElementById('newSessionForm').style.display = 'none';
     const app = document.querySelector('.app-wrap');
     const loader = document.createElement('div');
     loader.className = 'status-box';
     loader.textContent = 'Betaling ontvangen, je sessie wordt aangemaakt...';
     app.appendChild(loader);
-
     await createSession(data);
     loader.remove();
   }
