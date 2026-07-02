@@ -54,8 +54,8 @@
   </div>
   <div class="grid-3">
     <div class="card">
-      <h3>Eén gesprek</h3>
-      <p>Het volledige traject voor één conflict: beide kanten schrijven hun verhaal, beantwoorden gerichte vervolgvragen, en krijgen samen één objectief overzicht met inzichten en tips.</p>
+      <h3>Gratis vs betaald</h3>
+      <p>De gratis versie geeft een eerste eerlijk overzicht: een samenvatting van het conflict en waar jullie het al over eens zijn. Het volledige document met inzichten, tips en gesprekshulp is beschikbaar vanaf het betaalde plan.</p>
     </div>
     <div class="card">
       <h3>Vervolgvragen</h3>
@@ -77,6 +77,15 @@
       <h3>Anonimiteit</h3>
       <p>Beschikbaar in elk plan: bij meer dan 2 deelnemers kan iedereen per opmerking kiezen om die zonder naam te delen.</p>
     </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="card" style="max-width:640px;margin:0 auto;text-align:center;padding:36px">
+    <span class="label" style="display:block;margin-bottom:12px">Op maat</span>
+    <h3 style="font-size:1.4rem;margin-bottom:12px">Een plan specifiek voor jouw situatie?</h3>
+    <p style="color:var(--ink-soft);margin-bottom:24px">Grotere organisatie, specifieke noden, of wil je weten wat Middlepoint voor jou kan betekenen? Neem contact op en we bekijken samen wat het beste past.</p>
+    <a href="mailto:middlepoint@zohomail.eu?subject=Maatwerkplan Middlepoint" class="btn clay" style="padding:12px 28px">Contacteer ons</a>
   </div>
 </section>
 
@@ -109,6 +118,7 @@ PRICING_CONFIG.plans.forEach(plan => {
       <li><span class="check">✓</span> ${sessionLabel}</li>
       <li>${plan.includesFollowups ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Vervolgvragen</li>
       <li>${plan.includesCheckins ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Groeidocument / check-ins</li>
+      <li>${plan.id === 'gratis' ? '<span class="cross">–</span>' : '<span class="check">✓</span>'} Volledig document met inzichten en tips</li>
       <li>${plan.includesProfessionalInsights ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Inzichten voor begeleider</li>
       <li><span class="check">✓</span> Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>
     </ul>
