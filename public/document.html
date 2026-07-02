@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jullie document, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
+<style>
+@media print {
+  .nav-bar, .no-print { display: none !important; }
+  body { background: white; }
+  .app-wrap { max-width: 100%; padding: 20px; }
+  .doc-section { break-inside: avoid; }
+}
+</style>
 </head>
 <body>
 <header class="nav-bar">
@@ -35,11 +43,27 @@ async function load() {
   renderDoc(data);
 }
 
+function downloadPDF() {
+  window.print();
+}
+
+async function shareViaEmail(token) {
+  const link = window.location.href;
+  const subject = encodeURIComponent('Jullie Middlepoint document');
+  const body = encodeURIComponent(`Hier is de link naar jullie document: ${link}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+function shareViaWhatsApp() {
+  const link = window.location.href;
+  const text = encodeURIComponent(`Bekijk ons Middlepoint document hier: ${link}`);
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
 function renderDoc(data, displayVersion) {
-  const allVersions = data.documents; // altijd gesorteerd, hoogste versie eerst
+  const allVersions = data.documents;
   const doc = displayVersion ? allVersions.find(d => d.version === displayVersion) : allVersions[0];
   const mostRecentVersion = allVersions[0].version;
-  const myName = data.myName;
 
   const perspectiveEntries = Object.entries(doc.perspectives || {});
   const tipEntries = Object.entries(doc.tips || {});
@@ -57,6 +81,13 @@ function renderDoc(data, displayVersion) {
   app.innerHTML = `
     <span class="label">Versie ${doc.version}${allVersions.length > 1 ? ` van ${allVersions.length}` : ''}</span>
     <h1>Jullie document</h1>
+
+    <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+      <button onclick="downloadPDF()" class="btn outline" style="padding:9px 16px;font-size:.85rem">⬇ Download als PDF</button>
+      <button onclick="shareViaEmail()" class="btn outline" style="padding:9px 16px;font-size:.85rem">✉ Verstuur via mail</button>
+      <button onclick="shareViaWhatsApp()" class="btn whatsapp" style="padding:9px 16px;font-size:.85rem">Verstuur via WhatsApp</button>
+    </div>
+
     ${versionPicker}
 
     <div class="doc-section">
@@ -114,14 +145,14 @@ function renderDoc(data, displayVersion) {
     </div>
 
     ${!doc.includes_followups ? `
-    <div class="doc-section" style="background:var(--clay-soft);border-radius:var(--radius);padding:28px;border-bottom:none">
+    <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:28px;border-bottom:none">
       <span class="label">Wil je dieper gaan?</span>
       <h3>Dit is jullie eerste, vrije inzicht</h3>
       <p style="color:var(--ink-soft);max-width:480px;margin:0 0 18px">Dit document is gebaseerd op jullie eerste verhalen. Met vervolgvragen gaat Middlepoint nog een stap dieper, juist op de punten waar jullie verhalen verschillen. En met check-ins kan je later terugkomen om te zien hoe het evolueert.</p>
       <a href="/pricing.html" class="btn clay">Bekijk de volledige mogelijkheden</a>
     </div>` : ''}
 
-    <div class="doc-section" style="text-align:center;border-bottom:none">
+    <div class="doc-section no-print" style="text-align:center;border-bottom:none">
       <span class="label">Groeidocument</span>
       <h3>Kom later terug</h3>
       <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een nieuwe check-in starten. Beiden vullen opnieuw aan, en er komt een nieuwe versie van het document.</p>
