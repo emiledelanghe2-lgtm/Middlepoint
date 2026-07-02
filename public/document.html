@@ -43,27 +43,25 @@ async function load() {
   renderDoc(data);
 }
 
-function downloadPDF() {
-  window.print();
+function downloadPDF() { window.print(); }
+
+function shareViaWhatsApp() {
+  const link = window.location.href;
+  window.open(`https://wa.me/?text=${encodeURIComponent('Bekijk ons Middlepoint document: ' + link)}`, '_blank');
 }
 
-async function shareViaEmail(token) {
+function shareViaEmail() {
   const link = window.location.href;
   const subject = encodeURIComponent('Jullie Middlepoint document');
   const body = encodeURIComponent(`Hier is de link naar jullie document: ${link}`);
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
-function shareViaWhatsApp() {
-  const link = window.location.href;
-  const text = encodeURIComponent(`Bekijk ons Middlepoint document hier: ${link}`);
-  window.open(`https://wa.me/?text=${text}`, '_blank');
-}
-
 function renderDoc(data, displayVersion) {
   const allVersions = data.documents;
   const doc = displayVersion ? allVersions.find(d => d.version === displayVersion) : allVersions[0];
   const mostRecentVersion = allVersions[0].version;
+  const isPaid = data.isPaid || false;
 
   const perspectiveEntries = Object.entries(doc.perspectives || {});
   const tipEntries = Object.entries(doc.tips || {});
@@ -102,6 +100,7 @@ function renderDoc(data, displayVersion) {
       <p>${doc.common_ground}</p>
     </div>
 
+    ${isPaid ? `
     <div class="doc-section">
       <span class="label">Perspectief</span>
       <h3>Hoe de ander het ziet</h3>
@@ -143,21 +142,30 @@ function renderDoc(data, displayVersion) {
           <ul class="tip-list">${phrases.map(p => `<li>"${p}"</li>`).join('')}</ul>
         </div>`).join('')}
     </div>
-
-    ${!doc.includes_followups ? `
+    ` : `
     <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:28px;border-bottom:none">
-      <span class="label">Wil je dieper gaan?</span>
-      <h3>Dit is jullie eerste, vrije inzicht</h3>
-      <p style="color:var(--ink-soft);max-width:480px;margin:0 0 18px">Dit document is gebaseerd op jullie eerste verhalen. Met vervolgvragen gaat Middlepoint nog een stap dieper, juist op de punten waar jullie verhalen verschillen. En met check-ins kan je later terugkomen om te zien hoe het evolueert.</p>
+      <span class="label">Er is meer</span>
+      <h3>Dit is jullie eerste inzicht</h3>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 0 12px">Het volledige document bevat ook:</p>
+      <ul style="color:var(--ink-soft);margin:0 0 18px;padding-left:20px">
+        <li>Hoe de ander het werkelijk ziet, uitgelegd in jouw taal</li>
+        <li>Persoonlijke tips per persoon</li>
+        <li>Concrete vragen om het gesprek te openen</li>
+        <li>Zinnen die je letterlijk kan gebruiken</li>
+        <li>Vervolgvragen die dieper graven</li>
+        <li>Check-ins om later op terug te komen</li>
+      </ul>
       <a href="/pricing.html" class="btn clay">Bekijk de volledige mogelijkheden</a>
-    </div>` : ''}
+    </div>`}
 
     <div class="doc-section no-print" style="text-align:center;border-bottom:none">
+      ${isPaid ? `
       <span class="label">Groeidocument</span>
       <h3>Kom later terug</h3>
       <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een nieuwe check-in starten. Beiden vullen opnieuw aan, en er komt een nieuwe versie van het document.</p>
       <button id="startRoundBtn" class="btn clay">Start een nieuwe check-in</button>
       <div id="roundMsg" style="margin-top:12px;color:var(--sage);font-size:.9rem"></div>
+      ` : ''}
       <div style="margin-top:24px"><a href="/" class="btn outline">Terug naar startpagina</a></div>
     </div>
   `;
@@ -168,15 +176,17 @@ function renderDoc(data, displayVersion) {
     });
   }
 
-  document.getElementById('startRoundBtn').addEventListener('click', async () => {
-    const res = await fetch('/.netlify/functions/start-new-round', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+  if (isPaid) {
+    document.getElementById('startRoundBtn').addEventListener('click', async () => {
+      const res = await fetch('/.netlify/functions/start-new-round', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+      });
+      const result = await res.json();
+      const msg = document.getElementById('roundMsg');
+      if (!res.ok) { msg.style.color = '#8A4222'; msg.textContent = result.error; return; }
+      msg.textContent = 'Nieuwe ronde gestart! Ga terug naar je eigen link om aan te vullen.';
     });
-    const result = await res.json();
-    const msg = document.getElementById('roundMsg');
-    if (!res.ok) { msg.style.color = '#8A4222'; msg.textContent = result.error; return; }
-    msg.textContent = 'Nieuwe ronde gestart! Ga terug naar je eigen link om aan te vullen.';
-  });
+  }
 }
 
 load();
