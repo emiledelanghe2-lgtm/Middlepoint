@@ -5,7 +5,7 @@ exports.handler = async (event) => {
   }
   try {
     const body = JSON.parse(event.body || '{}');
-    const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan } = body;
+    const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan, includeFollowups } = body;
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
       return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
     }
@@ -19,6 +19,7 @@ exports.handler = async (event) => {
         organizer_email: organizerEmail || null,
         organizer_sees_document: organizerSeesDocument !== false,
         plan: plan || 'gratis',
+        include_followups: includeFollowups !== false,
       })
       .select()
       .single();
