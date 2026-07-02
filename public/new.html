@@ -18,6 +18,7 @@
 .plan-pill-name{ font-weight:600; font-size:.88rem; }
 .plan-pill-price{ font-family:'IBM Plex Mono',monospace; font-size:.75rem; color:var(--clay); }
 .plan-pill-desc{ font-size:.75rem; color:var(--ink-soft); line-height:1.4; }
+.limit-box{ border:1px solid var(--clay); background:var(--clay-soft); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
 </style>
 </head>
 <body>
@@ -40,10 +41,13 @@
   <p style="color:var(--ink-soft);margin-bottom:24px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
 
   <div id="error" class="error-box" style="display:none"></div>
+  <div id="limitBox" class="limit-box" style="display:none">
+    <p style="margin:0 0 12px;font-weight:600" id="limitMsg"></p>
+    <a href="/pricing.html" class="btn clay" style="padding:10px 20px;font-size:.9rem">Bekijk plannen</a>
+  </div>
 
   <form id="newSessionForm">
 
-    <!-- SECTIE 1: PLAN -->
     <div class="form-section">
       <span class="form-section-title">1. Kies je plan</span>
       <div class="plan-grid" id="planSelector"></div>
@@ -51,7 +55,6 @@
       <div id="paidNotice" style="display:none;margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Na het invullen ga je naar de betaalpagina. Je links verschijnen zodra de betaling klaar is.</div>
     </div>
 
-    <!-- SECTIE 2: JOUW GEGEVENS -->
     <div class="form-section">
       <span class="form-section-title">2. Jouw gegevens</span>
       <div class="field">
@@ -101,7 +104,6 @@
       </div>
     </div>
 
-    <!-- SECTIE 3: DEELNEMERS -->
     <div class="form-section">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
       <div id="participantInputs"></div>
@@ -112,7 +114,6 @@
       </div>
     </div>
 
-    <!-- SECTIE 4: EXTRA OPTIES (enkel bij betaald) -->
     <div class="form-section" id="extraOptions" style="display:none">
       <span class="form-section-title">4. Extra opties</span>
       <div class="checkbox-row" style="margin-bottom:0">
@@ -213,7 +214,9 @@ function whatsappLink(name, fromName, link) {
 document.getElementById('newSessionForm').addEventListener('submit', async e => {
   e.preventDefault();
   const errorBox = document.getElementById('error');
+  const limitBox = document.getElementById('limitBox');
   errorBox.style.display = 'none';
+  limitBox.style.display = 'none';
 
   let category = document.getElementById('category').value;
   if (category === 'andere') {
@@ -264,6 +267,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
 async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan, includeFollowups }) {
   const errorBox = document.getElementById('error');
+  const limitBox = document.getElementById('limitBox');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
@@ -271,6 +275,14 @@ async function createSession({ category, organizerName, organizerEmail, organize
       body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan, includeFollowups }),
     });
     const data = await res.json();
+
+    if (res.status === 403 && data.limitReached) {
+      document.getElementById('limitMsg').textContent = data.error;
+      limitBox.style.display = 'block';
+      limitBox.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
 
     document.getElementById('newSessionForm').style.display = 'none';
