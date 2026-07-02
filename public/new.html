@@ -6,6 +6,19 @@
 <title>Nieuw gesprek starten, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 <script src="/pricing-config.js"></script>
+<style>
+.form-section{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+.form-section-title{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--clay); margin-bottom:16px; display:block; }
+.plan-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+@media(min-width:640px){ .plan-grid{ grid-template-columns:repeat(3,1fr); } }
+@media(min-width:900px){ .plan-grid{ grid-template-columns:repeat(5,1fr); } }
+.plan-pill{ border:1.5px solid var(--line); border-radius:10px; padding:12px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:border-color .15s; }
+.plan-pill input{ display:none; }
+.plan-pill.selected{ border-color:var(--clay); background:var(--clay-soft); }
+.plan-pill-name{ font-weight:600; font-size:.88rem; }
+.plan-pill-price{ font-family:'IBM Plex Mono',monospace; font-size:.75rem; color:var(--clay); }
+.plan-pill-desc{ font-size:.75rem; color:var(--ink-soft); line-height:1.4; }
+</style>
 </head>
 <body>
 <header class="nav-bar">
@@ -23,109 +36,92 @@
 
 <div class="app-wrap">
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
-  <span class="label">Stap 1 van 1</span>
   <h1>Start een nieuw gesprek</h1>
-  <p style="color:var(--ink-soft)">Vul dit kort in. Daarna krijg je links om door te sturen naar iedereen die moet deelnemen.</p>
+  <p style="color:var(--ink-soft);margin-bottom:24px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
 
   <div id="error" class="error-box" style="display:none"></div>
 
   <form id="newSessionForm">
 
-    <div class="field">
-      <label>Kies je plan</label>
-      <div id="planSelector" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
+    <!-- SECTIE 1: PLAN -->
+    <div class="form-section">
+      <span class="form-section-title">1. Kies je plan</span>
+      <div class="plan-grid" id="planSelector"></div>
+      <div id="freeNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">De gratis versie geeft een eerste overzicht. Voor vervolgvragen, tips en gesprekshulp, kies een betaald plan. <a href="/pricing.html">Meer info</a></div>
+      <div id="paidNotice" style="display:none;margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Na het invullen ga je naar de betaalpagina. Je links verschijnen zodra de betaling klaar is.</div>
     </div>
 
-    <div id="paidNotice" style="display:none;margin-bottom:20px">
-      <div class="card" style="background:var(--clay-soft);border:none;padding:16px">
-        <p style="margin:0;font-size:.9rem">Na het invullen stuur je door naar de betaalpagina. Je ontvangt je links zodra de betaling afgerond is.</p>
+    <!-- SECTIE 2: JOUW GEGEVENS -->
+    <div class="form-section">
+      <span class="form-section-title">2. Jouw gegevens</span>
+      <div class="field">
+        <label for="category">Soort situatie</label>
+        <select id="category" required>
+          <option value="koppel">Koppel / relatie</option>
+          <option value="familie">Familie</option>
+          <option value="vrienden">Vrienden</option>
+          <option value="buren">Buren</option>
+          <option value="werk">Werk / collega's</option>
+          <option value="school">School</option>
+          <option value="andere">Iets anders, namelijk...</option>
+        </select>
       </div>
-    </div>
-
-    <div id="freeNotice" style="margin-bottom:20px">
-      <div class="card" style="background:var(--clay-soft);border:none;padding:16px">
-        <p style="margin:0;font-size:.9rem">Starten is gratis. Je krijgt een eerste eerlijk overzicht (samenvatting en gedeelde grond). Voor het volledige document met inzichten, tips en concrete gesprekshulp, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
+      <div class="field" id="categoryOtherField" style="display:none">
+        <label for="categoryOther">Omschrijf kort jouw situatie</label>
+        <input type="text" id="categoryOther" placeholder="bv. een conflict met mijn huisbaas">
       </div>
-    </div>
-
-    <div class="field">
-      <label for="category">Soort situatie</label>
-      <select id="category" required>
-        <option value="koppel">Koppel / relatie</option>
-        <option value="familie">Familie</option>
-        <option value="vrienden">Vrienden</option>
-        <option value="buren">Buren</option>
-        <option value="werk">Werk / collega's</option>
-        <option value="school">School</option>
-        <option value="andere">Iets anders, namelijk...</option>
-      </select>
-    </div>
-
-    <div class="field" id="categoryOtherField" style="display:none">
-      <label for="categoryOther">Omschrijf kort jouw situatie</label>
-      <input type="text" id="categoryOther" placeholder="bv. een conflict met mijn huisbaas">
-      <div class="help">Middlepoint past de vragen en toon van het document aan op basis van je omschrijving.</div>
-    </div>
-
-    <div class="field">
-      <label for="organizerName">Jouw naam</label>
-      <input type="text" id="organizerName" required placeholder="bv. Sarah">
-    </div>
-
-    <div class="field">
-      <label for="organizerEmail">Jouw e-mailadres (verplicht)</label>
-      <input type="email" id="organizerEmail" required placeholder="jij@email.be">
-      <div class="help">Zo kunnen we je laten weten wanneer het document klaar is, en kan je je gesprekken later terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
-    </div>
-
-    <div class="checkbox-row">
-      <input type="checkbox" id="isThirdParty">
-      <label for="isThirdParty">Ik neem zelf niet deel aan het conflict (bv. ik ben HR, leerkracht of therapeut)</label>
-    </div>
-
-    <div class="field" id="organizerRoleField" style="display:none">
-      <label for="organizerRole">Jouw rol</label>
-      <select id="organizerRole">
-        <option value="hr">HR</option>
-        <option value="leerkracht">Leerkracht</option>
-        <option value="therapeut">Therapeut</option>
-        <option value="advocaat">Advocaat</option>
-        <option value="anders">Anders</option>
-      </select>
-      <div class="checkbox-row" style="margin-top:14px">
-        <input type="checkbox" id="organizerSeesDocument" checked>
-        <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
+      <div class="field">
+        <label for="organizerName">Jouw naam</label>
+        <input type="text" id="organizerName" required placeholder="bv. Sarah">
       </div>
-    </div>
-
-    <div class="field">
-      <label>Naam/namen van de andere deelnemer(s)</label>
-      <div id="participantInputs">
-        <div style="display:flex;gap:8px;margin-bottom:4px">
-          <input type="text" class="participant-name" placeholder="bv. Tom" style="flex:1">
-          <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">
+      <div class="field">
+        <label for="organizerEmail">Jouw e-mailadres</label>
+        <input type="email" id="organizerEmail" required placeholder="jij@email.be">
+        <div class="help">We gebruiken dit enkel om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="isThirdParty">
+        <label for="isThirdParty">Ik neem zelf niet deel (bv. ik ben HR, leerkracht of therapeut)</label>
+      </div>
+      <div id="organizerRoleField" style="display:none">
+        <div class="field">
+          <label for="organizerRole">Jouw rol</label>
+          <select id="organizerRole">
+            <option value="hr">HR</option>
+            <option value="leerkracht">Leerkracht</option>
+            <option value="therapeut">Therapeut</option>
+            <option value="advocaat">Advocaat</option>
+            <option value="anders">Anders</option>
+          </select>
         </div>
-        <div class="participant-email-warning" style="display:none;font-size:.82rem;color:var(--clay);margin-bottom:8px">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>
-      </div>
-      <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:6px">+ Nog een deelnemer toevoegen</button>
-      <div class="help">Bij meer dan 2 personen kan iedereen achteraf kiezen om punten anoniem te delen.</div>
-    </div>
-
-    <div id="followupOption" style="display:none;margin-bottom:20px">
-      <div class="card" style="padding:18px">
-        <div class="checkbox-row" style="margin-bottom:0">
-          <input type="checkbox" id="includeFollowups" checked>
-          <label for="includeFollowups">
-            <strong>Diepgaand traject met vervolgvragen</strong>
-            <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">Na de eerste verhalen stelt Middlepoint elk gerichte vervolgvragen om dieper te graven. Vink uit als je enkel een snel overzicht wil.</div>
-          </label>
+        <div class="checkbox-row">
+          <input type="checkbox" id="organizerSeesDocument" checked>
+          <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
         </div>
       </div>
     </div>
 
-    <div class="checkbox-row">
-      <input type="checkbox" id="sendInvites">
-      <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar deelnemers waarvan ik een e-mailadres invulde</label>
+    <!-- SECTIE 3: DEELNEMERS -->
+    <div class="form-section">
+      <span class="form-section-title">3. De andere deelnemer(s)</span>
+      <div id="participantInputs"></div>
+      <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:4px">+ Nog een deelnemer toevoegen</button>
+      <div class="checkbox-row" style="margin-top:16px">
+        <input type="checkbox" id="sendInvites">
+        <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar deelnemers waarvan ik een e-mailadres invulde</label>
+      </div>
+    </div>
+
+    <!-- SECTIE 4: EXTRA OPTIES (enkel bij betaald) -->
+    <div class="form-section" id="extraOptions" style="display:none">
+      <span class="form-section-title">4. Extra opties</span>
+      <div class="checkbox-row" style="margin-bottom:0">
+        <input type="checkbox" id="includeFollowups" checked>
+        <label for="includeFollowups">
+          <strong>Diepgaand traject met vervolgvragen</strong>
+          <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">Na de eerste verhalen stelt Middlepoint elk gerichte vervolgvragen. Vink uit als je enkel een snel overzicht wil.</div>
+        </label>
+      </div>
     </div>
 
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Sessie aanmaken</button>
@@ -143,77 +139,62 @@
 </div>
 
 <script>
-const planSelector = document.getElementById('planSelector');
 let selectedPlanId = 'gratis';
+const planSelector = document.getElementById('planSelector');
 
-PRICING_CONFIG.plans.forEach(plan => {
-  const row = document.createElement('label');
-  row.style.cssText = 'display:flex;align-items:flex-start;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;transition:border-color .15s';
-  row.innerHTML = `
-    <input type="radio" name="plan" value="${plan.id}" ${plan.id === 'gratis' ? 'checked' : ''} style="margin-top:3px;flex-shrink:0">
-    <div style="flex:1">
-      <div style="font-weight:600;font-size:.95rem">${plan.name}
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;color:var(--clay);margin-left:8px">
-          ${plan.price === 0 ? 'Gratis' : `€${plan.price.toFixed(2).replace('.',',')} ${plan.period}`}
-        </span>
-      </div>
-      <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">${plan.description}</div>
-    </div>`;
-  planSelector.appendChild(row);
+PRICING_CONFIG.plans.filter(p => p.id !== 'pro').forEach(plan => {
+  const pill = document.createElement('label');
+  pill.className = 'plan-pill' + (plan.id === 'gratis' ? ' selected' : '');
+  const priceLabel = plan.price === 0 ? 'Gratis' : `€${plan.price.toFixed(2).replace('.',',')}${plan.period}`;
+  pill.innerHTML = `
+    <input type="radio" name="plan" value="${plan.id}" ${plan.id === 'gratis' ? 'checked' : ''}>
+    <span class="plan-pill-name">${plan.name}</span>
+    <span class="plan-pill-price">${priceLabel}</span>
+    <span class="plan-pill-desc">${plan.sessionsPerMonth === 1 ? '1 gesprek' : `${plan.sessionsPerMonth}/maand`}</span>`;
+  planSelector.appendChild(pill);
 
-  const radio = row.querySelector('input[type=radio]');
-  radio.addEventListener('change', () => {
-    planSelector.querySelectorAll('label').forEach(l => l.style.borderColor = 'var(--line)');
-    row.style.borderColor = 'var(--clay)';
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.plan-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
     selectedPlanId = plan.id;
-    updatePlanNotice();
+    updatePlanUI();
   });
-
-  if (plan.id === 'gratis') row.style.borderColor = 'var(--clay)';
 });
 
-function updatePlanNotice() {
+function updatePlanUI() {
   const isFree = selectedPlanId === 'gratis';
   document.getElementById('freeNotice').style.display = isFree ? 'block' : 'none';
   document.getElementById('paidNotice').style.display = isFree ? 'none' : 'block';
-  document.getElementById('followupOption').style.display = isFree ? 'none' : 'block';
+  document.getElementById('extraOptions').style.display = isFree ? 'none' : 'block';
   document.getElementById('submitBtn').textContent = isFree ? 'Sessie aanmaken' : 'Verder naar betaling';
 }
 
-document.getElementById('category').addEventListener('change', (e) => {
-  document.getElementById('categoryOtherField').style.display = e.target.value === 'andere' ? 'block' : 'none';
-});
-
-document.getElementById('isThirdParty').addEventListener('change', (e) => {
-  document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
-});
-
-function addParticipantRow(wrap) {
-  const wrapper = document.createElement('div');
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:8px;margin-bottom:4px';
-  row.innerHTML = `
-    <input type="text" class="participant-name" placeholder="Naam" style="flex:1">
-    <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">`;
-  const warning = document.createElement('div');
-  warning.className = 'participant-email-warning';
-  warning.style.cssText = 'display:none;font-size:.82rem;color:var(--clay);margin-bottom:8px';
-  warning.textContent = 'Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.';
-  wrapper.appendChild(row);
-  wrapper.appendChild(warning);
-  wrap.appendChild(wrapper);
-
-  row.querySelector('.participant-email').addEventListener('blur', (e) => {
-    warning.style.display = e.target.value.trim() ? 'none' : 'block';
+function addParticipantRow() {
+  const wrap = document.getElementById('participantInputs');
+  const div = document.createElement('div');
+  div.style.marginBottom = '12px';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:4px">
+      <input type="text" class="participant-name" placeholder="Naam" style="flex:1">
+      <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">
+    </div>
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
+  wrap.appendChild(div);
+  div.querySelector('.participant-email').addEventListener('blur', e => {
+    div.querySelector('.participant-warning').style.display = e.target.value.trim() ? 'none' : 'block';
   });
 }
 
-document.getElementById('participantInputs').querySelector('.participant-email').addEventListener('blur', (e) => {
-  document.querySelector('.participant-email-warning').style.display = e.target.value.trim() ? 'none' : 'block';
+addParticipantRow();
+
+document.getElementById('addParticipant').addEventListener('click', addParticipantRow);
+
+document.getElementById('category').addEventListener('change', e => {
+  document.getElementById('categoryOtherField').style.display = e.target.value === 'andere' ? 'block' : 'none';
 });
 
-document.getElementById('addParticipant').addEventListener('click', () => {
-  addParticipantRow(document.getElementById('participantInputs'));
+document.getElementById('isThirdParty').addEventListener('change', e => {
+  document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
 });
 
 function copyLink(btn, link) {
@@ -225,11 +206,11 @@ function copyLink(btn, link) {
 }
 
 function whatsappLink(name, fromName, link) {
-  const text = `Hoi ${name}, ${fromName} nodigt je uit voor een gesprek via Middlepoint. Klik op deze link om jouw kant van het verhaal te delen: ${link}`;
+  const text = `Hoi ${name}, ${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
-document.getElementById('newSessionForm').addEventListener('submit', async (e) => {
+document.getElementById('newSessionForm').addEventListener('submit', async e => {
   e.preventDefault();
   const errorBox = document.getElementById('error');
   errorBox.style.display = 'none';
@@ -237,11 +218,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   let category = document.getElementById('category').value;
   if (category === 'andere') {
     const custom = document.getElementById('categoryOther').value.trim();
-    if (!custom) {
-      errorBox.textContent = 'Omschrijf kort je situatie bij "Iets anders".';
-      errorBox.style.display = 'block';
-      return;
-    }
+    if (!custom) { errorBox.textContent = 'Omschrijf kort je situatie.'; errorBox.style.display = 'block'; return; }
     category = custom;
   }
 
@@ -253,11 +230,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
   const sendInvites = document.getElementById('sendInvites').checked;
   const includeFollowups = selectedPlanId === 'gratis' ? false : document.getElementById('includeFollowups').checked;
 
-  if (!organizerEmail) {
-    errorBox.textContent = 'Jouw e-mailadres is verplicht.';
-    errorBox.style.display = 'block';
-    return;
-  }
+  if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
 
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
@@ -280,7 +253,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async (e) =
     sessionStorage.setItem('mp_pending_session', JSON.stringify({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, sendInvites, participantNames, participantEmails,
-      selectedPlanId, includeFollowups
+      selectedPlanId, includeFollowups, isThirdParty
     }));
     window.location.href = selectedPlan.ctaLink;
     return;
@@ -312,7 +285,8 @@ async function createSession({ category, organizerName, organizerEmail, organize
       const fullLink = window.location.origin + p.accessLink;
       const mainButtonLabel = isThirdParty && p.isOrganizer ? 'Bekijk status' : 'Vul mijn document in';
       const waLink = whatsappLink(p.name, organizerName, fullLink);
-      block.innerHTML = `<div class="who">Persoonlijke link voor ${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
+      block.innerHTML = `
+        <div class="who">Persoonlijke link voor ${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
           <input type="text" readonly value="${fullLink}" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.8rem">
           <button type="button" class="icon-btn" title="Kopieer link">📋</button>
@@ -322,7 +296,7 @@ async function createSession({ category, organizerName, organizerEmail, organize
           <a href="${waLink}" target="_blank" class="btn whatsapp">Verstuur via WhatsApp</a>
         </div>`;
       list.appendChild(block);
-      block.querySelector('button').addEventListener('click', (ev) => copyLink(ev.currentTarget, fullLink));
+      block.querySelector('button').addEventListener('click', ev => copyLink(ev.currentTarget, fullLink));
 
       if (sendInvites && !p.isOrganizer) {
         const matchIndex = participantNames.indexOf(p.name);
@@ -355,7 +329,6 @@ async function createSession({ category, organizerName, organizerEmail, organize
 window.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const pending = sessionStorage.getItem('mp_pending_session');
-
   if (urlParams.get('paid') === 'true' && pending) {
     sessionStorage.removeItem('mp_pending_session');
     const data = JSON.parse(pending);
