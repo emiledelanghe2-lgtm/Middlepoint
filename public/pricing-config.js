@@ -1,5 +1,3 @@
-// Centrale configuratie voor prijzen en limieten.
-// Pas deze waarden hier aan -- ze worden gebruikt op de prijspagina en (later) bij de Stripe-koppeling.
 const PRICING_CONFIG = {
   currency: '€',
   plans: [
@@ -21,7 +19,7 @@ const PRICING_CONFIG = {
       name: 'Eén gesprek',
       price: 3.99,
       period: 'eenmalig',
-      maxCharsPerStory: 8000,
+      maxCharsPerStory: 12000,
       sessionsPerMonth: 1,
       includesFollowups: true,
       includesCheckins: true,
@@ -34,7 +32,7 @@ const PRICING_CONFIG = {
       name: 'Starter',
       price: 4.99,
       period: '/maand',
-      maxCharsPerStory: 8000,
+      maxCharsPerStory: 12000,
       sessionsPerMonth: 3,
       includesFollowups: true,
       includesCheckins: true,
@@ -47,7 +45,7 @@ const PRICING_CONFIG = {
       name: 'Plus',
       price: 12.99,
       period: '/maand',
-      maxCharsPerStory: 8000,
+      maxCharsPerStory: 12000,
       sessionsPerMonth: 10,
       includesFollowups: true,
       includesCheckins: true,
@@ -61,14 +59,14 @@ const PRICING_CONFIG = {
       name: 'Pro',
       price: 34.99,
       period: '/maand',
-      maxCharsPerStory: 8000,
+      maxCharsPerStory: 12000,
       sessionsPerMonth: 30,
       includesFollowups: true,
       includesCheckins: true,
       includesProfessionalInsights: true,
       description: 'Voor therapeuten, HR en advocaten. 30 gesprekken per maand, plus een extra sectie in elk document met professionele inzichten voor de begeleider.',
       cta: 'Contacteer ons',
-      ctaLink: 'mailto:hello@middlepoint.net',
+      ctaLink: 'mailto:middlepoint@zohomail.eu',
     },
   ],
 };
