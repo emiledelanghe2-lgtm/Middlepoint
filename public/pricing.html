@@ -75,7 +75,7 @@
     </div>
     <div class="card">
       <h3>Anonimiteit</h3>
-      <p>Beschikbaar in elk plan: bij meer dan 2 deelnemers kan iedereen per opmerking kiezen om die zonder naam te delen.</p>
+      <p>Beschikbaar in elk plan: bij gesprekken met meerdere deelnemers kan je per onderdeel kiezen of je naam zichtbaar is voor de anderen.</p>
     </div>
   </div>
 </section>
@@ -104,10 +104,18 @@ const grid = document.getElementById('pricingGrid');
 PRICING_CONFIG.plans.forEach(plan => {
   const card = document.createElement('div');
   card.className = 'plan-card' + (plan.highlight ? ' highlight' : '');
-  const priceLabel = plan.price === 0 ? 'Gratis' : `${PRICING_CONFIG.currency}${plan.price.toFixed(2).replace('.', ',')}`;
-  const sessionLabel = plan.sessionsPerMonth === 1
-    ? '1 gesprek'
-    : `${plan.sessionsPerMonth} gesprekken per maand`;
+
+  const priceLabel = plan.price === null
+    ? 'Op maat'
+    : plan.price === 0
+      ? 'Gratis'
+      : `${PRICING_CONFIG.currency}${plan.price.toFixed(2).replace('.', ',')}`;
+
+  const sessionLabel = plan.sessionsPerMonth === null
+    ? 'Onbeperkt gesprekken'
+    : plan.sessionsPerMonth === 1
+      ? '1 gesprek'
+      : `${plan.sessionsPerMonth} gesprekken per maand`;
 
   card.innerHTML = `
     <div class="plan-name">${plan.name}</div>
@@ -119,12 +127,10 @@ PRICING_CONFIG.plans.forEach(plan => {
       <li>${plan.includesFollowups ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Vervolgvragen</li>
       <li>${plan.includesCheckins ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Groeidocument / check-ins</li>
       <li>${plan.id === 'gratis' ? '<span class="cross">–</span>' : '<span class="check">✓</span>'} Volledig document met inzichten en tips</li>
-      <li>${plan.includesProfessionalInsights ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Inzichten voor begeleider</li>
+      ${plan.includesProfessionalInsights ? '<li><span class="check">✓</span> Inzichten voor begeleider</li>' : ''}
       <li><span class="check">✓</span> Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>
     </ul>
-    ${plan.ctaLink
-      ? `<a href="${plan.ctaLink}" class="btn ${plan.highlight ? 'clay' : 'outline'}" style="text-align:center">${plan.cta}</a>`
-      : `<button class="btn outline" disabled style="opacity:.6;cursor:default">${plan.cta}</button>`}
+    <a href="${plan.ctaLink}" class="btn ${plan.highlight ? 'clay' : 'outline'}" style="text-align:center">${plan.cta}</a>
   `;
   grid.appendChild(card);
 });
