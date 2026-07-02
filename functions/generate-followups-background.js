@@ -81,10 +81,11 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
-    // PLAN-ONDERSCHEID: gratis plan slaat vervolgvragen over en gaat direct naar document genereren
     const sessionPlan = session.plan || 'gratis';
-    if (sessionPlan === 'gratis') {
-      // Geen vervolgvragen bij gratis plan, direct document genereren
+    const includeFollowups = session.include_followups !== false;
+
+    // Geen vervolgvragen bij gratis plan OF als gebruiker dit uitvinkte
+    if (sessionPlan === 'gratis' || !includeFollowups) {
       await supabase
         .from('sessions')
         .update({ status: 'document_genereren', updated_at: new Date().toISOString() })
@@ -103,7 +104,7 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, skippedFollowups: true }) };
     }
 
-    // Betaald plan: vervolgvragen genereren zoals normaal
+    // Betaald plan met vervolgvragen
     const systemPrompt = `Je bent een neutrale, empathische conflictbemiddelaar. Je leest het verhaal van meerdere mensen over hetzelfde conflict (categorie: ${session.category}). Je taak: per persoon 2-4 scherpe, niet-beschuldigende vervolgvragen formuleren die helpen om dieper te graven naar de werkelijke kern van het probleem, vaak is wat iemand eerst vertelt slechts het topje van de ijsberg. Gebruik vooral tegenstellingen, onduidelijkheden, of dingen die in het verhaal van de ANDERE persoon staan maar niet in dat van deze persoon, om gerichte vragen te stellen. Toon: warm, nieuwsgierig, niet rechterlijk. Gebruik in je tekst nooit het lange streepje (—); schrijf in volledige zinnen met punten en komma's. Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit formaat: {"vragen_per_persoon": [{"naam": "...", "vragen": ["...", "..."]}]}`;
 
     const userPrompt = `Hier zijn de verhalen:\n\n${storiesText}\n\nGeef per persoon hun vervolgvragen.`;
