@@ -1,4 +1,13 @@
 const { getSupabase } = require('./_supabase');
+
+const PLAN_LIMITS = {
+  gratis: 1,
+  los: 1,
+  starter: 3,
+  plus: 10,
+  pro: 30,
+};
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -9,16 +18,60 @@ exports.handler = async (event) => {
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
       return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
     }
-    const emails = Array.isArray(participantEmails) ? participantEmails : [];
+
     const supabase = getSupabase();
+    const normalizedEmail = organizerEmail.toLowerCase().trim();
+    const sessionPlan = plan || 'gratis';
+
+    // Check plan-limiet voor dit e-mailadres
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('*')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (customer) {
+      const limit = PLAN_LIMITS[customer.plan] ?? PLAN_LIMITS[sessionPlan] ?? 1;
+      const used = customer.sessions_used_this_period || 0;
+
+      // Check of de periode nog geldig is
+      const now = new Date();
+      const periodEnd = customer.period_end ? new Date(customer.period_end) : null;
+      const periodStillValid = periodEnd ? now < periodEnd : true;
+
+      if (periodStillValid && used >= limit) {
+        const planLabels = { gratis: 'gratis', los: 'Eén gesprek', starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+        return {
+          statusCode: 403,
+          body: JSON.stringify({
+            error: `Je hebt je limiet bereikt voor het ${planLabels[customer.plan] || customer.plan}-plan (${limit} gesprek${limit === 1 ? '' : 'ken'} per periode). Upgrade je plan voor meer gesprekken.`,
+            limitReached: true,
+          }),
+        };
+      }
+
+      // Gratis plan: check of het e-mailadres al ooit een gratis sessie heeft gehad
+      if (sessionPlan === 'gratis' && customer.free_session_used) {
+        return {
+          statusCode: 403,
+          body: JSON.stringify({
+            error: 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.',
+            limitReached: true,
+          }),
+        };
+      }
+    }
+
+    const emails = Array.isArray(participantEmails) ? participantEmails : [];
+
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
       .insert({
         category,
         organizer_role: organizerRole || null,
-        organizer_email: organizerEmail || null,
+        organizer_email: normalizedEmail,
         organizer_sees_document: organizerSeesDocument !== false,
-        plan: plan || 'gratis',
+        plan: sessionPlan,
         include_followups: includeFollowups !== false,
       })
       .select()
@@ -32,7 +85,7 @@ exports.handler = async (event) => {
         session_id: session.id,
         display_name: name,
         is_organizer: i === 0,
-        email: i === 0 ? (organizerEmail || null) : (emails[i - 1] || null),
+        email: i === 0 ? normalizedEmail : (emails[i - 1] || null),
       }));
     } else {
       participantsToInsert = participantNames.map((name, i) => ({
@@ -45,14 +98,41 @@ exports.handler = async (event) => {
         session_id: session.id,
         display_name: organizerName,
         is_organizer: true,
-        email: organizerEmail || null,
+        email: normalizedEmail,
       });
     }
+
     const { data: participants, error: participantsError } = await supabase
       .from('participants')
       .insert(participantsToInsert)
       .select();
     if (participantsError) throw participantsError;
+
+    // Sessie-teller bijwerken in customers
+    const now = new Date();
+    if (customer) {
+      const updates = {
+        sessions_used_this_period: (customer.sessions_used_this_period || 0) + 1,
+        updated_at: now.toISOString(),
+      };
+      if (sessionPlan === 'gratis') {
+        updates.free_session_used = true;
+      }
+      await supabase.from('customers').update(updates).eq('email', normalizedEmail);
+    } else {
+      // Nieuwe customer aanmaken
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+      await supabase.from('customers').insert({
+        email: normalizedEmail,
+        plan: sessionPlan,
+        sessions_used_this_period: 1,
+        period_start: now.toISOString(),
+        period_end: periodEnd.toISOString(),
+        free_session_used: sessionPlan === 'gratis',
+      });
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify({
