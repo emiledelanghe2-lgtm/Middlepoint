@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mijn link terugvinden, Middlepoint</title>
+<title>Mijn gesprekken terugvinden, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -20,46 +20,11 @@
   </div>
 </nav>
 </header>
-<div class="app-wrap">
-  <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
-  <span class="label">Link verloren?</span>
-  <h1>Vraag je link opnieuw op</h1>
-  <p style="color:var(--ink-soft)">Vul het e-mailadres in dat je gebruikte bij het starten of invullen van een gesprek. We sturen je een overzicht van je actieve gesprekken.</p>
-  <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px">
-    <p style="margin:0;font-size:.9rem">Heb je al een account? <a href="/login.html" style="font-weight:600">Log in via je e-mailadres</a> om al je gesprekken en documenten terug te vinden.</p>
-  </div>
-  <div id="error" class="error-box" style="display:none"></div>
-  <div id="success" class="status-box" style="display:none">Als dit e-mailadres bij ons gekend is, ontvang je binnen enkele minuten een mail met je link(s). Geen mail ontvangen? Dan is dit adres mogelijk niet gebruikt bij een gesprek, of vond je gesprek plaats zonder e-mailadres in te vullen.</div>
-  <form id="findForm">
-    <div class="field">
-      <label for="email">Jouw e-mailadres</label>
-      <input type="email" id="email" required placeholder="jij@email.be">
-    </div>
-    <button type="submit" class="btn clay" style="width:100%;padding:14px">Stuur mijn link(s)</button>
-  </form>
+<div class="app-wrap" style="text-align:center;padding-top:72px">
+  <span class="label">Je gesprekken terugvinden</span>
+  <h1 style="margin-bottom:16px">Gebruik "Mijn gesprekken"</h1>
+  <p style="color:var(--ink-soft);max-width:420px;margin:0 auto 32px">Vul je e-mailadres in op de loginpagina en je ontvangt een link waarmee je al je gesprekken en documenten kan terugvinden.</p>
+  <a href="/login.html" class="btn clay" style="padding:14px 28px">Naar Mijn gesprekken</a>
 </div>
-<script>
-document.getElementById('findForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const errorBox = document.getElementById('error');
-  const successBox = document.getElementById('success');
-  errorBox.style.display = 'none';
-  successBox.style.display = 'none';
-  const email = document.getElementById('email').value.trim();
-  try {
-    const res = await fetch('/.netlify/functions/find-link', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
-    document.getElementById('findForm').style.display = 'none';
-    successBox.style.display = 'block';
-  } catch (err) {
-    errorBox.textContent = err.message;
-    errorBox.style.display = 'block';
-  }
-});
-</script>
 </body>
 </html>
