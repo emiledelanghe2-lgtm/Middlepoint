@@ -2,10 +2,10 @@ const { getSupabase } = require('./_supabase');
 
 const PLAN_LIMITS = {
   gratis: 1,
-  los: 1,
-  starter: 3,
-  plus: 10,
-  pro: 30,
+  los: 1,        // eenmalig, 1 sessie totaal
+  starter: 3,    // per maand
+  plus: 10,      // per maand
+  pro: 9999,     // onbeperkt
 };
 
 exports.handler = async (event) => {
@@ -23,7 +23,7 @@ exports.handler = async (event) => {
     const normalizedEmail = organizerEmail.toLowerCase().trim();
     const sessionPlan = plan || 'gratis';
 
-    // Check plan-limiet voor dit e-mailadres
+    // Check plan-limiet
     const { data: customer } = await supabase
       .from('customers')
       .select('*')
@@ -31,31 +31,44 @@ exports.handler = async (event) => {
       .maybeSingle();
 
     if (customer) {
-      const limit = PLAN_LIMITS[customer.plan] ?? PLAN_LIMITS[sessionPlan] ?? 1;
+      const customerPlan = customer.plan || 'gratis';
+      const limit = PLAN_LIMITS[customerPlan] ?? 1;
       const used = customer.sessions_used_this_period || 0;
 
-      // Check of de periode nog geldig is
+      // Check of periode nog geldig is (enkel voor abonnementen, niet voor gratis/los)
       const now = new Date();
       const periodEnd = customer.period_end ? new Date(customer.period_end) : null;
       const periodStillValid = periodEnd ? now < periodEnd : true;
 
-      if (periodStillValid && used >= limit) {
-        const planLabels = { gratis: 'gratis', los: 'Eén gesprek', starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+      // Gratis: check of al gebruikt
+      if (customerPlan === 'gratis' && customer.free_session_used) {
         return {
           statusCode: 403,
           body: JSON.stringify({
-            error: `Je hebt je limiet bereikt voor het ${planLabels[customer.plan] || customer.plan}-plan (${limit} gesprek${limit === 1 ? '' : 'ken'} per periode). Upgrade je plan voor meer gesprekken.`,
+            error: 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.',
             limitReached: true,
           }),
         };
       }
 
-      // Gratis plan: check of het e-mailadres al ooit een gratis sessie heeft gehad
-      if (sessionPlan === 'gratis' && customer.free_session_used) {
+      // Los (eenmalig): check of al gebruikt
+      if (customerPlan === 'los' && used >= limit) {
         return {
           statusCode: 403,
           body: JSON.stringify({
-            error: 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.',
+            error: 'Je hebt je eenmalige gesprek al gebruikt. Kies een abonnement voor meer gesprekken.',
+            limitReached: true,
+          }),
+        };
+      }
+
+      // Abonnementen (starter, plus, pro): check enkel als periode nog geldig is
+      if (!['gratis', 'los'].includes(customerPlan) && periodStillValid && used >= limit) {
+        const planLabels = { starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+        return {
+          statusCode: 403,
+          body: JSON.stringify({
+            error: `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand opnieuw ingesteld.`,
             limitReached: true,
           }),
         };
@@ -108,19 +121,16 @@ exports.handler = async (event) => {
       .select();
     if (participantsError) throw participantsError;
 
-    // Sessie-teller bijwerken in customers
+    // Sessie-teller bijwerken
     const now = new Date();
     if (customer) {
       const updates = {
         sessions_used_this_period: (customer.sessions_used_this_period || 0) + 1,
         updated_at: now.toISOString(),
       };
-      if (sessionPlan === 'gratis') {
-        updates.free_session_used = true;
-      }
+      if (sessionPlan === 'gratis') updates.free_session_used = true;
       await supabase.from('customers').update(updates).eq('email', normalizedEmail);
     } else {
-      // Nieuwe customer aanmaken
       const periodEnd = new Date(now);
       periodEnd.setMonth(periodEnd.getMonth() + 1);
       await supabase.from('customers').insert({
