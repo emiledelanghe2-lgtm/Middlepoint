@@ -47,6 +47,12 @@
   <h1>Start een nieuw gesprek</h1>
   <p style="color:var(--ink-soft);margin-bottom:24px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
 
+  <div id="processingMsg" style="display:none">
+    <div class="status-box">
+      <p style="margin:0">Betaling ontvangen, je sessie wordt aangemaakt. Even geduld...</p>
+    </div>
+  </div>
+
   <div id="error" class="error-box" style="display:none"></div>
   <div id="limitBox" class="limit-box" style="display:none">
     <p style="margin:0 0 12px;font-weight:600" id="limitMsg"></p>
@@ -64,7 +70,6 @@
 
   <form id="newSessionForm">
 
-    <!-- SECTIE 1: PLAN -->
     <div class="form-section">
       <span class="form-section-title">1. Kies je plan</span>
       <div class="plan-grid" id="planSelector"></div>
@@ -78,7 +83,6 @@
       </div>
     </div>
 
-    <!-- SECTIE 2: JOUW GEGEVENS -->
     <div class="form-section">
       <span class="form-section-title">2. Jouw gegevens</span>
       <div class="field">
@@ -104,7 +108,7 @@
       <div class="field">
         <label for="organizerEmail">Jouw e-mailadres</label>
         <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
-        <div class="help">We gebruiken dit enkel om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
+        <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="isThirdParty">
@@ -128,7 +132,6 @@
       </div>
     </div>
 
-    <!-- SECTIE 3: DEELNEMERS -->
     <div class="form-section">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
       <div id="participantInputs"></div>
@@ -139,7 +142,6 @@
       </div>
     </div>
 
-    <!-- SECTIE 4: EXTRA OPTIES -->
     <div class="form-section" id="extraOptions" style="display:none">
       <span class="form-section-title">4. Extra opties</span>
       <div class="checkbox-row" style="margin-bottom:0">
@@ -151,7 +153,6 @@
       </div>
     </div>
 
-    <!-- BETALINGSBEVESTIGING -->
     <div id="paymentConfirm" style="display:none;margin-bottom:20px">
       <div class="payment-confirm">
         <p style="margin:0 0 6px;font-size:.85rem;color:var(--ink-soft)">Je staat op het punt te betalen voor:</p>
@@ -175,6 +176,25 @@
 </div>
 
 <script>
+// BUGFIX: gebruik localStorage in plaats van sessionStorage
+// sessionStorage wordt gewist door sommige browsers na externe navigatie (bv. naar Stripe)
+const STORAGE_KEY = 'mp_pending_session';
+
+function savePending(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function loadPending() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function clearPending() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+}
+
 let selectedPlanId = 'gratis';
 let activeSubscription = null;
 const planSelector = document.getElementById('planSelector');
@@ -185,7 +205,7 @@ const planFeatures = {
     hasNot: ['Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips per persoon', 'Check-ins achteraf'],
   },
   los: {
-    has: ['1 volledig gesprek', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', '1 check-in achteraf'],
+    has: ['1 volledig gesprek', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Check-ins achteraf'],
     hasNot: [],
   },
   starter: {
@@ -202,10 +222,8 @@ function showPlanDetail(planId) {
   const detail = document.getElementById('planDetail');
   const features = planFeatures[planId];
   if (!features) { detail.style.display = 'none'; return; }
-
   const hasItems = features.has.map(f => `<li><span class="check">✓</span> ${f}</li>`).join('');
   const hasNotItems = features.hasNot.map(f => `<li><span class="cross">–</span> <span style="color:var(--ink-soft)">${f}</span></li>`).join('');
-
   detail.innerHTML = `<div class="plan-detail"><ul>${hasItems}${hasNotItems}</ul></div>`;
   detail.style.display = 'block';
 }
@@ -231,7 +249,6 @@ PRICING_CONFIG.plans.filter(p => p.id !== 'pro').forEach(plan => {
   });
 });
 
-// Toon detail van gratis plan standaard
 showPlanDetail('gratis');
 
 function updatePlanUI() {
@@ -243,7 +260,6 @@ function updatePlanUI() {
   document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
   document.getElementById('extraOptions').style.display = isFree ? 'none' : 'block';
 
-  // Betalingsbevestiging tonen bij betaald plan zonder actief abonnement
   if (!isFree && !hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (selectedPlan) {
@@ -264,52 +280,43 @@ async function checkEmail(email) {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
     const data = await res.json();
 
-    // BUG FIX: als e-mailadres niet gekend is, doe NIETS met het gekozen plan
+    // BUGFIX: bij onbekend e-mailadres, doe NIETS aan het gekozen plan
     if (!data.known) {
       activeSubscription = null;
-      // Geen updatePlanUI() aanroepen, plan blijft wat de gebruiker koos
       return;
     }
 
     activeSubscription = data;
 
-    // Alleen automatisch plan wijzigen als het e-mailadres een actief betaald abonnement heeft
+    // Alleen plan wijzigen als er een actief betaald abonnement is
     if (data.plan && data.plan !== 'gratis' && data.planStatus !== 'cancelled') {
       document.querySelectorAll('.plan-pill').forEach(pill => {
         pill.classList.remove('selected');
-        if (pill.dataset.planId === data.plan) {
-          pill.classList.add('selected');
-        }
+        if (pill.dataset.planId === data.plan) pill.classList.add('selected');
       });
       selectedPlanId = data.plan;
       showPlanDetail(data.plan);
     }
 
-    // Toon plan-info
     const periodEnd = data.periodEnd
       ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
       : null;
 
     let infoText = '';
     if (data.plan === 'gratis' && data.freeSessionUsed) {
-      infoText = `Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.`;
+      infoText = 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.';
     } else if (data.plan !== 'gratis') {
-      infoText = `
-        <strong>Actief plan: ${data.planLabel}</strong><br>
-        Gesprekken resterend deze periode: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
-        ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}
-      `;
+      infoText = `<strong>Actief plan: ${data.planLabel}</strong><br>
+        Gesprekken resterend: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
+        ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}`;
     }
 
-    if (infoText) {
-      document.getElementById('customerInfoText').innerHTML = infoText;
-    }
+    if (infoText) document.getElementById('customerInfoText').innerHTML = infoText;
 
-    // Limiet check
     if (data.sessionsRemaining <= 0 || (data.plan === 'gratis' && data.freeSessionUsed)) {
       document.getElementById('limitMsg').textContent = data.plan === 'gratis'
         ? 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.'
-        : `Je hebt je limiet bereikt voor het ${data.planLabel}-plan (${data.sessionsLimit} gesprek${data.sessionsLimit === 1 ? '' : 'ken'}/periode). Upgrade voor meer gesprekken.`;
+        : `Je hebt je limiet bereikt voor het ${data.planLabel}-plan. Upgrade voor meer gesprekken.`;
       document.getElementById('limitBox').style.display = 'block';
       document.getElementById('submitBtn').disabled = true;
       document.getElementById('submitBtn').style.opacity = '0.5';
@@ -322,7 +329,7 @@ async function checkEmail(email) {
     updatePlanUI();
   } catch (err) {
     console.error('Email check mislukt:', err);
-    // Bij fout: niets veranderen aan het gekozen plan
+    // Bij fout: niets veranderen
   }
 }
 
@@ -408,7 +415,6 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
   const hasActiveSub = activeSubscription && activeSubscription.plan !== 'gratis' && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
-  // Naar Stripe als betaald plan en geen actief abonnement
   if (selectedPlanId !== 'gratis' && !hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (!selectedPlan || !selectedPlan.ctaLink) {
@@ -416,11 +422,14 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
       errorBox.style.display = 'block';
       return;
     }
-    sessionStorage.setItem('mp_pending_session', JSON.stringify({
+
+    // BUGFIX: sla op in localStorage (niet sessionStorage) zodat data bewaard blijft na Stripe-redirect
+    savePending({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, sendInvites, participantNames, participantEmails,
       selectedPlanId, includeFollowups, isThirdParty
-    }));
+    });
+
     window.location.href = selectedPlan.ctaLink;
     return;
   }
@@ -449,6 +458,7 @@ async function createSession({ category, organizerName, organizerEmail, organize
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
 
     document.getElementById('newSessionForm').style.display = 'none';
+    document.getElementById('postPurchaseInfo').style.display = 'none';
     const list = document.getElementById('linksList');
     list.innerHTML = '';
     const inviteMessages = [];
@@ -503,24 +513,30 @@ async function createSession({ category, organizerName, organizerEmail, organize
 
 window.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const pending = sessionStorage.getItem('mp_pending_session');
+  const isPaid = urlParams.get('paid') === 'true';
+  const pending = loadPending();
 
-  if (urlParams.get('paid') === 'true') {
-    document.getElementById('postPurchaseInfo').style.display = 'block';
-  }
-
-  if (urlParams.get('paid') === 'true' && pending) {
-    sessionStorage.removeItem('mp_pending_session');
-    const data = JSON.parse(pending);
+  if (isPaid && pending) {
+    // Verberg het formulier, toon laadbericht
     document.getElementById('newSessionForm').style.display = 'none';
-    document.getElementById('postPurchaseInfo').style.display = 'none';
-    const app = document.querySelector('.app-wrap');
-    const loader = document.createElement('div');
-    loader.className = 'status-box';
-    loader.textContent = 'Betaling ontvangen, je sessie wordt aangemaakt...';
-    app.appendChild(loader);
-    await createSession(data);
-    loader.remove();
+    document.getElementById('processingMsg').style.display = 'block';
+
+    // Verwijder de pending data VOOR de API call, zodat bij refresh het niet dubbel loopt
+    clearPending();
+
+    try {
+      await createSession(pending);
+    } catch (err) {
+      // Als het mislukt, toon foutmelding en herstel het formulier
+      document.getElementById('processingMsg').style.display = 'none';
+      document.getElementById('newSessionForm').style.display = 'block';
+      document.getElementById('error').textContent = 'Er ging iets mis bij het aanmaken van je sessie. Probeer opnieuw of contacteer ons.';
+      document.getElementById('error').style.display = 'block';
+    }
+  } else if (isPaid && !pending) {
+    // Betaald maar geen pending data meer (bv. al verwerkt of verlopen)
+    // Toon de post-purchase info zodat de gebruiker weet wat er gebeurd is
+    document.getElementById('postPurchaseInfo').style.display = 'block';
   }
 });
 </script>
