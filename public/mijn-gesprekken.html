@@ -28,6 +28,7 @@
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
 const app = document.getElementById('app');
+const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
 
 function statusLabel(status) {
   const labels = {
@@ -90,6 +91,8 @@ async function load() {
       return;
     }
 
+    const isPaidPlan = data.plan && data.plan !== 'gratis';
+
     if (data.sessions.length === 0) {
       app.innerHTML = `
         <span class="label">Mijn gesprekken</span>
@@ -103,9 +106,16 @@ async function load() {
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
       <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong>${data.email}</strong></p>
-      <div style="margin-bottom:32px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:32px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
+        ${isPaidPlan ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
       </div>
+
+      ${isPaidPlan ? `
+      <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:16px">
+        <p style="margin:0;font-size:.85rem">Wil je van plan wisselen of je abonnement opzeggen? Klik op "Abonnement beheren of opzeggen" hierboven. Je wordt doorgestuurd naar de beveiligde Stripe-pagina waar je alles zelf kan regelen.</p>
+      </div>` : ''}
+
       <div id="sessionsList"></div>
       <div style="margin-top:32px">
         <a href="/new.html" class="btn outline">Start een nieuw gesprek</a>
