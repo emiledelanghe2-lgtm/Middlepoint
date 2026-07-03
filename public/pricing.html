@@ -1,9 +1,10 @@
+<script src="/pricing-config.js"></script>
+<script>
 const grid = document.getElementById('pricingGrid');
 PRICING_CONFIG.plans.forEach(plan => {
   const card = document.createElement('div');
   card.className = 'plan-card' + (plan.highlight ? ' highlight' : '');
 
-  // BUGFIX: null-check voor Pro plan dat geen vaste prijs heeft
   const priceLabel = plan.price === null
     ? 'Op maat'
     : plan.price === 0
@@ -27,9 +28,10 @@ PRICING_CONFIG.plans.forEach(plan => {
       <li>${plan.includesCheckins ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Groeidocument / check-ins</li>
       <li>${plan.id === 'gratis' ? '<span class="cross">–</span>' : '<span class="check">✓</span>'} Volledig document met inzichten en tips</li>
       ${plan.includesProfessionalInsights ? '<li><span class="check">✓</span> Inzichten voor begeleider</li>' : ''}
-      <li><span class="check">✓</span> Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>
+      ${plan.maxCharsPerStory ? `<li><span class="check">✓</span> Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>` : ''}
     </ul>
     <a href="${plan.ctaLink}" class="btn ${plan.highlight ? 'clay' : 'outline'}" style="text-align:center">${plan.cta}</a>
   `;
   grid.appendChild(card);
 });
+</script>
