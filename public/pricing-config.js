@@ -64,7 +64,7 @@ const PRICING_CONFIG = {
       includesFollowups: true,
       includesCheckins: true,
       includesProfessionalInsights: true,
-      description: 'Voor therapeuten, HR en advocaten. Aantal gesprekken, extra functies en prijs op maat. Neem contact op voor een persoonlijk voorstel.',
+      description: 'Voor therapeuten, HR en advocaten. Aantal gesprekken en prijs op maat. Neem contact op voor een persoonlijk voorstel.',
       cta: 'Contacteer ons',
       ctaLink: 'mailto:middlepoint@zohomail.eu?subject=Pro plan Middlepoint',
     },
