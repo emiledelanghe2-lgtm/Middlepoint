@@ -26,6 +26,9 @@
 .limit-box{ border:1px solid var(--clay); background:var(--clay-soft); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
 .customer-info{ background:#EFF4ED; border:1px solid var(--sage); border-radius:var(--radius); padding:16px; margin-top:12px; font-size:.88rem; }
 .payment-confirm{ background:var(--clay-soft); border:1.5px solid var(--clay); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+.participant-row{ display:flex; gap:8px; margin-bottom:8px; }
+.participant-row input[type=text]{ flex:1; min-width:0; }
+.participant-row input[type=email]{ flex:1.5; min-width:0; }
 </style>
 </head>
 <body>
@@ -134,6 +137,7 @@
 
     <div class="form-section">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Als je een e-mailadres invult, wordt de uitnodigingsmail automatisch verstuurd.</p>
       <div id="participantInputs"></div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:4px">+ Nog een deelnemer toevoegen</button>
       <div class="checkbox-row" style="margin-top:16px">
@@ -176,24 +180,10 @@
 </div>
 
 <script>
-// BUGFIX: gebruik localStorage in plaats van sessionStorage
-// sessionStorage wordt gewist door sommige browsers na externe navigatie (bv. naar Stripe)
 const STORAGE_KEY = 'mp_pending_session';
-
-function savePending(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-
-function loadPending() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
-}
-
-function clearPending() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
-}
+function savePending(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {} }
+function loadPending() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
 
 let selectedPlanId = 'gratis';
 let activeSubscription = null;
@@ -202,7 +192,7 @@ const planSelector = document.getElementById('planSelector');
 const planFeatures = {
   gratis: {
     has: ['Eerste eerlijk overzicht', 'Samenvatting van het conflict', 'Gedeelde grond'],
-    hasNot: ['Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips per persoon', 'Check-ins achteraf'],
+    hasNot: ['Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
   },
   los: {
     has: ['1 volledig gesprek', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Check-ins achteraf'],
@@ -254,12 +244,10 @@ showPlanDetail('gratis');
 function updatePlanUI() {
   const isFree = selectedPlanId === 'gratis';
   const hasActiveSub = activeSubscription && activeSubscription.plan !== 'gratis' && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
-
   document.getElementById('freeNotice').style.display = (isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('paidNotice').style.display = (!isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
   document.getElementById('extraOptions').style.display = isFree ? 'none' : 'block';
-
   if (!isFree && !hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (selectedPlan) {
@@ -270,7 +258,6 @@ function updatePlanUI() {
   } else {
     document.getElementById('paymentConfirm').style.display = 'none';
   }
-
   document.getElementById('submitBtn').textContent = (!isFree && !hasActiveSub) ? 'Verder naar betaling' : 'Sessie aanmaken';
 }
 
@@ -279,16 +266,8 @@ async function checkEmail(email) {
   try {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
     const data = await res.json();
-
-    // BUGFIX: bij onbekend e-mailadres, doe NIETS aan het gekozen plan
-    if (!data.known) {
-      activeSubscription = null;
-      return;
-    }
-
+    if (!data.known) { activeSubscription = null; return; }
     activeSubscription = data;
-
-    // Alleen plan wijzigen als er een actief betaald abonnement is
     if (data.plan && data.plan !== 'gratis' && data.planStatus !== 'cancelled') {
       document.querySelectorAll('.plan-pill').forEach(pill => {
         pill.classList.remove('selected');
@@ -297,11 +276,9 @@ async function checkEmail(email) {
       selectedPlanId = data.plan;
       showPlanDetail(data.plan);
     }
-
     const periodEnd = data.periodEnd
       ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
       : null;
-
     let infoText = '';
     if (data.plan === 'gratis' && data.freeSessionUsed) {
       infoText = 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.';
@@ -310,9 +287,7 @@ async function checkEmail(email) {
         Gesprekken resterend: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
         ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}`;
     }
-
     if (infoText) document.getElementById('customerInfoText').innerHTML = infoText;
-
     if (data.sessionsRemaining <= 0 || (data.plan === 'gratis' && data.freeSessionUsed)) {
       document.getElementById('limitMsg').textContent = data.plan === 'gratis'
         ? 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.'
@@ -325,11 +300,9 @@ async function checkEmail(email) {
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('submitBtn').style.opacity = '1';
     }
-
     updatePlanUI();
   } catch (err) {
     console.error('Email check mislukt:', err);
-    // Bij fout: niets veranderen
   }
 }
 
@@ -337,19 +310,31 @@ document.getElementById('organizerEmail').addEventListener('blur', e => {
   checkEmail(e.target.value.trim());
 });
 
+function checkAutoSendInvites() {
+  // Automatisch vinkje aanvinken als minstens 1 deelnemer een e-mailadres heeft
+  const hasEmail = Array.from(document.querySelectorAll('.participant-email')).some(i => i.value.trim());
+  document.getElementById('sendInvites').checked = hasEmail;
+}
+
 function addParticipantRow() {
   const wrap = document.getElementById('participantInputs');
   const div = document.createElement('div');
   div.style.marginBottom = '12px';
   div.innerHTML = `
-    <div style="display:flex;gap:8px;margin-bottom:4px">
-      <input type="text" class="participant-name" placeholder="Naam" style="flex:1">
-      <input type="email" class="participant-email" placeholder="e-mail (optioneel)" style="flex:1">
+    <div class="participant-row">
+      <input type="text" class="participant-name" placeholder="Naam van de deelnemer">
+      <input type="email" class="participant-email" placeholder="E-mailadres (aanbevolen)">
     </div>
-    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay);margin-bottom:4px">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
   wrap.appendChild(div);
+
   div.querySelector('.participant-email').addEventListener('blur', e => {
     div.querySelector('.participant-warning').style.display = e.target.value.trim() ? 'none' : 'block';
+    checkAutoSendInvites();
+  });
+
+  div.querySelector('.participant-email').addEventListener('input', () => {
+    checkAutoSendInvites();
   });
 }
 
@@ -422,14 +407,11 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
       errorBox.style.display = 'block';
       return;
     }
-
-    // BUGFIX: sla op in localStorage (niet sessionStorage) zodat data bewaard blijft na Stripe-redirect
     savePending({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, sendInvites, participantNames, participantEmails,
       selectedPlanId, includeFollowups, isThirdParty
     });
-
     window.location.href = selectedPlan.ctaLink;
     return;
   }
@@ -516,26 +498,23 @@ window.addEventListener('DOMContentLoaded', async () => {
   const isPaid = urlParams.get('paid') === 'true';
   const pending = loadPending();
 
+  if (urlParams.get('paid') === 'true') {
+    document.getElementById('postPurchaseInfo').style.display = 'block';
+  }
+
   if (isPaid && pending) {
-    // Verberg het formulier, toon laadbericht
     document.getElementById('newSessionForm').style.display = 'none';
     document.getElementById('processingMsg').style.display = 'block';
-
-    // Verwijder de pending data VOOR de API call, zodat bij refresh het niet dubbel loopt
     clearPending();
-
     try {
       await createSession(pending);
     } catch (err) {
-      // Als het mislukt, toon foutmelding en herstel het formulier
       document.getElementById('processingMsg').style.display = 'none';
       document.getElementById('newSessionForm').style.display = 'block';
       document.getElementById('error').textContent = 'Er ging iets mis bij het aanmaken van je sessie. Probeer opnieuw of contacteer ons.';
       document.getElementById('error').style.display = 'block';
     }
   } else if (isPaid && !pending) {
-    // Betaald maar geen pending data meer (bv. al verwerkt of verlopen)
-    // Toon de post-purchase info zodat de gebruiker weet wat er gebeurd is
     document.getElementById('postPurchaseInfo').style.display = 'block';
   }
 });
