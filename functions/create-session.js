@@ -2,10 +2,10 @@ const { getSupabase } = require('./_supabase');
 
 const PLAN_LIMITS = {
   gratis: 1,
-  los: 1,        // eenmalig, 1 sessie totaal
-  starter: 3,    // per maand
-  plus: 10,      // per maand
-  pro: 9999,     // onbeperkt
+  los: 1,
+  starter: 3,
+  plus: 10,
+  pro: 9999,
 };
 
 exports.handler = async (event) => {
@@ -23,7 +23,6 @@ exports.handler = async (event) => {
     const normalizedEmail = organizerEmail.toLowerCase().trim();
     const sessionPlan = plan || 'gratis';
 
-    // Check plan-limiet
     const { data: customer } = await supabase
       .from('customers')
       .select('*')
@@ -32,16 +31,13 @@ exports.handler = async (event) => {
 
     if (customer) {
       const customerPlan = customer.plan || 'gratis';
-      const limit = PLAN_LIMITS[customerPlan] ?? 1;
       const used = customer.sessions_used_this_period || 0;
-
-      // Check of periode nog geldig is (enkel voor abonnementen, niet voor gratis/los)
       const now = new Date();
       const periodEnd = customer.period_end ? new Date(customer.period_end) : null;
       const periodStillValid = periodEnd ? now < periodEnd : true;
 
-      // Gratis: check of al gebruikt
-      if (customerPlan === 'gratis' && customer.free_session_used) {
+      // Gratis: eenmalig per e-mailadres, voor altijd
+      if (sessionPlan === 'gratis' && customer.free_session_used) {
         return {
           statusCode: 403,
           body: JSON.stringify({
@@ -51,27 +47,21 @@ exports.handler = async (event) => {
         };
       }
 
-      // Los (eenmalig): check of al gebruikt
-      if (customerPlan === 'los' && used >= limit) {
-        return {
-          statusCode: 403,
-          body: JSON.stringify({
-            error: 'Je hebt je eenmalige gesprek al gebruikt. Kies een abonnement voor meer gesprekken.',
-            limitReached: true,
-          }),
-        };
-      }
-
-      // Abonnementen (starter, plus, pro): check enkel als periode nog geldig is
-      if (!['gratis', 'los'].includes(customerPlan) && periodStillValid && used >= limit) {
-        const planLabels = { starter: 'Starter', plus: 'Plus', pro: 'Pro' };
-        return {
-          statusCode: 403,
-          body: JSON.stringify({
-            error: `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand opnieuw ingesteld.`,
-            limitReached: true,
-          }),
-        };
+      // BUGFIX: 'los' (eenmalig) heeft GEEN doorlopende limiet. Elke aankoop via Stripe
+      // geeft recht op exact 1 nieuw gesprek en mag dus altijd opnieuw gekocht worden.
+      // Enkel abonnementen (starter/plus/pro) hebben een limiet binnen de lopende maand.
+      if (['starter', 'plus', 'pro'].includes(customerPlan) && periodStillValid) {
+        const limit = PLAN_LIMITS[customerPlan] ?? 3;
+        if (used >= limit) {
+          const planLabels = { starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+          return {
+            statusCode: 403,
+            body: JSON.stringify({
+              error: `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`,
+              limitReached: true,
+            }),
+          };
+        }
       }
     }
 
@@ -121,14 +111,23 @@ exports.handler = async (event) => {
       .select();
     if (participantsError) throw participantsError;
 
-    // Sessie-teller bijwerken
+    // Sessie-teller bijwerken. Voor 'los' resetten we telkens naar 1/1, zodat een
+    // volgende aankoop altijd opnieuw als een nieuwe, geldige aankoop telt.
     const now = new Date();
     if (customer) {
+      const samesPlan = customer.plan === sessionPlan;
       const updates = {
-        sessions_used_this_period: (customer.sessions_used_this_period || 0) + 1,
+        plan: sessionPlan,
+        sessions_used_this_period: sessionPlan === 'los' ? 1 : (samesPlan ? (customer.sessions_used_this_period || 0) + 1 : 1),
         updated_at: now.toISOString(),
       };
       if (sessionPlan === 'gratis') updates.free_session_used = true;
+      if (!samesPlan) {
+        const periodEnd = new Date(now);
+        periodEnd.setMonth(periodEnd.getMonth() + 1);
+        updates.period_start = now.toISOString();
+        updates.period_end = periodEnd.toISOString();
+      }
       await supabase.from('customers').update(updates).eq('email', normalizedEmail);
     } else {
       const periodEnd = new Date(now);
