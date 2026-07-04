@@ -26,9 +26,26 @@
 .limit-box{ border:1px solid var(--clay); background:var(--clay-soft); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
 .customer-info{ background:#EFF4ED; border:1px solid var(--sage); border-radius:var(--radius); padding:16px; margin-top:12px; font-size:.88rem; }
 .payment-confirm{ background:var(--clay-soft); border:1.5px solid var(--clay); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
-.participant-row{ display:flex; gap:8px; margin-bottom:8px; }
-.participant-row input[type=text]{ flex:1; min-width:0; }
-.participant-row input[type=email]{ flex:1.5; min-width:0; }
+
+/* BUGFIX: deelnemersvakjes hadden geen styling, nu wel duidelijk en groot */
+.participant-row{ display:flex; gap:10px; margin-bottom:8px; }
+.participant-row input[type=text],
+.participant-row input[type=email]{
+  flex:1;
+  min-width:0;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-family:'Karla', sans-serif;
+  font-size:16px;
+  background:var(--white);
+  color:var(--ink);
+  transition:border-color .15s ease;
+}
+.participant-row input:focus{ border-color:var(--clay); outline:none; }
+@media (max-width:480px){
+  .participant-row{ flex-direction:column; }
+}
 </style>
 </head>
 <body>
@@ -243,11 +260,13 @@ showPlanDetail('gratis');
 
 function updatePlanUI() {
   const isFree = selectedPlanId === 'gratis';
-  const hasActiveSub = activeSubscription && activeSubscription.plan !== 'gratis' && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+  const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+
   document.getElementById('freeNotice').style.display = (isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('paidNotice').style.display = (!isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
   document.getElementById('extraOptions').style.display = isFree ? 'none' : 'block';
+
   if (!isFree && !hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (selectedPlan) {
@@ -258,48 +277,61 @@ function updatePlanUI() {
   } else {
     document.getElementById('paymentConfirm').style.display = 'none';
   }
+
   document.getElementById('submitBtn').textContent = (!isFree && !hasActiveSub) ? 'Verder naar betaling' : 'Sessie aanmaken';
 }
 
+// BUGFIX: enkel abonnementen (starter/plus/pro) kunnen de knop blokkeren bij limiet.
+// 'los' (eenmalig) en 'gratis' blokkeren NOOIT vooraf: bij gratis toont de server
+// achteraf een duidelijke foutmelding, en 'los' mag altijd opnieuw gekocht worden.
 async function checkEmail(email) {
   if (!email || !email.includes('@')) return;
   try {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
     const data = await res.json();
-    if (!data.known) { activeSubscription = null; return; }
+
+    if (!data.known) {
+      activeSubscription = null;
+      document.getElementById('limitBox').style.display = 'none';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').style.opacity = '1';
+      return;
+    }
+
     activeSubscription = data;
-    if (data.plan && data.plan !== 'gratis' && data.planStatus !== 'cancelled') {
+    const isSubscriptionPlan = ['starter', 'plus', 'pro'].includes(data.plan);
+
+    // Reset UI standaard
+    document.getElementById('limitBox').style.display = 'none';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').style.opacity = '1';
+
+    if (isSubscriptionPlan && data.planStatus !== 'cancelled') {
       document.querySelectorAll('.plan-pill').forEach(pill => {
         pill.classList.remove('selected');
         if (pill.dataset.planId === data.plan) pill.classList.add('selected');
       });
       selectedPlanId = data.plan;
       showPlanDetail(data.plan);
-    }
-    const periodEnd = data.periodEnd
-      ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
-      : null;
-    let infoText = '';
-    if (data.plan === 'gratis' && data.freeSessionUsed) {
-      infoText = 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.';
-    } else if (data.plan !== 'gratis') {
-      infoText = `<strong>Actief plan: ${data.planLabel}</strong><br>
+
+      const periodEnd = data.periodEnd
+        ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+        : null;
+      document.getElementById('customerInfoText').innerHTML = `
+        <strong>Actief plan: ${data.planLabel}</strong><br>
         Gesprekken resterend: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
         ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}`;
+
+      if (data.sessionsRemaining <= 0) {
+        document.getElementById('limitMsg').textContent = `Je hebt je limiet bereikt voor het ${data.planLabel}-plan (${data.sessionsLimit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`;
+        document.getElementById('limitBox').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').style.opacity = '0.5';
+      }
     }
-    if (infoText) document.getElementById('customerInfoText').innerHTML = infoText;
-    if (data.sessionsRemaining <= 0 || (data.plan === 'gratis' && data.freeSessionUsed)) {
-      document.getElementById('limitMsg').textContent = data.plan === 'gratis'
-        ? 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.'
-        : `Je hebt je limiet bereikt voor het ${data.planLabel}-plan. Upgrade voor meer gesprekken.`;
-      document.getElementById('limitBox').style.display = 'block';
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('submitBtn').style.opacity = '0.5';
-    } else {
-      document.getElementById('limitBox').style.display = 'none';
-      document.getElementById('submitBtn').disabled = false;
-      document.getElementById('submitBtn').style.opacity = '1';
-    }
+    // Voor 'los' en 'gratis': geen vooraf-blokkade. De server (create-session) checkt
+    // dit zelf bij het indienen en toont dan pas een foutmelding indien nodig.
+
     updatePlanUI();
   } catch (err) {
     console.error('Email check mislukt:', err);
@@ -311,7 +343,6 @@ document.getElementById('organizerEmail').addEventListener('blur', e => {
 });
 
 function checkAutoSendInvites() {
-  // Automatisch vinkje aanvinken als minstens 1 deelnemer een e-mailadres heeft
   const hasEmail = Array.from(document.querySelectorAll('.participant-email')).some(i => i.value.trim());
   document.getElementById('sendInvites').checked = hasEmail;
 }
@@ -319,23 +350,20 @@ function checkAutoSendInvites() {
 function addParticipantRow() {
   const wrap = document.getElementById('participantInputs');
   const div = document.createElement('div');
-  div.style.marginBottom = '12px';
+  div.style.marginBottom = '14px';
   div.innerHTML = `
     <div class="participant-row">
       <input type="text" class="participant-name" placeholder="Naam van de deelnemer">
       <input type="email" class="participant-email" placeholder="E-mailadres (aanbevolen)">
     </div>
-    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay);margin-bottom:4px">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
   wrap.appendChild(div);
 
   div.querySelector('.participant-email').addEventListener('blur', e => {
     div.querySelector('.participant-warning').style.display = e.target.value.trim() ? 'none' : 'block';
     checkAutoSendInvites();
   });
-
-  div.querySelector('.participant-email').addEventListener('input', () => {
-    checkAutoSendInvites();
-  });
+  div.querySelector('.participant-email').addEventListener('input', checkAutoSendInvites);
 }
 
 addParticipantRow();
@@ -398,7 +426,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     return;
   }
 
-  const hasActiveSub = activeSubscription && activeSubscription.plan !== 'gratis' && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+  const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
   if (selectedPlanId !== 'gratis' && !hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
@@ -498,7 +526,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const isPaid = urlParams.get('paid') === 'true';
   const pending = loadPending();
 
-  if (urlParams.get('paid') === 'true') {
+  if (isPaid) {
     document.getElementById('postPurchaseInfo').style.display = 'block';
   }
 
@@ -514,8 +542,6 @@ window.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('error').textContent = 'Er ging iets mis bij het aanmaken van je sessie. Probeer opnieuw of contacteer ons.';
       document.getElementById('error').style.display = 'block';
     }
-  } else if (isPaid && !pending) {
-    document.getElementById('postPurchaseInfo').style.display = 'block';
   }
 });
 </script>
