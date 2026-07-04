@@ -176,4 +176,381 @@
         <input type="checkbox" id="includeFollowups" checked>
         <label for="includeFollowups">
           <strong>Diepgaand traject met vervolgvragen</strong>
-          <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">Na de eerste
+          <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">Na de eerste verhalen stelt Middlepoint elk gerichte vervolgvragen. Vink uit als je enkel een snel overzicht wil.</div>
+        </label>
+      </div>
+    </div>
+
+    <div id="paymentConfirm" style="display:none;margin-bottom:20px">
+      <div class="payment-confirm">
+        <p style="margin:0 0 6px;font-size:.85rem;color:var(--ink-soft)">Je staat op het punt te betalen voor:</p>
+        <p style="margin:0;font-size:1.1rem;font-weight:700;color:var(--ink)" id="paymentConfirmText"></p>
+        <p style="margin:8px 0 0;font-size:.82rem;color:var(--ink-soft)">Je wordt doorgestuurd naar een beveiligde betaalpagina. Na de betaling kom je automatisch terug om je gesprek te starten.</p>
+      </div>
+    </div>
+
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Sessie aanmaken</button>
+  </form>
+
+  <div id="result" style="display:none;margin-top:32px">
+    <a href="/" class="btn ghost" style="margin-bottom:12px;display:inline-block">← Terug naar startpagina</a>
+    <h3>Klaar! Hieronder jullie links</h3>
+    <div id="linksList"></div>
+    <div id="inviteStatus" style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)"></div>
+    <div style="margin-top:24px">
+      <a href="/" class="btn outline">Terug naar startpagina</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'mp_pending_session';
+function savePending(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {} }
+function loadPending() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
+
+let selectedPlanId = 'gratis';
+let activeSubscription = null;
+const planSelector = document.getElementById('planSelector');
+
+const planFeatures = {
+  gratis: {
+    has: ['Eerste eerlijk overzicht', 'Samenvatting van het conflict', 'Gedeelde grond'],
+    hasNot: ['Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+  },
+  los: {
+    has: ['1 volledig gesprek', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Check-ins achteraf'],
+    hasNot: [],
+  },
+  starter: {
+    has: ['3 gesprekken per maand', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    hasNot: [],
+  },
+  plus: {
+    has: ['10 gesprekken per maand', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    hasNot: [],
+  },
+};
+
+function showPlanDetail(planId) {
+  const detail = document.getElementById('planDetail');
+  const features = planFeatures[planId];
+  if (!features) { detail.style.display = 'none'; return; }
+  const hasItems = features.has.map(f => `<li><span class="check">✓</span> ${f}</li>`).join('');
+  const hasNotItems = features.hasNot.map(f => `<li><span class="cross">–</span> <span style="color:var(--ink-soft)">${f}</span></li>`).join('');
+  detail.innerHTML = `<div class="plan-detail"><ul>${hasItems}${hasNotItems}</ul></div>`;
+  detail.style.display = 'block';
+}
+
+PRICING_CONFIG.plans.filter(p => p.id !== 'pro').forEach(plan => {
+  const pill = document.createElement('label');
+  pill.className = 'plan-pill' + (plan.id === 'gratis' ? ' selected' : '');
+  pill.dataset.planId = plan.id;
+  const priceLabel = plan.price === 0 ? 'Gratis' : `€${plan.price.toFixed(2).replace('.',',')}${plan.period}`;
+  pill.innerHTML = `
+    <input type="radio" name="plan" value="${plan.id}" ${plan.id === 'gratis' ? 'checked' : ''}>
+    <span class="plan-pill-name">${plan.name}</span>
+    <span class="plan-pill-price">${priceLabel}</span>
+    <span class="plan-pill-desc">${plan.sessionsPerMonth === 1 ? '1 gesprek' : `${plan.sessionsPerMonth}/maand`}</span>`;
+  planSelector.appendChild(pill);
+
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.plan-pill').forEach(p => p.classList.remove('selected'));
+    pill.classList.add('selected');
+    selectedPlanId = plan.id;
+    showPlanDetail(plan.id);
+    updatePlanUI();
+  });
+});
+
+showPlanDetail('gratis');
+
+function updatePlanUI() {
+  const isFree = selectedPlanId === 'gratis';
+  const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+
+  document.getElementById('freeNotice').style.display = (isFree && !hasActiveSub) ? 'block' : 'none';
+  document.getElementById('paidNotice').style.display = (!isFree && !hasActiveSub) ? 'block' : 'none';
+  document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
+  document.getElementById('extraOptions').style.display = isFree ? 'none' : 'block';
+
+  if (!isFree && !hasActiveSub) {
+    const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
+    if (selectedPlan) {
+      const priceLabel = `€${selectedPlan.price.toFixed(2).replace('.',',')} ${selectedPlan.period}`;
+      document.getElementById('paymentConfirmText').textContent = `${selectedPlan.name} — ${priceLabel}`;
+      document.getElementById('paymentConfirm').style.display = 'block';
+    }
+  } else {
+    document.getElementById('paymentConfirm').style.display = 'none';
+  }
+
+  document.getElementById('submitBtn').textContent = (!isFree && !hasActiveSub) ? 'Verder naar betaling' : 'Sessie aanmaken';
+}
+
+// BUGFIX: enkel abonnementen (starter/plus/pro) kunnen de knop blokkeren bij limiet.
+// 'los' (eenmalig) en 'gratis' blokkeren NOOIT vooraf: bij gratis toont de server
+// achteraf een duidelijke foutmelding, en 'los' mag altijd opnieuw gekocht worden.
+async function checkEmail(email) {
+  if (!email || !email.includes('@')) return;
+  try {
+    const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+
+    if (!data.known) {
+      activeSubscription = null;
+      document.getElementById('limitBox').style.display = 'none';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').style.opacity = '1';
+      return;
+    }
+
+    activeSubscription = data;
+    const isSubscriptionPlan = ['starter', 'plus', 'pro'].includes(data.plan);
+
+    // Reset UI standaard
+    document.getElementById('limitBox').style.display = 'none';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').style.opacity = '1';
+
+    if (isSubscriptionPlan && data.planStatus !== 'cancelled') {
+      document.querySelectorAll('.plan-pill').forEach(pill => {
+        pill.classList.remove('selected');
+        if (pill.dataset.planId === data.plan) pill.classList.add('selected');
+      });
+      selectedPlanId = data.plan;
+      showPlanDetail(data.plan);
+
+      const periodEnd = data.periodEnd
+        ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+        : null;
+      document.getElementById('customerInfoText').innerHTML = `
+        <strong>Actief plan: ${data.planLabel}</strong><br>
+        Gesprekken resterend: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
+        ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}`;
+
+      if (data.sessionsRemaining <= 0) {
+        document.getElementById('limitMsg').textContent = `Je hebt je limiet bereikt voor het ${data.planLabel}-plan (${data.sessionsLimit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`;
+        document.getElementById('limitBox').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').style.opacity = '0.5';
+      }
+    }
+    // Voor 'los' en 'gratis': geen vooraf-blokkade. De server (create-session) checkt
+    // dit zelf bij het indienen en toont dan pas een foutmelding indien nodig.
+
+    updatePlanUI();
+  } catch (err) {
+    console.error('Email check mislukt:', err);
+  }
+}
+
+document.getElementById('organizerEmail').addEventListener('blur', e => {
+  checkEmail(e.target.value.trim());
+});
+
+function checkAutoSendInvites() {
+  const hasEmail = Array.from(document.querySelectorAll('.participant-email')).some(i => i.value.trim());
+  document.getElementById('sendInvites').checked = hasEmail;
+}
+
+function addParticipantRow() {
+  const wrap = document.getElementById('participantInputs');
+  const div = document.createElement('div');
+  div.style.marginBottom = '14px';
+  div.innerHTML = `
+    <div class="participant-row">
+      <input type="text" class="participant-name" placeholder="Naam van de deelnemer">
+      <input type="email" class="participant-email" placeholder="E-mailadres (aanbevolen)">
+    </div>
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
+  wrap.appendChild(div);
+
+  div.querySelector('.participant-email').addEventListener('blur', e => {
+    div.querySelector('.participant-warning').style.display = e.target.value.trim() ? 'none' : 'block';
+    checkAutoSendInvites();
+  });
+  div.querySelector('.participant-email').addEventListener('input', checkAutoSendInvites);
+}
+
+addParticipantRow();
+document.getElementById('addParticipant').addEventListener('click', addParticipantRow);
+
+document.getElementById('category').addEventListener('change', e => {
+  document.getElementById('categoryOtherField').style.display = e.target.value === 'andere' ? 'block' : 'none';
+});
+
+document.getElementById('isThirdParty').addEventListener('change', e => {
+  document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
+});
+
+function copyLink(btn, link) {
+  navigator.clipboard.writeText(link).then(() => {
+    const old = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = old; }, 1500);
+  });
+}
+
+function whatsappLink(name, fromName, link) {
+  const text = `Hoi ${name}, ${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+document.getElementById('newSessionForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errorBox = document.getElementById('error');
+  const limitBox = document.getElementById('limitBox');
+  errorBox.style.display = 'none';
+  limitBox.style.display = 'none';
+
+  let category = document.getElementById('category').value;
+  if (category === 'andere') {
+    const custom = document.getElementById('categoryOther').value.trim();
+    if (!custom) { errorBox.textContent = 'Omschrijf kort je situatie.'; errorBox.style.display = 'block'; return; }
+    category = custom;
+  }
+
+  const organizerName = document.getElementById('organizerName').value.trim();
+  const organizerEmail = document.getElementById('organizerEmail').value.trim();
+  const isThirdParty = document.getElementById('isThirdParty').checked;
+  const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
+  const sendInvites = document.getElementById('sendInvites').checked;
+  const includeFollowupsEl = document.getElementById('includeFollowups');
+  const includeFollowups = selectedPlanId === 'gratis' ? false : (includeFollowupsEl ? includeFollowupsEl.checked : true);
+
+  if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
+
+  const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
+  const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
+  const participantNames = nameInputs.map(i => i.value.trim()).filter(Boolean);
+  const participantEmails = nameInputs.map((_, i) => emailInputs[i] ? emailInputs[i].value.trim() : '');
+
+  if (!organizerName || participantNames.length === 0) {
+    errorBox.textContent = 'Vul je naam en minstens één deelnemer in.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+
+  if (selectedPlanId !== 'gratis' && !hasActiveSub) {
+    const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
+    if (!selectedPlan || !selectedPlan.ctaLink) {
+      errorBox.textContent = 'Dit plan is nog niet beschikbaar.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    savePending({
+      category, organizerName, organizerEmail, organizerRole,
+      organizerSeesDocument, sendInvites, participantNames, participantEmails,
+      selectedPlanId, includeFollowups, isThirdParty
+    });
+    window.location.href = selectedPlan.ctaLink;
+    return;
+  }
+
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId, includeFollowups });
+});
+
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan, includeFollowups }) {
+  const errorBox = document.getElementById('error');
+  const limitBox = document.getElementById('limitBox');
+  try {
+    const res = await fetch('/.netlify/functions/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan, includeFollowups }),
+    });
+    const data = await res.json();
+
+    if (res.status === 403 && data.limitReached) {
+      document.getElementById('limitMsg').textContent = data.error;
+      limitBox.style.display = 'block';
+      limitBox.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
+
+    document.getElementById('newSessionForm').style.display = 'none';
+    document.getElementById('postPurchaseInfo').style.display = 'none';
+    const list = document.getElementById('linksList');
+    list.innerHTML = '';
+    const inviteMessages = [];
+
+    for (let i = 0; i < data.participants.length; i++) {
+      const p = data.participants[i];
+      const block = document.createElement('div');
+      block.className = 'person-block';
+      const fullLink = window.location.origin + p.accessLink;
+      const mainButtonLabel = isThirdParty && p.isOrganizer ? 'Bekijk status' : 'Vul mijn document in';
+      const waLink = whatsappLink(p.name, organizerName, fullLink);
+      block.innerHTML = `
+        <div class="who">Persoonlijke link voor ${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <input type="text" readonly value="${fullLink}" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.8rem">
+          <button type="button" class="icon-btn" title="Kopieer link">📋</button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${p.isOrganizer ? `<a href="${p.accessLink}" class="btn clay">${mainButtonLabel}</a>` : ''}
+          <a href="${waLink}" target="_blank" class="btn whatsapp">Verstuur via WhatsApp</a>
+        </div>`;
+      list.appendChild(block);
+      block.querySelector('button').addEventListener('click', ev => copyLink(ev.currentTarget, fullLink));
+
+      if (sendInvites && !p.isOrganizer) {
+        const matchIndex = participantNames.indexOf(p.name);
+        const email = matchIndex !== -1 ? participantEmails[matchIndex] : '';
+        if (email) {
+          try {
+            const inviteRes = await fetch('/.netlify/functions/send-invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ toEmail: email, fromName: organizerName, toName: p.name, accessLink: fullLink, category }),
+            });
+            const inviteData = await inviteRes.json();
+            inviteMessages.push(inviteRes.ok ? `Mail verstuurd naar ${p.name}.` : `Mail naar ${p.name} mislukt: ${inviteData.error}`);
+          } catch (err) {
+            inviteMessages.push(`Mail naar ${p.name} mislukt: ${err.message}`);
+          }
+        }
+      }
+    }
+
+    document.getElementById('inviteStatus').innerHTML = inviteMessages.join('<br>');
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPaid = urlParams.get('paid') === 'true';
+  const pending = loadPending();
+
+  if (isPaid) {
+    document.getElementById('postPurchaseInfo').style.display = 'block';
+  }
+
+  if (isPaid && pending) {
+    document.getElementById('newSessionForm').style.display = 'none';
+    document.getElementById('processingMsg').style.display = 'block';
+    clearPending();
+    try {
+      await createSession(pending);
+    } catch (err) {
+      document.getElementById('processingMsg').style.display = 'none';
+      document.getElementById('newSessionForm').style.display = 'block';
+      document.getElementById('error').textContent = 'Er ging iets mis bij het aanmaken van je sessie. Probeer opnieuw of contacteer ons.';
+      document.getElementById('error').style.display = 'block';
+    }
+  }
+});
+</script>
+</body>
+</html>
