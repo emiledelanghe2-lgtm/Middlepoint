@@ -51,7 +51,85 @@
     <span class="label">Prijzen</span>
     <h2>Begin gratis, betaal pas als het werkt voor jou</h2>
   </div>
-  <div class="pricing-grid" id="pricingGrid"></div>
+  <div class="pricing-grid" id="pricingGrid">
+
+    <div class="plan-card">
+      <div class="plan-name">Gratis kennismaking</div>
+      <div class="plan-price">Gratis </div>
+      <div style="height:24px"></div>
+      <div class="plan-desc">Eén eerste inzicht: een samenvatting van het conflict en waar jullie het al over eens zijn.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> 1 gesprek</li>
+        <li><span class="cross">–</span> Vervolgvragen</li>
+        <li><span class="cross">–</span> Groeidocument / check-ins</li>
+        <li><span class="cross">–</span> Volledig document met inzichten en tips</li>
+        <li><span class="check">✓</span> Max 2.000 tekens per verhaal</li>
+      </ul>
+      <a href="/new.html" class="btn outline" style="text-align:center">Start gratis</a>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-name">Eén gesprek</div>
+      <div class="plan-price">€3,99 <span>eenmalig</span></div>
+      <div class="plan-period-badge">Eenmalig</div>
+      <div class="plan-desc">1 volledig gesprek met vervolgvragen, het complete document met inzichten en tips, en check-ins achteraf.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> 1 gesprek</li>
+        <li><span class="check">✓</span> Vervolgvragen</li>
+        <li><span class="check">✓</span> Groeidocument / check-ins</li>
+        <li><span class="check">✓</span> Volledig document met inzichten en tips</li>
+        <li><span class="check">✓</span> Max 12.000 tekens per verhaal</li>
+      </ul>
+      <a href="https://buy.stripe.com/00w8wP1sw3Du6w9djRaVa0b" class="btn outline" style="text-align:center">Start nu</a>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">€4,99 <span>/maand</span></div>
+      <div class="plan-period-badge">Per maand</div>
+      <div class="plan-desc">3 volledige gesprekken per maand, inclusief vervolgvragen, compleet document en check-ins.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> 3 gesprekken per maand</li>
+        <li><span class="check">✓</span> Vervolgvragen</li>
+        <li><span class="check">✓</span> Groeidocument / check-ins</li>
+        <li><span class="check">✓</span> Volledig document met inzichten en tips</li>
+        <li><span class="check">✓</span> Max 12.000 tekens per verhaal</li>
+      </ul>
+      <a href="https://buy.stripe.com/28E6oH3AE2zq7AdfrZaVa0c" class="btn outline" style="text-align:center">Start nu</a>
+    </div>
+
+    <div class="plan-card highlight">
+      <div class="plan-name">Plus</div>
+      <div class="plan-price">€12,99 <span>/maand</span></div>
+      <div class="plan-period-badge">Per maand</div>
+      <div class="plan-desc">10 volledige gesprekken per maand. Voor wie Middlepoint regelmatig gebruikt.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> 10 gesprekken per maand</li>
+        <li><span class="check">✓</span> Vervolgvragen</li>
+        <li><span class="check">✓</span> Groeidocument / check-ins</li>
+        <li><span class="check">✓</span> Volledig document met inzichten en tips</li>
+        <li><span class="check">✓</span> Max 12.000 tekens per verhaal</li>
+      </ul>
+      <a href="https://buy.stripe.com/14AbJ1b365LC7Ad5RpaVa0d" class="btn clay" style="text-align:center">Start nu</a>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-name">Pro</div>
+      <div class="plan-price">Op maat </div>
+      <div style="height:24px"></div>
+      <div class="plan-desc">Voor therapeuten, HR en advocaten. Aantal gesprekken en prijs op maat. Neem contact op voor een persoonlijk voorstel.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Onbeperkt gesprekken</li>
+        <li><span class="check">✓</span> Vervolgvragen</li>
+        <li><span class="check">✓</span> Groeidocument / check-ins</li>
+        <li><span class="check">✓</span> Volledig document met inzichten en tips</li>
+        <li><span class="check">✓</span> Inzichten voor begeleider</li>
+        <li><span class="check">✓</span> Max 12.000 tekens per verhaal</li>
+      </ul>
+      <a href="mailto:middlepoint@zohomail.eu?subject=Pro plan Middlepoint" class="btn outline" style="text-align:center">Contacteer ons</a>
+    </div>
+
+  </div>
   <p style="margin-top:20px;font-size:.85rem;color:var(--ink-soft);text-align:center">
     Abonnement beheren, van plan wisselen of opzeggen? Dat kan via <a href="/login.html" style="font-weight:600">Mijn gesprekken</a>.
   </p>
@@ -108,42 +186,5 @@
   </p>
 </footer>
 
-<script src="/pricing-config.js"></script>
-<script>
-const grid = document.getElementById('pricingGrid');
-PRICING_CONFIG.plans.forEach(plan => {
-  const card = document.createElement('div');
-  card.className = 'plan-card' + (plan.highlight ? ' highlight' : '');
-
-  const priceLabel = plan.price === null
-    ? 'Op maat'
-    : plan.price === 0
-      ? 'Gratis'
-      : `${PRICING_CONFIG.currency}${plan.price.toFixed(2).replace('.', ',')}`;
-
-  const sessionLabel = plan.sessionsPerMonth === null
-    ? 'Onbeperkt gesprekken'
-    : plan.sessionsPerMonth === 1
-      ? '1 gesprek'
-      : `${plan.sessionsPerMonth} gesprekken per maand`;
-
-  card.innerHTML = `
-    <div class="plan-name">${plan.name}</div>
-    <div class="plan-price">${priceLabel} ${plan.period ? `<span>${plan.period}</span>` : ''}</div>
-    ${plan.period === 'eenmalig' ? '<div class="plan-period-badge">Eenmalig</div>' : plan.period === '/maand' ? '<div class="plan-period-badge">Per maand</div>' : '<div style="height:24px"></div>'}
-    <div class="plan-desc">${plan.description}</div>
-    <ul class="plan-features">
-      <li><span class="check">✓</span> ${sessionLabel}</li>
-      <li>${plan.includesFollowups ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Vervolgvragen</li>
-      <li>${plan.includesCheckins ? '<span class="check">✓</span>' : '<span class="cross">–</span>'} Groeidocument / check-ins</li>
-      <li>${plan.id === 'gratis' ? '<span class="cross">–</span>' : '<span class="check">✓</span>'} Volledig document met inzichten en tips</li>
-      ${plan.includesProfessionalInsights ? '<li><span class="check">✓</span> Inzichten voor begeleider</li>' : ''}
-      ${plan.maxCharsPerStory ? `<li><span class="check">✓</span> Max ${plan.maxCharsPerStory.toLocaleString('nl-BE')} tekens per verhaal</li>` : ''}
-    </ul>
-    <a href="${plan.ctaLink}" class="btn ${plan.highlight ? 'clay' : 'outline'}" style="text-align:center">${plan.cta}</a>
-  `;
-  grid.appendChild(card);
-});
-</script>
 </body>
 </html>
