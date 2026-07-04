@@ -17,11 +17,24 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ known: false }) };
     }
 
+    const ACTIVE_SUBSCRIPTION_PLANS = ['starter', 'plus', 'pro'];
+    const hasActiveSubscription =
+      ACTIVE_SUBSCRIPTION_PLANS.includes(customer.plan) &&
+      customer.plan_status === 'active';
+
+    // Voor gratis/los, of onbekende/niet-actieve abonnementen: doe alsof
+    // het e-mailadres onbekend is. new.html verandert daar toch niets aan
+    // het gekozen plan bij, dus dit heeft geen effect op het gedrag —
+    // maar het voorkomt dat iemand met een willekeurig e-mailadres kan
+    // opvragen of dat adres klant is en wat zijn/haar status is.
+    if (!hasActiveSubscription) {
+      return { statusCode: 200, body: JSON.stringify({ known: false }) };
+    }
+
     const PLAN_LIMITS = { gratis: 1, los: 1, starter: 3, plus: 10, pro: 30 };
     const limit = PLAN_LIMITS[customer.plan] ?? 1;
     const used = customer.sessions_used_this_period || 0;
     const remaining = Math.max(0, limit - used);
-
     const planLabels = {
       gratis: 'Gratis',
       los: 'Eén gesprek',
