@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inloggen, Middlepoint</title>
+<title>Inloggen | Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -15,23 +15,19 @@
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
-    <a href="/find-link.html">Link kwijt?</a>
     <a href="/new.html" class="btn">Start een gesprek</a>
   </div>
 </nav>
 </header>
-
 <div class="app-wrap" style="max-width:480px">
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
   <span class="label">Mijn gesprekken</span>
   <h1>Inloggen</h1>
   <p style="color:var(--ink-soft)">Vul je e-mailadres in. Je ontvangt een link waarmee je al jouw gesprekken en documenten kan terugvinden.</p>
-
   <div id="error" class="error-box" style="display:none"></div>
   <div id="success" style="display:none" class="status-box">
     <p style="margin:0;color:var(--sage)">We hebben een link verstuurd naar jouw e-mailadres. Kijk in je inbox (en eventueel je spammap) en klik op de link om in te loggen.</p>
   </div>
-
   <form id="loginForm">
     <div class="field">
       <label for="email">Jouw e-mailadres</label>
@@ -39,10 +35,8 @@
     </div>
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Stuur mij een toegangslink</button>
   </form>
-
   <p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)">Heb je nog geen gesprek gestart? <a href="/new.html">Begin hier</a>.</p>
 </div>
-
 <script>
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -50,12 +44,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const errorBox = document.getElementById('error');
   const successBox = document.getElementById('success');
   const submitBtn = document.getElementById('submitBtn');
-
   errorBox.style.display = 'none';
   successBox.style.display = 'none';
   submitBtn.textContent = 'Even geduld...';
   submitBtn.disabled = true;
-
   try {
     const res = await fetch('/.netlify/functions/send-magic-link', {
       method: 'POST',
@@ -64,7 +56,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-
     document.getElementById('loginForm').style.display = 'none';
     successBox.style.display = 'block';
   } catch (err) {
