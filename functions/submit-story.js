@@ -1,4 +1,34 @@
 const { getSupabase } = require('./_supabase');
+
+async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
+  if (!process.env.RESEND_API_KEY || !toEmail) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
+        to: toEmail,
+        subject: `${fromName} heeft zijn verhaal ingediend`,
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
+            <p><strong>${fromName}</strong> heeft zojuist zijn kant van het verhaal ingediend bij Middlepoint.</p>
+            <p>Zodra iedereen zijn verhaal heeft ingediend, gaan we verder met de volgende stap.</p>
+            <p style="margin:28px 0">
+              <a href="${siteUrl}${accessLink}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk mijn status</a>
+            </p>
+          </div>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Kon story-ingediend-mail niet versturen:', err);
+  }
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -28,15 +58,17 @@ exports.handler = async (event) => {
       content,
       is_anonymous: !!isAnonymous,
     });
-    // Check of alle echte deelnemers (dus niet de pure derde partij) nu hun ronde-1-verhaal hebben ingediend
+
     const { data: allParticipants } = await supabase
       .from('participants')
-      .select('id, is_organizer')
+      .select('id, is_organizer, display_name, email, access_token')
       .eq('session_id', participant.session_id);
+
     const sessionOrganizerRole = participant.sessions.organizer_role;
     const requiredIds = allParticipants
       .filter(p => !(p.is_organizer && sessionOrganizerRole))
       .map(p => p.id);
+
     const { data: round1Entries } = await supabase
       .from('entries')
       .select('participant_id')
@@ -44,15 +76,27 @@ exports.handler = async (event) => {
       .eq('round', 1);
     const submittedIds = new Set((round1Entries || []).map(e => e.participant_id));
     const everyoneSubmitted = requiredIds.every(id => submittedIds.has(id));
+
+    const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
+
+    // Nieuwe feature: verwittig de andere deelnemer(s) dat deze persoon zijn verhaal
+    // heeft ingediend. Enkel als niet iedereen al klaar is (anders volgt sowieso
+    // meteen de "document klaar"-mail, en zou dit dubbelop zijn).
+    if (!everyoneSubmitted) {
+      const others = allParticipants.filter(p => p.id !== participant.id && p.email);
+      await Promise.all(
+        others.map(p =>
+          sendStorySubmittedEmail(p.email, p.display_name, participant.display_name, siteUrl, `/story.html?token=${p.access_token}`)
+        )
+      );
+    }
+
     if (everyoneSubmitted) {
       await supabase
         .from('sessions')
         .update({ status: 'verhalen_klaar_vervolgvragen_genereren', updated_at: new Date().toISOString() })
         .eq('id', participant.session_id);
-      // Trigger de achtergrondfunctie die de AI-vervolgvragen genereert.
-      // BELANGRIJK: we wachten (await) op het opstarten van deze call, anders kan Netlify
-      // de functie-uitvoering afbreken voor de fetch ooit echt vertrekt.
-      const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
+
       try {
         await fetch(`${siteUrl}/.netlify/functions/generate-followups-background`, {
           method: 'POST',
@@ -63,6 +107,7 @@ exports.handler = async (event) => {
         console.error('Kon followups-background niet triggeren:', e);
       }
     }
+
     return { statusCode: 200, body: JSON.stringify({ ok: true, everyoneSubmitted }) };
   } catch (err) {
     console.error(err);
