@@ -26,6 +26,15 @@ function saveDraft(suffix, value) { try { localStorage.setItem(draftKey(suffix),
 function loadDraft(suffix) { try { return localStorage.getItem(draftKey(suffix)) || ''; } catch (e) { return ''; } }
 function clearDraft(suffix) { try { localStorage.removeItem(draftKey(suffix)); } catch (e) {} }
 
+const CATEGORY_OPTIONS = [
+  { value: 'koppel', label: 'Koppel / relatie' },
+  { value: 'familie', label: 'Familie' },
+  { value: 'vrienden', label: 'Vrienden' },
+  { value: 'buren', label: 'Buren' },
+  { value: 'werk', label: "Werk / collega's" },
+  { value: 'school', label: 'School' },
+];
+
 async function load() {
   if (!token) { app.innerHTML = '<div class="error-box">Geen geldige link. Vraag de organisator om de link opnieuw te sturen, of <a href="/login.html">bekijk je gesprekken via Mijn gesprekken</a>.</div>'; return; }
   const res = await fetch(`/.netlify/functions/get-session?token=${token}`);
@@ -65,6 +74,59 @@ function attachLinksButton(tok) {
 function getMaxChars(session) {
   const plan = session.plan || 'gratis';
   return plan === 'gratis' ? 2000 : 12000;
+}
+
+function categoryEditorHTML(currentCategory) {
+  const isKnown = CATEGORY_OPTIONS.some(o => o.value === currentCategory);
+  const options = CATEGORY_OPTIONS.map(o =>
+    `<option value="${o.value}" ${o.value === currentCategory ? 'selected' : ''}>${o.label}</option>`
+  ).join('');
+  return `
+    <div class="field" style="margin-bottom:24px">
+      <label for="categoryEdit">Soort situatie</label>
+      <select id="categoryEdit">
+        ${options}
+        <option value="__andere__" ${!isKnown ? 'selected' : ''}>Iets anders, namelijk...</option>
+      </select>
+      <div class="field" id="categoryEditOtherField" style="display:${!isKnown ? 'block' : 'none'};margin-top:10px">
+        <input type="text" id="categoryEditOther" placeholder="Omschrijf kort jouw situatie" value="${!isKnown ? currentCategory : ''}">
+      </div>
+      <div class="help" id="categorySavedMsg" style="display:none;color:var(--sage)">Opgeslagen.</div>
+    </div>`;
+}
+
+function attachCategoryEditor(session) {
+  const select = document.getElementById('categoryEdit');
+  if (!select) return;
+  const otherField = document.getElementById('categoryEditOtherField');
+  const otherInput = document.getElementById('categoryEditOther');
+  const savedMsg = document.getElementById('categorySavedMsg');
+
+  async function saveCategory() {
+    let value = select.value;
+    if (value === '__andere__') {
+      value = otherInput.value.trim();
+      if (!value) return;
+    }
+    if (value === session.category) return;
+    try {
+      const res = await fetch('/.netlify/functions/update-session-category', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, category: value }),
+      });
+      if (res.ok) {
+        session.category = value;
+        savedMsg.style.display = 'block';
+        setTimeout(() => { savedMsg.style.display = 'none'; }, 2500);
+      }
+    } catch (e) { /* stil falen, niet kritiek */ }
+  }
+
+  select.addEventListener('change', () => {
+    otherField.style.display = select.value === '__andere__' ? 'block' : 'none';
+    if (select.value !== '__andere__') saveCategory();
+  });
+  otherInput.addEventListener('blur', saveCategory);
 }
 
 function render(data) {
@@ -183,6 +245,9 @@ function renderStoryForm(name, session) {
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>. Is dit niet jouw naam? Sluit deze pagina en vraag de juiste link op bij wie het gesprek startte, of <a href="/login.html">bekijk je eigen gesprekken</a>.
     </div>
+
+    ${categoryEditorHTML(session.category)}
+
     ${isGratis ? `<div class="card" style="background:var(--clay-soft);border:none;margin-bottom:20px;padding:16px">
       <p style="margin:0;font-size:.9rem">Je gebruikt de gratis versie (max 2.000 tekens). Voor een uitgebreider verhaal en vervolgvragen, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
     </div>` : ''}
@@ -236,6 +301,8 @@ function renderStoryForm(name, session) {
         </div>
       </div>
     </div>`;
+
+  attachCategoryEditor(session);
 
   const storyText = document.getElementById('storyText');
 
