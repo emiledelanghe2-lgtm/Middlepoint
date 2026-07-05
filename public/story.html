@@ -911,7 +911,8 @@ function render(data) {
       const wie = otherNames(data) || 'de andere deelnemer(s)';
       app.innerHTML = `<span class="label">${session.category}</span>
         <h1>Bedankt voor de aanvulling</h1>
-        <div class="status-box">We wachten nu op de aanvulling van <strong>${wie}</strong>.</div>`;
+        <div class="status-box">We wachten nu op de aanvulling van <strong>${wie}</strong>.</div>
+        <div style="margin-top:16px"><a href="/document.html?token=${token}" class="btn outline">Bekijk je huidige document</a></div>`;
       setTimeout(load, 8000);
     } else {
       renderCheckinForm(round, participant.name);
