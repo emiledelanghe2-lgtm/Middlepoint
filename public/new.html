@@ -536,7 +536,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (isPaid) {
     document.getElementById('postPurchaseInfo').style.display = 'block';
   }
-
+if (!isPaid) {
+    const preselectPlan = urlParams.get('plan');
+    if (preselectPlan && preselectPlan !== 'gratis') {
+      const pill = document.querySelector(`.plan-pill[data-plan-id="${preselectPlan}"]`);
+      if (pill) pill.click();
+    }
+  }
   if (isPaid && pending) {
     document.getElementById('newSessionForm').style.display = 'none';
     document.getElementById('processingMsg').style.display = 'block';
