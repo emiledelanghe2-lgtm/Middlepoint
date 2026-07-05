@@ -52,6 +52,8 @@
 @media (max-width:480px){
   .participant-row{ flex-direction:column; }
 }
+.participant-message{ width:100%; margin-top:6px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:15px; resize:vertical; min-height:60px; }
+.participant-message-label{ font-size:.78rem; color:var(--ink-soft); margin-top:6px; display:block; }
 </style>
 </head>
 <body>
@@ -160,7 +162,7 @@
 
     <div class="form-section">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
-      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Als je een e-mailadres invult, wordt de uitnodigingsmail automatisch verstuurd.</p>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Als je een e-mailadres invult, wordt de uitnodigingsmail automatisch verstuurd. Je kan optioneel ook zelf een kort, persoonlijk berichtje toevoegen dat mee in de mail komt te staan.</p>
       <div id="participantInputs"></div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:4px">+ Nog een deelnemer toevoegen</button>
       <div class="checkbox-row" style="margin-top:16px">
@@ -344,7 +346,9 @@ function addParticipantRow() {
       <input type="text" class="participant-name" placeholder="Naam van de deelnemer">
       <input type="email" class="participant-email" placeholder="E-mailadres (aanbevolen)">
     </div>
-    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>`;
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>
+    <span class="participant-message-label">Persoonlijk berichtje (optioneel, komt mee in de uitnodigingsmail)</span>
+    <textarea class="participant-message" placeholder="bv. Hey, ik heb ons gesprek over het gras via Middlepoint gestart, zou fijn zijn als jij ook je kant deelt."></textarea>`;
   wrap.appendChild(div);
 
   div.querySelector('.participant-email').addEventListener('blur', e => {
@@ -403,8 +407,10 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
+  const messageInputs = Array.from(document.querySelectorAll('.participant-message'));
   const participantNames = nameInputs.map(i => i.value.trim()).filter(Boolean);
   const participantEmails = nameInputs.map((_, i) => emailInputs[i] ? emailInputs[i].value.trim() : '');
+  const participantMessages = nameInputs.map((_, i) => messageInputs[i] ? messageInputs[i].value.trim() : '');
 
   if (!organizerName || participantNames.length === 0) {
     errorBox.textContent = 'Vul je naam en minstens één deelnemer in.';
@@ -423,17 +429,17 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     }
     savePending({
       category, organizerName, organizerEmail, organizerRole,
-      organizerSeesDocument, sendInvites, participantNames, participantEmails,
+      organizerSeesDocument, sendInvites, participantNames, participantEmails, participantMessages,
       plan: selectedPlanId, isThirdParty
     });
     window.location.href = selectedPlan.ctaLink;
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan }) {
   const errorBox = document.getElementById('error');
   const limitBox = document.getElementById('limitBox');
   try {
@@ -482,12 +488,13 @@ async function createSession({ category, organizerName, organizerEmail, organize
       if (sendInvites && !p.isOrganizer) {
         const matchIndex = participantNames.indexOf(p.name);
         const email = matchIndex !== -1 ? participantEmails[matchIndex] : '';
+        const customMessage = matchIndex !== -1 ? participantMessages[matchIndex] : '';
         if (email) {
           try {
             const inviteRes = await fetch('/.netlify/functions/send-invite', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ toEmail: email, fromName: organizerName, toName: p.name, accessLink: fullLink, category }),
+              body: JSON.stringify({ toEmail: email, fromName: organizerName, toName: p.name, accessLink: fullLink, category, customMessage }),
             });
             const inviteData = await inviteRes.json();
             inviteMessages.push(inviteRes.ok ? `Mail verstuurd naar ${p.name}.` : `Mail naar ${p.name} mislukt: ${inviteData.error}`);
