@@ -34,7 +34,6 @@
 .customer-info{ background:#EFF4ED; border:1px solid var(--sage); border-radius:var(--radius); padding:16px; margin-top:12px; font-size:.88rem; }
 .payment-confirm{ background:var(--clay-soft); border:1.5px solid var(--clay); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
 
-/* BUGFIX: deelnemersvakjes hadden geen styling, nu wel duidelijk en groot */
 .participant-row{ display:flex; gap:10px; margin-bottom:8px; }
 .participant-row input[type=text],
 .participant-row input[type=email]{
@@ -101,7 +100,7 @@
       <span class="form-section-title">1. Kies je plan</span>
       <div class="plan-grid" id="planSelector"></div>
       <div id="planDetail" style="display:none"></div>
-      <div id="freeNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">De gratis versie geeft een eerste overzicht. Voor vervolgvragen, tips en gesprekshulp, kies een betaald plan. <a href="/pricing.html">Meer info</a></div>
+      <div id="freeNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">De gratis versie geeft een eerste overzicht met een beknopte vragenlijst. Voor de volledige, diepgaande vragenlijst en het complete document, kies een betaald plan. <a href="/pricing.html">Meer info</a></div>
       <div id="paidNotice" style="display:none;margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Na het invullen ga je naar de beveiligde betaalpagina.</div>
       <div id="activeSubNotice" style="display:none;margin-top:14px">
         <div class="customer-info">
@@ -170,17 +169,6 @@
       </div>
     </div>
 
-    <div class="form-section" id="extraOptions" style="display:none">
-      <span class="form-section-title">4. Extra opties</span>
-      <div class="checkbox-row" style="margin-bottom:0">
-        <input type="checkbox" id="includeFollowups" checked>
-        <label for="includeFollowups">
-          <strong>Diepgaand traject met vervolgvragen</strong>
-          <div style="font-size:.85rem;color:var(--ink-soft);margin-top:3px">Na de eerste verhalen stelt Middlepoint elk gerichte vervolgvragen. Vink uit als je enkel een snel overzicht wil.</div>
-        </label>
-      </div>
-    </div>
-
     <div id="paymentConfirm" style="display:none;margin-bottom:20px">
       <div class="payment-confirm">
         <p style="margin:0 0 6px;font-size:.85rem;color:var(--ink-soft)">Je staat op het punt te betalen voor:</p>
@@ -215,19 +203,19 @@ const planSelector = document.getElementById('planSelector');
 
 const planFeatures = {
   gratis: {
-    has: ['Eerste eerlijk overzicht', 'Samenvatting van het conflict', 'Gedeelde grond'],
-    hasNot: ['Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    has: ['Eerste eerlijk overzicht', 'Beknopte vragenlijst', 'Gedeelde grond'],
+    hasNot: ['Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
   },
   los: {
-    has: ['1 volledig gesprek', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Check-ins achteraf'],
+    has: ['1 volledig gesprek', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Check-ins achteraf'],
     hasNot: [],
   },
   starter: {
-    has: ['3 gesprekken per maand', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    has: ['3 gesprekken per maand', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
     hasNot: [],
   },
   plus: {
-    has: ['10 gesprekken per maand', 'Vervolgvragen', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    has: ['10 gesprekken per maand', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
     hasNot: [],
   },
 };
@@ -272,7 +260,6 @@ function updatePlanUI() {
   document.getElementById('freeNotice').style.display = (isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('paidNotice').style.display = (!isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
-  document.getElementById('extraOptions').style.display = isFree ? 'none' : 'block';
 
   if (!isFree && !hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
@@ -288,9 +275,6 @@ function updatePlanUI() {
   document.getElementById('submitBtn').textContent = (!isFree && !hasActiveSub) ? 'Verder naar betaling' : 'Sessie aanmaken';
 }
 
-// BUGFIX: enkel abonnementen (starter/plus/pro) kunnen de knop blokkeren bij limiet.
-// 'los' (eenmalig) en 'gratis' blokkeren NOOIT vooraf: bij gratis toont de server
-// achteraf een duidelijke foutmelding, en 'los' mag altijd opnieuw gekocht worden.
 async function checkEmail(email) {
   if (!email || !email.includes('@')) return;
   try {
@@ -308,7 +292,6 @@ async function checkEmail(email) {
     activeSubscription = data;
     const isSubscriptionPlan = ['starter', 'plus', 'pro'].includes(data.plan);
 
-    // Reset UI standaard
     document.getElementById('limitBox').style.display = 'none';
     document.getElementById('submitBtn').disabled = false;
     document.getElementById('submitBtn').style.opacity = '1';
@@ -336,8 +319,6 @@ async function checkEmail(email) {
         document.getElementById('submitBtn').style.opacity = '0.5';
       }
     }
-    // Voor 'los' en 'gratis': geen vooraf-blokkade. De server (create-session) checkt
-    // dit zelf bij het indienen en toont dan pas een foutmelding indien nodig.
 
     updatePlanUI();
   } catch (err) {
@@ -417,8 +398,6 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
-  const includeFollowupsEl = document.getElementById('includeFollowups');
-  const includeFollowups = selectedPlanId === 'gratis' ? false : (includeFollowupsEl ? includeFollowupsEl.checked : true);
 
   if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
 
@@ -442,26 +421,26 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
       errorBox.style.display = 'block';
       return;
     }
-savePending({
-  category, organizerName, organizerEmail, organizerRole,
-  organizerSeesDocument, sendInvites, participantNames, participantEmails,
-  plan: selectedPlanId, includeFollowups, isThirdParty
-});
+    savePending({
+      category, organizerName, organizerEmail, organizerRole,
+      organizerSeesDocument, sendInvites, participantNames, participantEmails,
+      plan: selectedPlanId, isThirdParty
+    });
     window.location.href = selectedPlan.ctaLink;
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId, includeFollowups });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan: selectedPlanId });
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan, includeFollowups }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, isThirdParty, plan }) {
   const errorBox = document.getElementById('error');
   const limitBox = document.getElementById('limitBox');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan, includeFollowups }),
+      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan }),
     });
     const data = await res.json();
 
@@ -536,13 +515,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (isPaid) {
     document.getElementById('postPurchaseInfo').style.display = 'block';
   }
-if (!isPaid) {
+
+  if (!isPaid) {
     const preselectPlan = urlParams.get('plan');
     if (preselectPlan && preselectPlan !== 'gratis') {
       const pill = document.querySelector(`.plan-pill[data-plan-id="${preselectPlan}"]`);
       if (pill) pill.click();
     }
   }
+
   if (isPaid && pending) {
     document.getElementById('newSessionForm').style.display = 'none';
     document.getElementById('processingMsg').style.display = 'block';
