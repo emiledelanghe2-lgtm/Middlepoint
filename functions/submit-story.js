@@ -79,9 +79,6 @@ exports.handler = async (event) => {
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
 
-    // Nieuwe feature: verwittig de andere deelnemer(s) dat deze persoon zijn verhaal
-    // heeft ingediend. Enkel als niet iedereen al klaar is (anders volgt sowieso
-    // meteen de "document klaar"-mail, en zou dit dubbelop zijn).
     if (!everyoneSubmitted) {
       const others = allParticipants.filter(p => p.id !== participant.id && p.email);
       await Promise.all(
@@ -91,20 +88,25 @@ exports.handler = async (event) => {
       );
     }
 
+    // AANGEPAST: geen vervolgvragen-stap meer. De vragenlijst die de gebruiker nu
+    // invult op story.html is al gestructureerd en diepgaand genoeg, dus zodra
+    // iedereen zijn antwoorden heeft ingediend, gaat het rechtstreeks naar
+    // documentgeneratie. generate-followups-background.js wordt hierdoor niet
+    // meer aangeroepen voor nieuwe sessies.
     if (everyoneSubmitted) {
       await supabase
         .from('sessions')
-        .update({ status: 'verhalen_klaar_vervolgvragen_genereren', updated_at: new Date().toISOString() })
+        .update({ status: 'document_genereren', updated_at: new Date().toISOString() })
         .eq('id', participant.session_id);
 
       try {
-        await fetch(`${siteUrl}/.netlify/functions/generate-followups-background`, {
+        await fetch(`${siteUrl}/.netlify/functions/generate-document-background`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionId: participant.session_id }),
         });
       } catch (e) {
-        console.error('Kon followups-background niet triggeren:', e);
+        console.error('Kon document-background niet triggeren:', e);
       }
     }
 
