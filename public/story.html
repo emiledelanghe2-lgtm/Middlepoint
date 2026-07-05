@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jouw verhaal, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
+<style>
+.q-block{ margin-bottom:26px; }
+.q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
+.mc-group{ display:flex; flex-direction:column; gap:8px; }
+.mc-option{ display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:8px; cursor:pointer; font-size:.92rem; background:var(--white); }
+.mc-option input{ margin-top:3px; }
+.other-input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-family:'Karla',sans-serif; margin-top:6px; }
+.scale-row{ display:flex; gap:8px; }
+.scale-option{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border:1px solid var(--line); border-radius:8px; cursor:pointer; background:var(--white); }
+.scale-labels{ display:flex; justify-content:space-between; font-size:.75rem; color:var(--ink-soft); margin-top:6px; }
+.branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
+.q-textarea{ width:100%; min-height:90px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
+.q-invalid{ outline:2px solid #8A4222; border-radius:10px; }
+</style>
 </head>
 <body>
 <header class="nav-bar">
@@ -20,11 +34,16 @@
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
 const app = document.getElementById('app');
+let currentPlan = 'gratis';
+let pendingSubmitContent = '';
 
 function draftKey(suffix) { return `mp_draft_${suffix}_${token}`; }
 function saveDraft(suffix, value) { try { localStorage.setItem(draftKey(suffix), value); } catch (e) {} }
 function loadDraft(suffix) { try { return localStorage.getItem(draftKey(suffix)) || ''; } catch (e) { return ''; } }
 function clearDraft(suffix) { try { localStorage.removeItem(draftKey(suffix)); } catch (e) {} }
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(v) { return String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"'); }
 
 const CATEGORY_OPTIONS = [
   { value: 'koppel', label: 'Koppel / relatie' },
@@ -34,6 +53,707 @@ const CATEGORY_OPTIONS = [
   { value: 'werk', label: "Werk / collega's" },
   { value: 'school', label: 'School' },
 ];
+
+/* ===================== VRAGENBANK ===================== */
+
+const QUESTIONNAIRES = {
+  koppel: {
+    freeIds: ['duur_samen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'duur_samen', type:'single', label:'Hoelang zijn jullie al samen?', options:[
+        {value:'minder dan 1 jaar', label:'Minder dan 1 jaar'},
+        {value:'1 tot 3 jaar', label:'1 tot 3 jaar'},
+        {value:'3 tot 10 jaar', label:'3 tot 10 jaar'},
+        {value:'meer dan 10 jaar', label:'Meer dan 10 jaar'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit specifieke probleem al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'meer dan een jaar', label:'Meer dan een jaar'},
+        {value:'onze volledige relatie', label:'Onze volledige relatie'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'Waar draait het conflict vooral rond?', options:[
+        {value:'communicatie', label:'Communicatie'},
+        {value:'huishouden', label:'Huishouden en taakverdeling'},
+        {value:'financien', label:'Financien'},
+        {value:'intimiteit', label:'Intimiteit en nabijheid'},
+        {value:'jaloezie', label:'Jaloezie of vertrouwen'},
+        {value:'opvoeding', label:'Opvoeding van de kinderen'},
+        {value:'schoonfamilie', label:'Familie van je partner'},
+        {value:'toekomst', label:'Toekomstplannen'},
+        {value:'vrije_tijd', label:'Vrije tijd en sociale afspraken'},
+      ]},
+      { id:'frequentie', type:'single', label:'Hoe vaak loopt dit uit op een conflict?', options:[
+        {value:'bijna dagelijks', label:'Bijna dagelijks'},
+        {value:'enkele keren per week', label:'Enkele keren per week'},
+        {value:'enkele keren per maand', label:'Enkele keren per maand'},
+        {value:'af en toe, maar weegt zwaar door', label:'Af en toe, maar het weegt zwaar door'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Vergeet even de vakjes hierboven. Wat is, in jouw woorden, het echte probleem tussen jullie?' },
+      { id:'vorm_conflict', type:'multi', allowOther:true, label:'Hoe ziet een conflict er meestal uit tussen jullie?', options:[
+        {value:'schreeuwen', label:'Er wordt geschreeuwd'},
+        {value:'terugtrekken', label:'Een van ons trekt zich terug en zwijgt'},
+        {value:'weglopen', label:'Een van ons loopt weg'},
+        {value:'escaleert', label:'Het escaleert naar verwijten over andere dingen'},
+        {value:'koud', label:'Het wordt koud en afstandelijk, zonder ruzie'},
+      ]},
+      { id:'anderen_erbij', type:'yesno', label:'Gebeurt dit ook waar anderen bij zijn, zoals kinderen, familie of vrienden?',
+        branch:{ ja:{ id:'wie_erbij', type:'multi', allowOther:true, label:'Wie is daar meestal bij?', options:[
+          {value:'kinderen', label:'Onze kinderen'},
+          {value:'familie', label:'Familie'},
+          {value:'vrienden', label:'Vrienden'},
+          {value:'openbaar', label:'Het gebeurt in het openbaar'},
+        ]}}
+      },
+      { id:'al_geprobeerd', type:'yesno', label:'Hebben jullie dit al eerder samen proberen aan te pakken?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'Wat hebben jullie al geprobeerd, en heeft het geholpen?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'Wat maakte het moeilijk om dit al aan te pakken?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit conflict zich voordeed', placeholder:'Kies een moment dat je is bijgebleven. Wat gebeurde er precies, wat werd er gezegd, en hoe eindigde het?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'Hoe voel jij je op dit moment in jullie relatie?', options:[
+        {value:'gefrustreerd', label:'Gefrustreerd'},
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'eenzaam', label:'Eenzaam, ook al zijn we samen'},
+        {value:'boos', label:'Boos'},
+        {value:'onbegrepen', label:'Onbegrepen'},
+        {value:'bang', label:'Bang om het te verliezen'},
+        {value:'hoopvol', label:'Hoopvol dat het beter kan'},
+        {value:'moe', label:'Moe, uitgeput door de herhaling'},
+      ]},
+      { id:'gevoel_partner', type:'multi', allowOther:true, label:'Wat denk jij dat je partner op dit moment voelt?', options:[
+        {value:'gefrustreerd', label:'Gefrustreerd'},
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'eenzaam', label:'Eenzaam, ook al zijn we samen'},
+        {value:'boos', label:'Boos'},
+        {value:'onbegrepen', label:'Onbegrepen'},
+        {value:'bang', label:'Bang om het te verliezen'},
+        {value:'hoopvol', label:'Hoopvol dat het beter kan'},
+        {value:'moe', label:'Moe, uitgeput door de herhaling'},
+      ]},
+      { id:'gehoord', type:'single', label:'Voel je je gehoord door je partner wanneer je dit aankaart?', options:[
+        {value:'ja meestal', label:'Ja, meestal wel'},
+        {value:'soms', label:'Soms wel, soms niet'},
+        {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'durf niet', label:'Ik durf het eigenlijk niet goed aan te kaarten'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Spelen er nog andere zaken mee die het moeilijker maken?', options:[
+        {value:'werkstress', label:'Werkstress'},
+        {value:'financieel', label:'Financiele zorgen'},
+        {value:'gezondheid', label:'Gezondheid, van jezelf of je partner'},
+        {value:'verandering', label:'Een verhuis of grote verandering'},
+        {value:'weinig_tijd', label:'Weinig tijd voor elkaar'},
+        {value:'geen', label:'Nee, het draait echt om dit ene probleem'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'Wat zou voor jou een goede uitkomst zijn?', options:[
+        {value:'begrip', label:'Dat mijn partner beter begrijpt hoe ik me voel'},
+        {value:'verontschuldiging', label:'Een oprechte verontschuldiging'},
+        {value:'afspraken', label:'Dat we samen concrete afspraken maken'},
+        {value:'gedragsverandering', label:'Dat er iets structureel verandert in gedrag'},
+        {value:'normaal_praten', label:'Gewoon dat we weer normaal met elkaar kunnen praten'},
+        {value:'weet_niet', label:'Ik weet het nog niet, ik wil eerst gehoord worden'},
+      ]},
+      { id:'dringendheid', type:'scale', label:'Hoe belangrijk is het voor jou dat dit nu wordt aangepakt?', lowLabel:'Kan nog wachten', highLabel:'Heel dringend' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar we komen er wel', highLabel:'Ik weet niet meer hoe we hier samen uitkomen' },
+      { id:'partner_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je partner het niet weet of niet beseft?',
+        branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
+      },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+
+  familie: {
+    freeIds: ['familielid','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'familielid', type:'single', allowOtherAsOption:true, label:'Om welk familielid gaat het vooral?', options:[
+        {value:'ouder', label:'Een ouder'},
+        {value:'kind', label:'Mijn kind'},
+        {value:'broer_zus', label:'Broer of zus'},
+        {value:'schoonfamilie', label:'Schoonfamilie'},
+        {value:'grootouder', label:'Grootouder'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'meer dan een jaar', label:'Meer dan een jaar'},
+        {value:'ons hele leven', label:'Al ons hele leven'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'Waar draait het conflict vooral rond?', options:[
+        {value:'erfenis_geld', label:'Erfenis of geld'},
+        {value:'opvoeding', label:'Opvoeding of grootbrengen'},
+        {value:'betrokkenheid', label:'Betrokkenheid bij het gezin'},
+        {value:'oude_gebeurtenissen', label:'Oude gebeurtenissen die nooit uitgesproken zijn'},
+        {value:'levenskeuzes', label:'Verschil in levenskeuzes'},
+        {value:'zorg_ouder', label:'Zorg voor een ouder familielid'},
+      ]},
+      { id:'frequentie', type:'single', label:'Hoe vaak komt dit conflict naar boven?', options:[
+        {value:'elke bijeenkomst', label:'Bij elke familiebijeenkomst'},
+        {value:'af en toe', label:'Af en toe'},
+        {value:'nu altijd', label:'Het is er nu altijd'},
+        {value:'onopgelost', label:'Het is een groot conflict dat nooit is opgelost'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
+      { id:'vorm_conflict', type:'multi', allowOther:true, label:'Hoe uit het conflict zich meestal?', options:[
+        {value:'ruzie', label:'Er wordt ruzie gemaakt'},
+        {value:'mijden', label:'Mensen mijden elkaar'},
+        {value:'zwijgen', label:'Er wordt gezwegen over het onderwerp'},
+        {value:'via_anderen', label:'Het wordt besproken via andere familieleden'},
+      ]},
+      { id:'anderen_betrokken', type:'yesno', label:'Zijn er nog andere familieleden bij betrokken of die partij kiezen?',
+        branch:{ ja:{ id:'wie_partij', type:'text', label:'Wie kiest er partij, en hoe uit zich dat?' } }
+      },
+      { id:'al_geprobeerd', type:'yesno', label:'Hebben jullie dit al eerder proberen aan te pakken?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'Wat hebben jullie geprobeerd, en heeft het geholpen?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'Wat maakte het moeilijk om dit aan te pakken?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit conflict zich voordeed', placeholder:'Wat gebeurde er precies, en hoe eindigde het?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'Hoe voel jij je op dit moment tegenover dit familielid?', options:[
+        {value:'boos', label:'Boos'},
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'buitengesloten', label:'Buitengesloten'},
+        {value:'schuldig', label:'Schuldig'},
+        {value:'onbegrepen', label:'Onbegrepen'},
+        {value:'moe', label:'Moe, uitgeput door de herhaling'},
+      ]},
+      { id:'gevoel_ander', type:'multi', allowOther:true, label:'Wat denk je dat dit familielid op dit moment voelt?', options:[
+        {value:'boos', label:'Boos'},
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'buitengesloten', label:'Buitengesloten'},
+        {value:'schuldig', label:'Schuldig'},
+        {value:'onbegrepen', label:'Onbegrepen'},
+        {value:'moe', label:'Moe, uitgeput door de herhaling'},
+      ]},
+      { id:'gehoord', type:'single', label:'Voel je je gehoord wanneer je dit aankaart binnen de familie?', options:[
+        {value:'ja meestal', label:'Ja, meestal wel'},
+        {value:'soms', label:'Soms wel, soms niet'},
+        {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'durf niet', label:'Ik durf het eigenlijk niet aan te kaarten'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Spelen er nog andere zaken mee die het moeilijker maken?', options:[
+        {value:'gezondheid', label:'Gezondheid'},
+        {value:'geld', label:'Geld'},
+        {value:'sterfgeval', label:'Een sterfgeval of ziekte'},
+        {value:'nieuwe_partner', label:'Een nieuwe partner in het gezin'},
+        {value:'afstand', label:'Afstand qua locatie'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'Wat zou voor jou een goede uitkomst zijn?', options:[
+        {value:'begrip', label:'Dat de ander beter begrijpt hoe ik me voel'},
+        {value:'verontschuldiging', label:'Een oprechte verontschuldiging'},
+        {value:'afspraken', label:'Dat we samen afspraken maken'},
+        {value:'normaal_contact', label:'Gewoon weer normaal contact'},
+        {value:'weet_niet', label:'Ik weet het nog niet'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Ik weet niet meer hoe dit ooit goed komt' },
+      { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat dit familielid het niet weet of beseft?',
+        branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
+      },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+
+  vrienden: {
+    freeIds: ['duur_kennen','duur_probleem','onderwerp','contact_nu','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'duur_kennen', type:'single', label:'Hoelang kennen jullie elkaar al?', options:[
+        {value:'minder dan 1 jaar', label:'Minder dan 1 jaar'},
+        {value:'een paar jaar', label:'Een paar jaar'},
+        {value:'meer dan 10 jaar', label:'Meer dan 10 jaar'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit specifieke probleem al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'meer dan een jaar', label:'Meer dan een jaar'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'Waar draait het conflict vooral rond?', options:[
+        {value:'gezegd_gedaan', label:'Iets dat gezegd of gedaan is'},
+        {value:'afstand', label:'Een gevoel van afstand of verwaarlozing'},
+        {value:'jaloezie', label:'Jaloezie of vergelijking'},
+        {value:'meningsverschil', label:'Een meningsverschil dat escaleerde'},
+        {value:'geheim_leugen', label:'Een geheim of leugen'},
+      ]},
+      { id:'contact_nu', type:'single', label:'Hoe vaak spreken jullie elkaar nog?', options:[
+        {value:'even vaak', label:'Nog even vaak als voorheen'},
+        {value:'veel minder', label:'Veel minder dan voorheen'},
+        {value:'vermijden', label:'We vermijden elkaar nu'},
+        {value:'geen contact', label:'We hebben helemaal geen contact meer'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem tussen jullie?' },
+      { id:'vorm_conflict', type:'multi', allowOther:true, label:'Hoe uit het conflict zich meestal?', options:[
+        {value:'ruzie', label:'Ruzie'},
+        {value:'stilzwijgen', label:'Stilzwijgen'},
+        {value:'afstand_nemen', label:'Passief afstand nemen'},
+        {value:'via_andere_vrienden', label:'Het wordt besproken met andere vrienden erbij'},
+      ]},
+      { id:'andere_vrienden_betrokken', type:'yesno', label:'Zijn er andere gemeenschappelijke vrienden bij betrokken?',
+        branch:{ ja:{ id:'hoe_betrokken', type:'text', label:'Hoe zijn zij betrokken?' } }
+      },
+      { id:'al_geprobeerd', type:'yesno', label:'Hebben jullie dit al eerder proberen aan te pakken?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'Wat hebben jullie geprobeerd, en heeft het geholpen?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'Wat maakte het moeilijk om dit aan te pakken?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit conflict zich voordeed', placeholder:'Wat gebeurde er precies, en hoe eindigde het?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'Hoe voel jij je op dit moment over deze vriendschap?', options:[
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'boos', label:'Boos'},
+        {value:'teleurgesteld', label:'Teleurgesteld'},
+        {value:'gemist', label:'Ik mis de vriendschap'},
+        {value:'onzeker', label:'Onzeker over waar we staan'},
+      ]},
+      { id:'gevoel_ander', type:'multi', allowOther:true, label:'Wat denk je dat je vriend of vriendin op dit moment voelt?', options:[
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'boos', label:'Boos'},
+        {value:'teleurgesteld', label:'Teleurgesteld'},
+        {value:'onverschillig', label:'Onverschillig'},
+        {value:'onzeker', label:'Onzeker over waar we staan'},
+      ]},
+      { id:'gehoord', type:'single', label:'Voel je je gehoord wanneer je dit aankaart?', options:[
+        {value:'ja meestal', label:'Ja, meestal wel'},
+        {value:'soms', label:'Soms wel, soms niet'},
+        {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'durf niet', label:'Ik durf het eigenlijk niet aan te kaarten'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Speelt er nog iets anders mee dat het moeilijker maakt?', options:[
+        {value:'levensfase', label:'Een andere levensfase'},
+        {value:'nieuwe_partner', label:'Een nieuwe partner'},
+        {value:'minder_tijd', label:'Minder tijd door werk of gezin'},
+        {value:'al_langer', label:'Iets dat al langer knaagde'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'Wat zou voor jou een goede uitkomst zijn?', options:[
+        {value:'normaal_contact', label:'Dat we het weer normaal kunnen hebben samen'},
+        {value:'verontschuldiging', label:'Een oprechte verontschuldiging'},
+        {value:'begrip', label:'Dat de ander beter begrijpt hoe ik me voelde'},
+        {value:'weet_niet', label:'Ik weet het nog niet'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Ik weet niet meer hoe dit ooit goed komt' },
+      { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je vriend of vriendin het niet weet of beseft?',
+        branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
+      },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+
+  buren: {
+    freeIds: ['duur_buren','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_oplossing','wat_toevoegen'],
+    questions: [
+      { id:'duur_buren', type:'single', label:'Hoelang wonen jullie al naast of dicht bij elkaar?', options:[
+        {value:'minder dan 1 jaar', label:'Minder dan 1 jaar'},
+        {value:'een paar jaar', label:'Een paar jaar'},
+        {value:'meer dan 10 jaar', label:'Meer dan 10 jaar'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit probleem al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'al jaren', label:'Al jaren'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'Waar draait het conflict vooral rond?', options:[
+        {value:'geluidsoverlast', label:'Geluidsoverlast'},
+        {value:'grenzen', label:'Grenzen of eigendom'},
+        {value:'gedeelde_ruimtes', label:'Gedeelde ruimtes'},
+        {value:'huisdieren', label:'Huisdieren'},
+        {value:'parkeren', label:'Parkeren'},
+        {value:'netheid', label:'Netheid of onderhoud'},
+      ]},
+      { id:'frequentie', type:'single', label:'Hoe vaak komt dit voor?', options:[
+        {value:'bijna dagelijks', label:'Bijna dagelijks'},
+        {value:'wekelijks', label:'Wekelijks'},
+        {value:'af en toe maar zwaar', label:'Af en toe, maar het weegt zwaar door'},
+        {value:'een incident', label:'Het was een eenmalig, ernstig incident'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
+      { id:'al_gesproken', type:'yesno', label:'Heb je hier al rechtstreeks met de buur over gesproken?',
+        branch:{
+          ja:{ id:'hoe_verliep', type:'text', label:'Hoe verliep dat gesprek?' },
+          nee:{ id:'waarom_niet_gesproken', type:'text', label:'Wat maakte het moeilijk om dit aan te kaarten?' },
+        }
+      },
+      { id:'derde_partij', type:'yesno', label:'Is er al een derde partij bij betrokken geweest, zoals politie, syndicus of gemeente?',
+        branch:{ ja:{ id:'wat_gebeurde_derde', type:'text', label:'Wat gebeurde er toen?' } }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit probleem zich voordeed', placeholder:'Wat gebeurde er precies?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'Hoe voel jij je op dit moment over deze situatie?', options:[
+        {value:'geirriteerd', label:'Geirriteerd'},
+        {value:'machteloos', label:'Machteloos'},
+        {value:'onveilig', label:'Onveilig'},
+        {value:'boos', label:'Boos'},
+        {value:'moe', label:'Moe van de herhaling'},
+      ]},
+      { id:'buur_beseft', type:'single', allowOther:true, label:'Wat denk je dat de buur op dit moment vindt of ervan beseft?', options:[
+        {value:'beseft niet', label:'Die beseft het waarschijnlijk niet'},
+        {value:'expres', label:'Die doet het waarschijnlijk expres'},
+        {value:'weet niet', label:'Ik weet het niet'},
+      ]},
+      { id:'invloed_leven', type:'yesno', label:'Heeft dit al invloed op je dagelijks leven of woongenot?',
+        branch:{ ja:{ id:'hoe_invloed', type:'text', label:'Hoe uit die invloed zich?' } }
+      },
+      { id:'gewenste_oplossing', type:'multi', allowOther:true, label:'Wat zou voor jou een aanvaardbare oplossing zijn?', options:[
+        {value:'afspraken', label:'Duidelijke afspraken maken'},
+        {value:'verontschuldiging', label:'Een verontschuldiging'},
+        {value:'stoppen', label:'Dat het gedrag gewoon stopt'},
+        {value:'compromis', label:'Een compromis over de ruimte of situatie'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Het beheerst mijn dagelijks leven' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+
+  werk: {
+    freeIds: ['relatie','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'relatie', type:'single', allowOther:true, label:'Wat is jullie onderlinge relatie?', options:[
+        {value:'collegas', label:"Rechtstreekse collega's"},
+        {value:'leiding_medewerker', label:'Leidinggevende en medewerker'},
+        {value:'verschillende_afdelingen', label:'Verschillende afdelingen'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit probleem al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'meer dan een jaar', label:'Meer dan een jaar'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'Waar draait het conflict vooral rond?', options:[
+        {value:'communicatie', label:'Communicatie of toon'},
+        {value:'taakverdeling', label:'Verdeling van taken of werklast'},
+        {value:'erkenning', label:'Erkenning of waardering'},
+        {value:'leiderschapsstijl', label:'Stijl van leidinggeven'},
+        {value:'incident', label:'Een concreet incident'},
+        {value:'grensoverschrijdend', label:'Grensoverschrijdend gedrag'},
+      ]},
+      { id:'frequentie', type:'single', label:'Hoe vaak speelt dit?', options:[
+        {value:'bijna dagelijks', label:'Bijna dagelijks'},
+        {value:'wekelijks', label:'Wekelijks'},
+        {value:'af en toe maar zwaar', label:'Af en toe, maar het weegt zwaar door'},
+        {value:'een incident', label:'Het was een eenmalig, ernstig incident'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
+      { id:'al_besproken', type:'yesno', label:'Is dit al besproken met een leidinggevende, HR of iemand anders binnen het bedrijf?',
+        branch:{
+          ja:{ id:'wat_gebeurde_bespreking', type:'text', label:'Wat gebeurde er toen?' },
+          nee:{ id:'waarom_niet_besproken', type:'text', label:'Wat maakte het moeilijk om dit te bespreken?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit zich voordeed', placeholder:'Wat gebeurde er precies?' },
+      { id:'invloed_functioneren', type:'yesno', label:'Heeft dit invloed op je functioneren, welzijn of motivatie op het werk?',
+        branch:{ ja:{ id:'hoe_invloed_werk', type:'text', label:'Hoe uit die invloed zich?' } }
+      },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'Hoe voel jij je op dit moment op de werkvloer?', options:[
+        {value:'gefrustreerd', label:'Gefrustreerd'},
+        {value:'onder_druk', label:'Onder druk'},
+        {value:'niet_gerespecteerd', label:'Niet gerespecteerd'},
+        {value:'onzeker', label:'Onzeker'},
+        {value:'gedemotiveerd', label:'Gedemotiveerd'},
+      ]},
+      { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere persoon op dit moment voelt of vindt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
+      { id:'gehoord', type:'single', label:'Voel je je gehoord wanneer je dit probeert aan te kaarten?', options:[
+        {value:'ja meestal', label:'Ja, meestal wel'},
+        {value:'soms', label:'Soms wel, soms niet'},
+        {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'durf niet', label:'Ik durf het eigenlijk niet aan te kaarten'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'Wat zou voor jou een goede uitkomst zijn?', options:[
+        {value:'afspraken', label:'Duidelijke afspraken over samenwerking'},
+        {value:'begeleid_gesprek', label:'Een gesprek onder begeleiding'},
+        {value:'structurele_verandering', label:'Dat het gedrag structureel verandert'},
+        {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Het beheerst mijn werkdagen' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+
+  school: {
+    freeIds: ['betrokkenen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_betrokkene','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'betrokkenen', type:'single', allowOther:true, label:'Wie zijn er betrokken?', options:[
+        {value:'twee_leerlingen', label:'Twee leerlingen'},
+        {value:'leerling_leerkracht', label:'Leerling en leerkracht'},
+        {value:'leerkracht_ouder', label:'Leerkracht en ouder'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'meer dan een jaar', label:'Meer dan een jaar'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'Waar draait het conflict vooral rond?', options:[
+        {value:'pesten', label:'Pesten of uitsluiting'},
+        {value:'meningsverschil', label:'Een meningsverschil dat escaleerde'},
+        {value:'communicatie_school_ouder', label:'Communicatie tussen school en ouder'},
+        {value:'prestaties', label:'Prestaties of aanpak'},
+        {value:'incident', label:'Een concreet incident'},
+      ]},
+      { id:'frequentie', type:'single', label:'Hoe vaak speelt dit?', options:[
+        {value:'bijna dagelijks', label:'Bijna dagelijks'},
+        {value:'wekelijks', label:'Wekelijks'},
+        {value:'af en toe maar zwaar', label:'Af en toe, maar het weegt zwaar door'},
+        {value:'een incident', label:'Het was een eenmalig, ernstig incident'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou of je kind ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
+      { id:'al_gemeld', type:'yesno', label:'Is dit al gemeld bij een leerkracht, zorgcoordinator of directie?',
+        branch:{
+          ja:{ id:'wat_gebeurde_melding', type:'text', label:'Wat gebeurde er toen?' },
+          nee:{ id:'waarom_niet_gemeld', type:'text', label:'Wat maakte het moeilijk om dit te melden?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit zich voordeed', placeholder:'Wat gebeurde er precies?' },
+      { id:'invloed_welbevinden', type:'yesno', label:'Heeft dit invloed op het welbevinden of functioneren op school?',
+        branch:{ ja:{ id:'hoe_invloed_school', type:'text', label:'Hoe uit die invloed zich?' } }
+      },
+      { id:'gevoel_betrokkene', type:'multi', allowOther:true, label:'Hoe voelt de betrokkene zich op dit moment?', options:[
+        {value:'angstig', label:'Angstig'},
+        {value:'boos', label:'Boos'},
+        {value:'alleen', label:'Alleen'},
+        {value:'onbegrepen', label:'Onbegrepen'},
+      ]},
+      { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt of vindt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'Wat zou voor jou een goede uitkomst zijn?', options:[
+        {value:'stoppen', label:'Dat het gedrag stopt'},
+        {value:'begeleiding', label:'Meer begeleiding of opvolging vanuit de school'},
+        {value:'gesprek_alle', label:'Een gesprek tussen alle betrokkenen'},
+        {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Het beheerst de schooldagen' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+
+  andere: {
+    freeIds: ['duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'duur_probleem', type:'single', label:'Hoelang speelt dit al?', options:[
+        {value:'enkele dagen', label:'Enkele dagen'},
+        {value:'enkele weken', label:'Enkele weken'},
+        {value:'enkele maanden', label:'Enkele maanden'},
+        {value:'meer dan een jaar', label:'Meer dan een jaar'},
+      ]},
+      { id:'onderwerp', type:'text', label:'Waar draait het conflict vooral rond?', placeholder:'Beschrijf kort waar het over gaat.' },
+      { id:'frequentie', type:'single', label:'Hoe vaak speelt dit?', options:[
+        {value:'bijna dagelijks', label:'Bijna dagelijks'},
+        {value:'wekelijks', label:'Wekelijks'},
+        {value:'af en toe maar zwaar', label:'Af en toe, maar het weegt zwaar door'},
+        {value:'een incident', label:'Het was een eenmalig, ernstig incident'},
+      ]},
+      { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
+      { id:'al_geprobeerd', type:'yesno', label:'Hebben jullie dit al eerder proberen aan te pakken?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'Wat hebben jullie geprobeerd, en heeft het geholpen?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'Wat maakte het moeilijk om dit aan te pakken?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Beschrijf een specifiek moment dat dit zich voordeed', placeholder:'Wat gebeurde er precies?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'Hoe voel jij je op dit moment?', options:[
+        {value:'gefrustreerd', label:'Gefrustreerd'},
+        {value:'verdrietig', label:'Verdrietig'},
+        {value:'boos', label:'Boos'},
+        {value:'onbegrepen', label:'Onbegrepen'},
+        {value:'machteloos', label:'Machteloos'},
+        {value:'moe', label:'Moe van de herhaling'},
+      ]},
+      { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
+      { id:'gewenste_uitkomst', type:'text', label:'Wat zou voor jou een goede uitkomst zijn?', placeholder:'Beschrijf wat voor jou een goede oplossing zou zijn.' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Ik weet niet meer hoe dit ooit goed komt' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
+    ]
+  },
+};
+
+function getQuestionnaire(category) {
+  return QUESTIONNAIRES[category] || QUESTIONNAIRES.andere;
+}
+
+/* ===================== RENDER-ENGINE VOOR DE VRAGENLIJST ===================== */
+
+function renderInput(q) {
+  if (q.type === 'single') {
+    const opts = q.options.map(o => `
+      <label class="mc-option">
+        <input type="radio" name="${esc(q.id)}" value="${esc(o.value)}">
+        <span>${esc(o.label)}</span>
+      </label>`).join('');
+    return `<div class="mc-group" data-name="${esc(q.id)}">${opts}</div>`;
+  }
+  if (q.type === 'multi') {
+    let opts = q.options.map(o => `
+      <label class="mc-option">
+        <input type="checkbox" name="${esc(q.id)}" value="${esc(o.value)}">
+        <span>${esc(o.label)}</span>
+      </label>`).join('');
+    if (q.allowOther) {
+      opts += `
+        <label class="mc-option">
+          <input type="checkbox" name="${esc(q.id)}" value="__andere__" class="other-toggle" data-other-target="other_${esc(q.id)}">
+          <span>Andere, namelijk...</span>
+        </label>
+        <input type="text" id="other_${esc(q.id)}" class="other-input" style="display:none" placeholder="Vul hier aan">`;
+    }
+    return `<div class="mc-group" data-name="${esc(q.id)}">${opts}</div>`;
+  }
+  if (q.type === 'scale') {
+    const opts = [1,2,3,4,5].map(n => `
+      <label class="scale-option">
+        <input type="radio" name="${esc(q.id)}" value="${n}">
+        <span>${n}</span>
+      </label>`).join('');
+    return `<div class="scale-group" data-name="${esc(q.id)}">
+      <div class="scale-row">${opts}</div>
+      <div class="scale-labels"><span>${esc(q.lowLabel || '')}</span><span>${esc(q.highLabel || '')}</span></div>
+    </div>`;
+  }
+  if (q.type === 'yesno') {
+    let branchHtml = '';
+    if (q.branch) {
+      if (q.branch.ja) branchHtml += `<div class="branch-box" id="branch_${esc(q.id)}_ja" style="display:none">${renderQuestion(q.branch.ja)}</div>`;
+      if (q.branch.nee) branchHtml += `<div class="branch-box" id="branch_${esc(q.id)}_nee" style="display:none">${renderQuestion(q.branch.nee)}</div>`;
+    }
+    return `<div class="mc-group" data-name="${esc(q.id)}">
+      <label class="mc-option"><input type="radio" name="${esc(q.id)}" value="ja" class="yesno-input" data-parent="${esc(q.id)}"><span>Ja</span></label>
+      <label class="mc-option"><input type="radio" name="${esc(q.id)}" value="nee" class="yesno-input" data-parent="${esc(q.id)}"><span>Nee</span></label>
+    </div>${branchHtml}`;
+  }
+  if (q.type === 'text') {
+    const maxChars = q.isFinal
+      ? (currentPlan === 'gratis' ? 1000 : 12000)
+      : (currentPlan === 'gratis' ? 800 : 3000);
+    return `<textarea class="q-textarea" data-qid="${esc(q.id)}" maxlength="${maxChars}" placeholder="${escAttr(q.placeholder || '')}"></textarea>
+      <div class="help char-counter" data-for="${esc(q.id)}">0 / ${maxChars.toLocaleString('nl-BE')} tekens</div>`;
+  }
+  return '';
+}
+
+function renderQuestion(q) {
+  return `<div class="q-block" data-qid="${esc(q.id)}" data-required="${q.optional ? 'false' : 'true'}">
+    <label class="q-label">${esc(q.label)}</label>
+    ${renderInput(q)}
+  </div>`;
+}
+
+function handleSurveyChange(e) {
+  const t = e.target;
+  if (t.classList && t.classList.contains('other-toggle')) {
+    const target = document.getElementById(t.dataset.otherTarget);
+    if (target) target.style.display = t.checked ? 'block' : 'none';
+  }
+  if (t.classList && t.classList.contains('yesno-input')) {
+    const parent = t.dataset.parent;
+    const jaBox = document.getElementById(`branch_${parent}_ja`);
+    const neeBox = document.getElementById(`branch_${parent}_nee`);
+    if (jaBox) jaBox.style.display = (t.value === 'ja') ? 'block' : 'none';
+    if (neeBox) neeBox.style.display = (t.value === 'nee') ? 'block' : 'none';
+  }
+}
+
+function handleSurveyInput(e) {
+  const t = e.target;
+  if (t.classList && t.classList.contains('q-textarea')) {
+    const container = e.currentTarget;
+    const counter = container.querySelector(`.char-counter[data-for="${t.dataset.qid}"]`);
+    if (counter) {
+      const max = t.getAttribute('maxlength');
+      counter.textContent = `${t.value.length} / ${Number(max).toLocaleString('nl-BE')} tekens`;
+    }
+  }
+}
+
+function collectAnswers(container) {
+  const blocks = Array.from(container.querySelectorAll('.q-block[data-qid]'));
+  const results = [];
+  for (const block of blocks) {
+    if (block.offsetParent === null) continue;
+    const qid = block.dataset.qid;
+    const required = block.dataset.required === 'true';
+    const label = block.querySelector('.q-label').textContent;
+    let answer = '';
+    const group = block.querySelector(`.mc-group[data-name="${cssAttrEscape(qid)}"]`);
+    const scaleGroup = block.querySelector(`.scale-group[data-name="${cssAttrEscape(qid)}"]`);
+    const textarea = block.querySelector(`textarea.q-textarea[data-qid="${cssAttrEscape(qid)}"]`);
+    if (group) {
+      const checked = Array.from(group.querySelectorAll('input:checked'));
+      const isMulti = group.querySelectorAll('input[type=checkbox]').length > 0;
+      if (isMulti) {
+        const labels = checked.filter(c => c.value !== '__andere__').map(c => c.closest('label').querySelector('span').textContent);
+        const otherChecked = checked.find(c => c.value === '__andere__');
+        if (otherChecked) {
+          const otherInput = document.getElementById(`other_${qid}`);
+          if (otherInput && otherInput.value.trim()) labels.push(otherInput.value.trim());
+        }
+        answer = labels.join(', ');
+      } else if (checked.length) {
+        answer = checked[0].closest('label').querySelector('span').textContent;
+      }
+    } else if (scaleGroup) {
+      const checked = scaleGroup.querySelector('input:checked');
+      answer = checked ? `${checked.value}/5` : '';
+    } else if (textarea) {
+      answer = textarea.value.trim();
+    }
+    results.push({ qid, label, answer, required });
+  }
+  return results;
+}
+
+function cssAttrEscape(v) {
+  return String(v).replace(/["\\]/g, '\\$&');
+}
+
+function validateAndBuildContent(container) {
+  const answers = collectAnswers(container);
+  const missing = answers.find(a => a.required && !a.answer);
+  if (missing) {
+    const block = container.querySelector(`.q-block[data-qid="${cssAttrEscape(missing.qid)}"]`);
+    if (block) {
+      block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      block.classList.add('q-invalid');
+      setTimeout(() => block.classList.remove('q-invalid'), 2500);
+    }
+    return null;
+  }
+  const lines = answers.filter(a => a.answer).map(a => `Vraag: ${a.label}\nAntwoord: ${a.answer}`);
+  return lines.join('\n\n');
+}
+
+function serializeFormState(container) {
+  const state = { radios: {}, checkboxes: {}, textareas: {}, others: {} };
+  container.querySelectorAll('input[type=radio]:checked').forEach(r => { state.radios[r.name] = r.value; });
+  container.querySelectorAll('input[type=checkbox]:checked').forEach(c => {
+    state.checkboxes[c.name] = state.checkboxes[c.name] || [];
+    state.checkboxes[c.name].push(c.value);
+  });
+  container.querySelectorAll('textarea.q-textarea').forEach(t => { state.textareas[t.dataset.qid] = t.value; });
+  container.querySelectorAll('.other-input').forEach(o => { state.others[o.id] = o.value; });
+  return state;
+}
+
+function restoreFormState(state, container) {
+  if (!state) return;
+  Object.entries(state.radios || {}).forEach(([name, val]) => {
+    const el = container.querySelector(`input[type=radio][name="${cssAttrEscape(name)}"][value="${cssAttrEscape(val)}"]`);
+    if (el) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+  });
+  Object.entries(state.checkboxes || {}).forEach(([name, vals]) => {
+    vals.forEach(val => {
+      const el = container.querySelector(`input[type=checkbox][name="${cssAttrEscape(name)}"][value="${cssAttrEscape(val)}"]`);
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+    });
+  });
+  Object.entries(state.textareas || {}).forEach(([qid, val]) => {
+    const el = container.querySelector(`textarea.q-textarea[data-qid="${cssAttrEscape(qid)}"]`);
+    if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
+  });
+  Object.entries(state.others || {}).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+/* ===================== BESTAANDE LOGICA (STATUS, CRISIS, CHECK-IN, LEGACY VERVOLGVRAGEN) ===================== */
 
 async function load() {
   if (!token) { app.innerHTML = '<div class="error-box">Geen geldige link. Vraag de organisator om de link opnieuw te sturen, of <a href="/login.html">bekijk je gesprekken via Mijn gesprekken</a>.</div>'; return; }
@@ -71,11 +791,6 @@ function attachLinksButton(tok) {
   });
 }
 
-function getMaxChars(session) {
-  const plan = session.plan || 'gratis';
-  return plan === 'gratis' ? 2000 : 12000;
-}
-
 function categoryEditorHTML(currentCategory) {
   const isKnown = CATEGORY_OPTIONS.some(o => o.value === currentCategory);
   const options = CATEGORY_OPTIONS.map(o =>
@@ -91,11 +806,11 @@ function categoryEditorHTML(currentCategory) {
       <div class="field" id="categoryEditOtherField" style="display:${!isKnown ? 'block' : 'none'};margin-top:10px">
         <input type="text" id="categoryEditOther" placeholder="Omschrijf kort jouw situatie" value="${!isKnown ? currentCategory : ''}">
       </div>
-      <div class="help" id="categorySavedMsg" style="display:none;color:var(--sage)">Opgeslagen.</div>
+      <div class="help" id="categorySavedMsg" style="display:none;color:var(--sage)">Opgeslagen. De vragenlijst hieronder is aangepast aan je nieuwe keuze.</div>
     </div>`;
 }
 
-function attachCategoryEditor(session) {
+function attachCategoryEditor(session, onCategoryChanged) {
   const select = document.getElementById('categoryEdit');
   if (!select) return;
   const otherField = document.getElementById('categoryEditOtherField');
@@ -117,7 +832,7 @@ function attachCategoryEditor(session) {
       if (res.ok) {
         session.category = value;
         savedMsg.style.display = 'block';
-        setTimeout(() => { savedMsg.style.display = 'none'; }, 2500);
+        setTimeout(() => { savedMsg.style.display = 'none'; onCategoryChanged(); }, 1200);
       }
     } catch (e) { /* stil falen, niet kritiek */ }
   }
@@ -157,25 +872,25 @@ function render(data) {
     const wie = otherNames(data) || 'de andere deelnemer(s)';
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
-      <div class="status-box">Jouw verhaal is ingediend. We wachten nu op het verhaal van <strong>${wie}</strong>. Zodra die er is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>
+      <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra die klaar is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>
       ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}`;
     setTimeout(load, 10000);
     if (participant.isOrganizer) attachLinksButton(token);
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
-      <div class="status-box">We bekijken jullie beide verhalen en bereiden gerichte vervolgvragen voor.<br>Dit duurt meestal 1-2 minuten. Deze pagina herlaadt zelf.</div>`;
+      <div class="status-box">We bekijken jullie antwoorden. Dit duurt meestal 1-2 minuten. Deze pagina herlaadt zelf.</div>`;
     setTimeout(load, 8000);
   } else if (session.status === 'wachten_op_vervolgvragen' && myFollowups && !round2Done) {
     renderFollowupForm(myFollowups, participant.name);
   } else if (session.status === 'wachten_op_vervolgvragen' && !myFollowups) {
-    app.innerHTML = `<div class="status-box">Vervolgvragen worden nog voorbereid. Even geduld.</div>`;
+    app.innerHTML = `<div class="status-box">Even geduld.</div>`;
     setTimeout(load, 5000);
   } else if (round2Done && session.status === 'wachten_op_vervolgvragen') {
     const wie = otherNames(data) || 'de andere deelnemer(s)';
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
-      <div class="status-box">We wachten nu op de vervolgvragen van <strong>${wie}</strong>. Deze pagina herlaadt zelf.</div>`;
+      <div class="status-box">We wachten nu op <strong>${wie}</strong>. Deze pagina herlaadt zelf.</div>`;
     setTimeout(load, 8000);
   } else if (session.status === 'document_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
@@ -210,8 +925,8 @@ function render(data) {
 
 function statusLabel(status) {
   const labels = {
-    wachten_op_verhalen: 'wachten op de verhalen',
-    verhalen_klaar_vervolgvragen_genereren: 'vervolgvragen worden voorbereid',
+    wachten_op_verhalen: 'wachten op de antwoorden',
+    verhalen_klaar_vervolgvragen_genereren: 'wordt voorbereid',
     wachten_op_vervolgvragen: 'wachten op de vervolgvragen',
     document_genereren: 'document wordt opgesteld',
     klaar: 'klaar',
@@ -233,57 +948,47 @@ function renderCrisisMessage() {
     </div>`;
 }
 
+/* ===================== HET NIEUWE VRAGENLIJST-FORMULIER ===================== */
+
 function renderStoryForm(name, session) {
-  const existingDraft = loadDraft('story');
-  const maxChars = getMaxChars(session);
   const plan = session.plan || 'gratis';
-  const isGratis = plan === 'gratis';
+  currentPlan = plan;
+  const questionnaire = getQuestionnaire(session.category);
+  const questions = plan === 'gratis'
+    ? questionnaire.questions.filter(q => questionnaire.freeIds.includes(q.id))
+    : questionnaire.questions;
+
+  const questionsHTML = questions.map(q => renderQuestion(q)).join('');
 
   app.innerHTML = `
     <span class="label">Jouw kant van het verhaal</span>
-    <h1>Vertel wat er gebeurd is</h1>
+    <h1>Vertel wat er speelt</h1>
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>. Is dit niet jouw naam? Sluit deze pagina en vraag de juiste link op bij wie het gesprek startte, of <a href="/login.html">bekijk je eigen gesprekken</a>.
     </div>
 
     ${categoryEditorHTML(session.category)}
 
-    ${isGratis ? `<div class="card" style="background:var(--clay-soft);border:none;margin-bottom:20px;padding:16px">
-      <p style="margin:0;font-size:.9rem">Je gebruikt de gratis versie (max 2.000 tekens). Voor een uitgebreider verhaal en vervolgvragen, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:18px">
+      <p style="margin:0;font-size:.88rem">Wat je hier invult, lezen de andere deelnemers nooit rechtstreeks. We combineren beide antwoorden tot een gedeeld, zorgvuldig overzicht, met respect voor jullie allebei.</p>
+    </div>
+
+    ${plan === 'gratis' ? `<div class="card" style="background:var(--clay-soft);border:none;margin-bottom:20px;padding:16px">
+      <p style="margin:0;font-size:.9rem">Je gebruikt de gratis versie, met een beperktere vragenlijst. Voor de volledige, diepgaande vragenlijst en het complete document, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
     </div>` : ''}
-    ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
-    <p style="color:var(--ink-soft)">Schrijf zo eerlijk en volledig mogelijk. Niemand anders ziet dit totdat het verwerkt is tot het rapport. Je kan dit rustig opbouwen: bewaar tussentijds als concept, en dien pas in als je echt klaar bent. Na het indienen kan je dit verhaal niet meer aanpassen.</p>
+
+    <p style="color:var(--ink-soft)">Beantwoord onderstaande vragen zo eerlijk mogelijk. Je kan gerust tussendoor pauzeren en later verder gaan. Na het definitief indienen kan je je antwoorden niet meer aanpassen.</p>
+
     <div id="error" class="error-box" style="display:none"></div>
+
     <form id="storyForm">
-      <div class="field">
-        <label for="duration">Hoelang speelt dit al?</label>
-        <select id="duration">
-          <option value="enkele dagen">Enkele dagen</option>
-          <option value="enkele weken">Enkele weken</option>
-          <option value="enkele maanden" selected>Enkele maanden</option>
-          <option value="meer dan een jaar">Meer dan een jaar</option>
-          <option value="al heel lang, jaren">Al heel lang (jaren)</option>
-        </select>
-      </div>
-      <div class="field">
-        <button type="button" id="toggleHints" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-bottom:12px">Hulp nodig om te beginnen?</button>
-        <div id="hintChips" style="display:none;margin-bottom:14px">
-          <p class="help" style="margin-bottom:8px">Klik op een vraag om ze toe te voegen, en beantwoord ze in het tekstveld hieronder. Allemaal optioneel.</p>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            <button type="button" class="hint-chip">Wat is er precies gebeurd?</button>
-            <button type="button" class="hint-chip">Hoe voelde jij je daarbij?</button>
-            <button type="button" class="hint-chip">Wat denk je dat de ander voelde?</button>
-            <button type="button" class="hint-chip">Wat zou je willen dat er verandert?</button>
-            <button type="button" class="hint-chip">Wat heb je zelf al geprobeerd?</button>
-          </div>
-        </div>
-        <div id="storyText" class="editable-field" contenteditable="true" data-placeholder="Begin maar...">${existingDraft}</div>
-        <div class="help" id="charCount">0 / ${maxChars.toLocaleString('nl-BE')} tekens</div>
-      </div>
+      <div id="surveyBody">${questionsHTML}</div>
+
       <div class="checkbox-row">
         <input type="checkbox" id="anon">
         <label for="anon">Vermeld mijn naam niet bij dit specifieke verhaal in het document (anoniem)</label>
       </div>
+
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button type="button" id="saveDraftBtn" class="btn outline" style="flex:1;padding:14px">Bewaar als concept</button>
         <button type="button" id="submitFinalBtn" class="btn clay" style="flex:1;padding:14px">Definitief indienen</button>
@@ -294,7 +999,7 @@ function renderStoryForm(name, session) {
     <div id="confirmSubmitModal" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
       <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
         <h3 style="margin-bottom:12px">Definitief indienen?</h3>
-        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je dit verhaal niet meer aanpassen. Weet je zeker dat je klaar bent?</p>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je je antwoorden niet meer aanpassen. Weet je zeker dat je klaar bent?</p>
         <div style="display:flex;gap:10px">
           <button type="button" id="cancelSubmit" class="btn outline" style="flex:1">Nog even wachten</button>
           <button type="button" id="confirmSubmit" class="btn clay" style="flex:1">Ja, indienen</button>
@@ -302,86 +1007,53 @@ function renderStoryForm(name, session) {
       </div>
     </div>`;
 
-  attachCategoryEditor(session);
+  const surveyBody = document.getElementById('surveyBody');
+  surveyBody.addEventListener('change', handleSurveyChange);
+  surveyBody.addEventListener('input', handleSurveyInput);
 
-  const storyText = document.getElementById('storyText');
+  attachCategoryEditor(session, () => renderStoryForm(name, session));
 
-  function updateCharCount() {
-    const len = storyText.innerText.trim().length;
-    document.getElementById('charCount').textContent = `${len} / ${maxChars.toLocaleString('nl-BE')} tekens`;
-    document.getElementById('charCount').style.color = len > maxChars ? '#8A4222' : '';
+  const draftRaw = loadDraft('story_answers');
+  if (draftRaw) {
+    try { restoreFormState(JSON.parse(draftRaw), surveyBody); } catch (e) {}
   }
 
-  storyText.addEventListener('input', updateCharCount);
-  updateCharCount();
-
   document.getElementById('saveDraftBtn').addEventListener('click', () => {
-    saveDraft('story', storyText.innerHTML);
+    saveDraft('story_answers', JSON.stringify(serializeFormState(surveyBody)));
     const msg = document.getElementById('draftSavedMsg');
     msg.style.display = 'block';
     setTimeout(() => { msg.style.display = 'none'; }, 4000);
   });
 
-  document.getElementById('toggleHints').addEventListener('click', () => {
-    const box = document.getElementById('hintChips');
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-  });
-
-  document.querySelectorAll('.hint-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const strong = document.createElement('strong');
-      strong.textContent = chip.textContent;
-      storyText.appendChild(strong);
-      storyText.appendChild(document.createElement('br'));
-      storyText.appendChild(document.createElement('br'));
-      updateCharCount();
-      storyText.focus();
-      const range = document.createRange();
-      range.selectNodeContents(storyText);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    });
-  });
-
-  function validateAndOpenModal() {
-    const rawContent = storyText.innerText.trim();
+  document.getElementById('submitFinalBtn').addEventListener('click', () => {
     const errorBox = document.getElementById('error');
     errorBox.style.display = 'none';
-    if (!rawContent) {
-      errorBox.textContent = 'Schrijf eerst je verhaal voor je het indient.';
+    const content = validateAndBuildContent(surveyBody);
+    if (content === null) {
+      errorBox.textContent = 'Beantwoord eerst alle verplichte vragen (rood gemarkeerd) voor je indient.';
       errorBox.style.display = 'block';
       return;
     }
-    if (rawContent.length > maxChars) {
-      errorBox.textContent = `Je verhaal is te lang (max ${maxChars.toLocaleString('nl-BE')} tekens voor jouw plan).`;
-      errorBox.style.display = 'block';
-      return;
-    }
+    pendingSubmitContent = content;
     document.getElementById('confirmSubmitModal').style.display = 'flex';
-  }
+  });
 
-  document.getElementById('submitFinalBtn').addEventListener('click', validateAndOpenModal);
   document.getElementById('cancelSubmit').addEventListener('click', () => {
     document.getElementById('confirmSubmitModal').style.display = 'none';
   });
 
   document.getElementById('confirmSubmit').addEventListener('click', async () => {
-    const duration = document.getElementById('duration').value;
-    const rawContent = storyText.innerText.trim();
-    const content = `Dit speelt al: ${duration}.\n\n${rawContent}`;
     const isAnonymous = document.getElementById('anon').checked;
     const errorBox = document.getElementById('error');
     document.getElementById('confirmSubmitModal').style.display = 'none';
     try {
       const res = await fetch('/.netlify/functions/submit-story', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, content, isAnonymous }),
+        body: JSON.stringify({ token, content: pendingSubmitContent, isAnonymous }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      clearDraft('story');
+      clearDraft('story_answers');
       load();
     } catch (err) {
       errorBox.textContent = err.message;
@@ -389,6 +1061,8 @@ function renderStoryForm(name, session) {
     }
   });
 }
+
+/* ===================== LEGACY: OUDE VERVOLGVRAGEN-RONDE (voor sessies die er nog in zaten) ===================== */
 
 function renderFollowupForm(questions, name) {
   const draftRaw = loadDraft('followup');
@@ -402,7 +1076,7 @@ function renderFollowupForm(questions, name) {
       Je vult dit in als <strong>${name}</strong>.
     </div>
     ${draftRaw ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
-    <p style="color:var(--ink-soft)">Op basis van beide verhalen willen we nog wat dingen beter begrijpen. Na het indienen kan je je antwoorden niet meer aanpassen.</p>
+    <p style="color:var(--ink-soft)">Op basis van beide antwoorden willen we nog wat dingen beter begrijpen. Na het indienen kan je je antwoorden niet meer aanpassen.</p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="followupForm">
       ${questions.map((q, i) => `
@@ -484,6 +1158,8 @@ function renderFollowupForm(questions, name) {
     }
   });
 }
+
+/* ===================== CHECK-IN (ongewijzigd) ===================== */
 
 function renderCheckinForm(round, name) {
   const draftSuffix = `checkin_${round}`;
