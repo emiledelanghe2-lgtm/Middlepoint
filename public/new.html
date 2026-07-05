@@ -442,11 +442,11 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
       errorBox.style.display = 'block';
       return;
     }
-    savePending({
-      category, organizerName, organizerEmail, organizerRole,
-      organizerSeesDocument, sendInvites, participantNames, participantEmails,
-      selectedPlanId, includeFollowups, isThirdParty
-    });
+savePending({
+  category, organizerName, organizerEmail, organizerRole,
+  organizerSeesDocument, sendInvites, participantNames, participantEmails,
+  plan: selectedPlanId, includeFollowups, isThirdParty
+});
     window.location.href = selectedPlan.ctaLink;
     return;
   }
