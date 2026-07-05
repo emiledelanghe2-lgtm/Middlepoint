@@ -618,10 +618,10 @@ function renderInput(q) {
       <label class="mc-option"><input type="radio" name="${esc(q.id)}" value="nee" class="yesno-input" data-parent="${esc(q.id)}"><span>Nee</span></label>
     </div>${branchHtml}`;
   }
-  if (q.type === 'text') {
+if (q.type === 'text') {
     const maxChars = q.isFinal
       ? (currentPlan === 'gratis' ? 1000 : 12000)
-      : (currentPlan === 'gratis' ? 800 : 3000);
+      : (currentPlan === 'gratis' ? 800 : 8000);
     return `<textarea class="q-textarea" data-qid="${esc(q.id)}" maxlength="${maxChars}" placeholder="${escAttr(q.placeholder || '')}"></textarea>
       <div class="help char-counter" data-for="${esc(q.id)}">0 / ${maxChars.toLocaleString('nl-BE')} tekens</div>`;
   }
