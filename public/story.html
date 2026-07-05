@@ -1170,8 +1170,9 @@ function renderCheckinForm(round, name) {
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>.
     </div>
-    ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
+ ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
     <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer. Na het indienen kan je dit niet meer aanpassen.</p>
+    <p style="margin-bottom:20px"><a href="/document.html?token=${token}" style="font-weight:600">Bekijk eerst nog eens je huidige document</a></p>
     <div id="error" class="error-box" style="display:none"></div>
     <form id="checkinForm">
       <div class="field">
