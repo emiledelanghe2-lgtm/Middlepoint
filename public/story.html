@@ -14,9 +14,15 @@
 .other-input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-family:'Karla',sans-serif; margin-top:6px; }
 .scale-row{ display:flex; gap:8px; }
 .scale-option{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border:1px solid var(--line); border-radius:8px; cursor:pointer; background:var(--white); }
-.scale-labels{ display:flex; justify-content:space-between; font-size:.75rem; color:var(--ink-soft); margin-top:6px; }
+.scale-labels{ display:flex; justify-content:space-between; gap:10px; font-size:.72rem; color:var(--ink-soft); margin-top:8px; line-height:1.3; }
+.scale-labels span{ max-width:48%; }
+@media (max-width:480px){
+  .scale-labels{ flex-direction:column; gap:4px; }
+  .scale-labels span{ max-width:100%; }
+}
 .branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
-.q-textarea{ width:100%; min-height:150px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }.q-invalid{ outline:2px solid #8A4222; border-radius:10px; }
+.q-textarea{ width:100%; min-height:150px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
+.q-invalid{ outline:2px solid #8A4222; border-radius:10px; }
 </style>
 </head>
 <body>
@@ -53,8 +59,6 @@ const CATEGORY_OPTIONS = [
   { value: 'school', label: 'School' },
 ];
 
-/* ===================== VRAGENBANK ===================== */
-
 const QUESTIONNAIRES = {
   koppel: {
     freeIds: ['duur_samen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
@@ -88,6 +92,11 @@ const QUESTIONNAIRES = {
         {value:'enkele keren per week', label:'Enkele keren per week'},
         {value:'enkele keren per maand', label:'Enkele keren per maand'},
         {value:'af en toe, maar weegt zwaar door', label:'Af en toe, maar het weegt zwaar door'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Wie kaart dit meestal aan?', options:[
+        {value:'meestal ik', label:'Meestal ik'},
+        {value:'meestal partner', label:'Meestal mijn partner'},
+        {value:'ongeveer evenveel', label:'Ongeveer evenveel, wij allebei'},
       ]},
       { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Vergeet even de vakjes hierboven. Wat is, in jouw woorden, het echte probleem tussen jullie?' },
       { id:'vorm_conflict', type:'multi', allowOther:true, label:'Hoe ziet een conflict er meestal uit tussen jullie?', options:[
@@ -132,10 +141,11 @@ const QUESTIONNAIRES = {
         {value:'hoopvol', label:'Hoopvol dat het beter kan'},
         {value:'moe', label:'Moe, uitgeput door de herhaling'},
       ]},
-      { id:'gehoord', type:'single', label:'Voel je je gehoord door je partner wanneer je dit aankaart?', options:[
+      { id:'gehoord', type:'single', allowOther:true, label:'Voel je je gehoord door je partner wanneer je dit aankaart?', options:[
         {value:'ja meestal', label:'Ja, meestal wel'},
         {value:'soms', label:'Soms wel, soms niet'},
         {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'hoort maar verandert niets', label:'Hij of zij zegt van wel, maar er verandert niets'},
         {value:'durf niet', label:'Ik durf het eigenlijk niet goed aan te kaarten'},
       ]},
       { id:'andere_factoren', type:'multi', allowOther:true, label:'Spelen er nog andere zaken mee die het moeilijker maken?', options:[
@@ -155,7 +165,7 @@ const QUESTIONNAIRES = {
         {value:'weet_niet', label:'Ik weet het nog niet, ik wil eerst gehoord worden'},
       ]},
       { id:'dringendheid', type:'scale', label:'Hoe belangrijk is het voor jou dat dit nu wordt aangepakt?', lowLabel:'Kan nog wachten', highLabel:'Heel dringend' },
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar we komen er wel', highLabel:'Ik weet niet meer hoe we hier samen uitkomen' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar we komen er wel', highLabel:'Weet niet meer hoe we hier uitkomen' },
       { id:'partner_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je partner het niet weet of niet beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
@@ -166,7 +176,7 @@ const QUESTIONNAIRES = {
   familie: {
     freeIds: ['familielid','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
     questions: [
-      { id:'familielid', type:'single', allowOtherAsOption:true, label:'Om welk familielid gaat het vooral?', options:[
+      { id:'familielid', type:'single', allowOther:true, label:'Om welk familielid gaat het vooral?', options:[
         {value:'ouder', label:'Een ouder'},
         {value:'kind', label:'Mijn kind'},
         {value:'broer_zus', label:'Broer of zus'},
@@ -193,6 +203,11 @@ const QUESTIONNAIRES = {
         {value:'af en toe', label:'Af en toe'},
         {value:'nu altijd', label:'Het is er nu altijd'},
         {value:'onopgelost', label:'Het is een groot conflict dat nooit is opgelost'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Wie kaart dit meestal aan?', options:[
+        {value:'meestal ik', label:'Meestal ik'},
+        {value:'meestal familielid', label:'Meestal dit familielid'},
+        {value:'ongeveer evenveel', label:'Ongeveer evenveel, wij allebei'},
       ]},
       { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
       { id:'vorm_conflict', type:'multi', allowOther:true, label:'Hoe uit het conflict zich meestal?', options:[
@@ -227,10 +242,11 @@ const QUESTIONNAIRES = {
         {value:'onbegrepen', label:'Onbegrepen'},
         {value:'moe', label:'Moe, uitgeput door de herhaling'},
       ]},
-      { id:'gehoord', type:'single', label:'Voel je je gehoord wanneer je dit aankaart binnen de familie?', options:[
+      { id:'gehoord', type:'single', allowOther:true, label:'Voel je je gehoord wanneer je dit aankaart binnen de familie?', options:[
         {value:'ja meestal', label:'Ja, meestal wel'},
         {value:'soms', label:'Soms wel, soms niet'},
         {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'hoort maar verandert niets', label:'Die zegt van wel, maar er verandert niets'},
         {value:'durf niet', label:'Ik durf het eigenlijk niet aan te kaarten'},
       ]},
       { id:'andere_factoren', type:'multi', allowOther:true, label:'Spelen er nog andere zaken mee die het moeilijker maken?', options:[
@@ -247,7 +263,7 @@ const QUESTIONNAIRES = {
         {value:'normaal_contact', label:'Gewoon weer normaal contact'},
         {value:'weet_niet', label:'Ik weet het nog niet'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Ik weet niet meer hoe dit ooit goed komt' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Weet niet hoe dit ooit goed komt' },
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat dit familielid het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
@@ -282,6 +298,11 @@ const QUESTIONNAIRES = {
         {value:'vermijden', label:'We vermijden elkaar nu'},
         {value:'geen contact', label:'We hebben helemaal geen contact meer'},
       ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Wie kaart dit meestal aan?', options:[
+        {value:'meestal ik', label:'Meestal ik'},
+        {value:'meestal ander', label:'Meestal deze vriend of vriendin'},
+        {value:'ongeveer evenveel', label:'Ongeveer evenveel, wij allebei'},
+      ]},
       { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem tussen jullie?' },
       { id:'vorm_conflict', type:'multi', allowOther:true, label:'Hoe uit het conflict zich meestal?', options:[
         {value:'ruzie', label:'Ruzie'},
@@ -313,10 +334,11 @@ const QUESTIONNAIRES = {
         {value:'onverschillig', label:'Onverschillig'},
         {value:'onzeker', label:'Onzeker over waar we staan'},
       ]},
-      { id:'gehoord', type:'single', label:'Voel je je gehoord wanneer je dit aankaart?', options:[
+      { id:'gehoord', type:'single', allowOther:true, label:'Voel je je gehoord wanneer je dit aankaart?', options:[
         {value:'ja meestal', label:'Ja, meestal wel'},
         {value:'soms', label:'Soms wel, soms niet'},
         {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'hoort maar verandert niets', label:'Die zegt van wel, maar er verandert niets'},
         {value:'durf niet', label:'Ik durf het eigenlijk niet aan te kaarten'},
       ]},
       { id:'andere_factoren', type:'multi', allowOther:true, label:'Speelt er nog iets anders mee dat het moeilijker maakt?', options:[
@@ -331,7 +353,7 @@ const QUESTIONNAIRES = {
         {value:'begrip', label:'Dat de ander beter begrijpt hoe ik me voelde'},
         {value:'weet_niet', label:'Ik weet het nog niet'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Ik weet niet meer hoe dit ooit goed komt' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Weet niet hoe dit ooit goed komt' },
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je vriend of vriendin het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
@@ -399,7 +421,7 @@ const QUESTIONNAIRES = {
         {value:'stoppen', label:'Dat het gedrag gewoon stopt'},
         {value:'compromis', label:'Een compromis over de ruimte of situatie'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Het beheerst mijn dagelijks leven' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Beheerst mijn dagelijks leven' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -432,6 +454,11 @@ const QUESTIONNAIRES = {
         {value:'af en toe maar zwaar', label:'Af en toe, maar het weegt zwaar door'},
         {value:'een incident', label:'Het was een eenmalig, ernstig incident'},
       ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Wie kaart dit meestal aan?', options:[
+        {value:'meestal ik', label:'Meestal ik'},
+        {value:'meestal collega', label:'Meestal deze collega'},
+        {value:'ongeveer evenveel', label:'Ongeveer evenveel, wij allebei'},
+      ]},
       { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
       { id:'al_besproken', type:'yesno', label:'Is dit al besproken met een leidinggevende, HR of iemand anders binnen het bedrijf?',
         branch:{
@@ -451,10 +478,11 @@ const QUESTIONNAIRES = {
         {value:'gedemotiveerd', label:'Gedemotiveerd'},
       ]},
       { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere persoon op dit moment voelt of vindt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
-      { id:'gehoord', type:'single', label:'Voel je je gehoord wanneer je dit probeert aan te kaarten?', options:[
+      { id:'gehoord', type:'single', allowOther:true, label:'Voel je je gehoord wanneer je dit probeert aan te kaarten?', options:[
         {value:'ja meestal', label:'Ja, meestal wel'},
         {value:'soms', label:'Soms wel, soms niet'},
         {value:'nee', label:'Nee, ik voel me niet gehoord'},
+        {value:'hoort maar verandert niets', label:'Die zegt van wel, maar er verandert niets'},
         {value:'durf niet', label:'Ik durf het eigenlijk niet aan te kaarten'},
       ]},
       { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'Wat zou voor jou een goede uitkomst zijn?', options:[
@@ -463,7 +491,7 @@ const QUESTIONNAIRES = {
         {value:'structurele_verandering', label:'Dat het gedrag structureel verandert'},
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Het beheerst mijn werkdagen' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Beheerst mijn werkdagen' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -519,7 +547,7 @@ const QUESTIONNAIRES = {
         {value:'gesprek_alle', label:'Een gesprek tussen alle betrokkenen'},
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Het beheerst de schooldagen' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Beheerst de schooldagen' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -558,7 +586,7 @@ const QUESTIONNAIRES = {
       ]},
       { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
       { id:'gewenste_uitkomst', type:'text', label:'Wat zou voor jou een goede uitkomst zijn?', placeholder:'Beschrijf wat voor jou een goede oplossing zou zijn.' },
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Ik weet niet meer hoe dit ooit goed komt' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Weet niet meer hoe dit ooit goed komt' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -568,15 +596,21 @@ function getQuestionnaire(category) {
   return QUESTIONNAIRES[category] || QUESTIONNAIRES.andere;
 }
 
-/* ===================== RENDER-ENGINE VOOR DE VRAGENLIJST ===================== */
-
 function renderInput(q) {
   if (q.type === 'single') {
-    const opts = q.options.map(o => `
+    let opts = q.options.map(o => `
       <label class="mc-option">
         <input type="radio" name="${esc(q.id)}" value="${esc(o.value)}">
         <span>${esc(o.label)}</span>
       </label>`).join('');
+    if (q.allowOther) {
+      opts += `
+        <label class="mc-option">
+          <input type="radio" name="${esc(q.id)}" value="__andere__" class="other-toggle-radio" data-other-target="other_${esc(q.id)}">
+          <span>Geen van deze, ik leg het zelf uit</span>
+        </label>
+        <input type="text" id="other_${esc(q.id)}" class="other-input" style="display:none" placeholder="Vul hier aan">`;
+    }
     return `<div class="mc-group" data-name="${esc(q.id)}">${opts}</div>`;
   }
   if (q.type === 'multi') {
@@ -589,7 +623,7 @@ function renderInput(q) {
       opts += `
         <label class="mc-option">
           <input type="checkbox" name="${esc(q.id)}" value="__andere__" class="other-toggle" data-other-target="other_${esc(q.id)}">
-          <span>Andere, namelijk...</span>
+          <span>Geen van deze, ik leg het zelf uit</span>
         </label>
         <input type="text" id="other_${esc(q.id)}" class="other-input" style="display:none" placeholder="Vul hier aan">`;
     }
@@ -617,7 +651,7 @@ function renderInput(q) {
       <label class="mc-option"><input type="radio" name="${esc(q.id)}" value="nee" class="yesno-input" data-parent="${esc(q.id)}"><span>Nee</span></label>
     </div>${branchHtml}`;
   }
-if (q.type === 'text') {
+  if (q.type === 'text') {
     const maxChars = q.isFinal
       ? (currentPlan === 'gratis' ? 1000 : 12000)
       : (currentPlan === 'gratis' ? 800 : 8000);
@@ -636,6 +670,15 @@ function renderQuestion(q) {
 
 function handleSurveyChange(e) {
   const t = e.target;
+  if (t.type === 'radio') {
+    const group = t.closest('.mc-group');
+    if (group) {
+      const otherInput = group.querySelector('.other-input');
+      if (otherInput) {
+        otherInput.style.display = (t.classList.contains('other-toggle-radio') && t.checked) ? 'block' : 'none';
+      }
+    }
+  }
   if (t.classList && t.classList.contains('other-toggle')) {
     const target = document.getElementById(t.dataset.otherTarget);
     if (target) target.style.display = t.checked ? 'block' : 'none';
@@ -659,6 +702,10 @@ function handleSurveyInput(e) {
       counter.textContent = `${t.value.length} / ${Number(max).toLocaleString('nl-BE')} tekens`;
     }
   }
+}
+
+function cssAttrEscape(v) {
+  return String(v).replace(/["\\]/g, '\\$&');
 }
 
 function collectAnswers(container) {
@@ -685,7 +732,12 @@ function collectAnswers(container) {
         }
         answer = labels.join(', ');
       } else if (checked.length) {
-        answer = checked[0].closest('label').querySelector('span').textContent;
+        if (checked[0].value === '__andere__') {
+          const otherInput = document.getElementById(`other_${qid}`);
+          answer = otherInput ? otherInput.value.trim() : '';
+        } else {
+          answer = checked[0].closest('label').querySelector('span').textContent;
+        }
       }
     } else if (scaleGroup) {
       const checked = scaleGroup.querySelector('input:checked');
@@ -696,10 +748,6 @@ function collectAnswers(container) {
     results.push({ qid, label, answer, required });
   }
   return results;
-}
-
-function cssAttrEscape(v) {
-  return String(v).replace(/["\\]/g, '\\$&');
 }
 
 function validateAndBuildContent(container) {
@@ -751,8 +799,6 @@ function restoreFormState(state, container) {
     if (el) el.value = val;
   });
 }
-
-/* ===================== BESTAANDE LOGICA (STATUS, CRISIS, CHECK-IN, LEGACY VERVOLGVRAGEN) ===================== */
 
 async function load() {
   if (!token) { app.innerHTML = '<div class="error-box">Geen geldige link. Vraag de organisator om de link opnieuw te sturen, of <a href="/login.html">bekijk je gesprekken via Mijn gesprekken</a>.</div>'; return; }
@@ -948,8 +994,6 @@ function renderCrisisMessage() {
     </div>`;
 }
 
-/* ===================== HET NIEUWE VRAGENLIJST-FORMULIER ===================== */
-
 function renderStoryForm(name, session) {
   const plan = session.plan || 'gratis';
   currentPlan = plan;
@@ -1062,8 +1106,6 @@ function renderStoryForm(name, session) {
   });
 }
 
-/* ===================== LEGACY: OUDE VERVOLGVRAGEN-RONDE (voor sessies die er nog in zaten) ===================== */
-
 function renderFollowupForm(questions, name) {
   const draftRaw = loadDraft('followup');
   let draftAnswers = {};
@@ -1159,8 +1201,6 @@ function renderFollowupForm(questions, name) {
   });
 }
 
-/* ===================== CHECK-IN (ongewijzigd) ===================== */
-
 function renderCheckinForm(round, name) {
   const draftSuffix = `checkin_${round}`;
   const existingDraft = loadDraft(draftSuffix);
@@ -1170,7 +1210,7 @@ function renderCheckinForm(round, name) {
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>.
     </div>
- ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
+    ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
     <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer. Na het indienen kan je dit niet meer aanpassen.</p>
     <p style="margin-bottom:20px"><a href="/document.html?token=${token}" style="font-weight:600">Bekijk eerst nog eens je huidige document</a></p>
     <div id="error" class="error-box" style="display:none"></div>
