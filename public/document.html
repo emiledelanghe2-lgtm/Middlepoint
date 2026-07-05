@@ -107,7 +107,7 @@ function renderDoc(data, displayVersion) {
       ${perspectiveEntries.map(([name, p]) => `
         <div class="person-block">
           <div class="who">Over ${name}</div>
-          <p><strong>Wat ${name} voelt/bedoelt:</strong> ${p.explanation}</p>
+          <p><strong>Wat ${name} voelt of bedoelt:</strong> ${p.explanation}</p>
           <p><strong>Wat goed gaat:</strong> ${p.strengths}</p>
           <p><strong>Waar groei mogelijk is:</strong> ${p.growth_areas}</p>
         </div>`).join('')}
@@ -152,10 +152,13 @@ function renderDoc(data, displayVersion) {
         <li>Persoonlijke tips per persoon</li>
         <li>Concrete vragen om het gesprek te openen</li>
         <li>Zinnen die je letterlijk kan gebruiken</li>
-        <li>Vervolgvragen die dieper graven</li>
+        <li>De volledige, diepgaande vragenlijst voor beide personen</li>
         <li>Check-ins om later op terug te komen</li>
       </ul>
-      <a href="/pricing.html" class="btn clay">Bekijk de volledige mogelijkheden</a>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a href="/pricing.html" class="btn clay">Bekijk de volledige mogelijkheden</a>
+        <a href="/voorbeeld-document.html" class="btn outline">Bekijk een voorbeeld</a>
+      </div>
     </div>`}
 
     <div class="doc-section no-print" style="text-align:center;border-bottom:none">
