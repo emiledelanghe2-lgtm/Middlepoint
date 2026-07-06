@@ -39,6 +39,8 @@
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
 const returnToken = new URLSearchParams(window.location.search).get('from');
+const backLink = returnToken ? `/mijn-gesprekken.html?token=${returnToken}` : '/';
+const backLabel = returnToken ? 'Terug naar Mijn gesprekken' : 'Terug naar startpagina';
 const app = document.getElementById('app');
 let currentPlan = 'gratis';
 let pendingSubmitContent = '';
@@ -657,7 +659,7 @@ function renderInput(q) {
         <input type="radio" name="${esc(q.id)}" value="${n}">
         <span>${n}</span>
       </label>`).join('');
-    return `<div class="scale-group" data-name="${esc(q.id)}">
+    return `<div class="scale-group" data-name="${esc(q.id)}" data-low="${escAttr(q.lowLabel || '')}" data-high="${escAttr(q.highLabel || '')}">
       <div class="scale-row">${opts}</div>
       <div class="scale-labels"><span>${esc(q.lowLabel || '')}</span><span>${esc(q.highLabel || '')}</span></div>
     </div>`;
@@ -763,7 +765,16 @@ function collectAnswers(container) {
       }
     } else if (scaleGroup) {
       const checked = scaleGroup.querySelector('input:checked');
-      answer = checked ? `${checked.value}/5` : '';
+      if (checked) {
+        const val = parseInt(checked.value, 10);
+        const low = scaleGroup.dataset.low || 'lichter';
+        const high = scaleGroup.dataset.high || 'zwaarder';
+        // BUGFIX: hier stond voorheen letterlijk "4/5", wat als een raw cijfer
+        // in het uiteindelijke document terechtkwam. Nu enkel nog woorden.
+        if (val <= 2) answer = `Dichter bij: ${low}`;
+        else if (val >= 4) answer = `Dichter bij: ${high}`;
+        else answer = 'Ergens in het midden';
+      }
     } else if (textarea) {
       answer = textarea.value.trim();
     }
@@ -935,7 +946,7 @@ function render(data) {
       <p style="color:var(--ink-soft)">Jij bent organisator van dit gesprek. Je hoeft zelf geen verhaal in te vullen. Status: <strong>${statusLabel(session.status)}</strong>.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="${docLinkWithReturn(token)}" class="btn clay">Naar het document</a>
-        <a href="/" class="btn outline">Terug naar startpagina</a>
+        <a href="${backLink}" class="btn outline">${backLabel}</a>
       </div>
       <div style="margin-top:16px"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>
       <p style="margin-top:20px;font-size:.85rem;color:var(--ink-soft)">Bewaar deze pagina (of je e-mail met deze link) om later terug te keren.</p>`;
@@ -953,7 +964,8 @@ function render(data) {
       <h1>Bedankt, ${participant.name}</h1>
       ${whoStartedBanner(data)}
       <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra die klaar is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>
-      ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}`;
+      ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}
+      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
     setTimeout(load, 10000);
     if (participant.isOrganizer) attachLinksButton(token);
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
@@ -984,7 +996,7 @@ function render(data) {
       <p style="color:var(--ink-soft)">Het eerlijke, neutrale rapport staat klaar om te bekijken.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="${docLinkWithReturn(token)}" class="btn clay">Bekijk document</a>
-        <a href="/" class="btn outline">Terug naar startpagina</a>
+        <a href="${backLink}" class="btn outline">${backLabel}</a>
       </div>`;
   } else if ((session.status || '').startsWith('nieuwe_ronde_')) {
     const round = parseInt(session.status.split('_').pop(), 10);
@@ -1238,12 +1250,26 @@ function renderFollowupForm(questions, name) {
   });
 }
 
-/* ===================== NIEUW: RIJKE OPVOLGVRAGENLIJST ===================== */
+/* ===================== RIJKE OPVOLGVRAGENLIJST ===================== */
 
 const FOLLOWUP_STATUS_OPTIONS = [
   { value: 'nog niet besproken', label: 'Nog niet besproken' },
   { value: 'besproken, nog geen verandering', label: 'Besproken, maar nog geen verandering' },
   { value: 'duidelijk verbeterd', label: 'Dit is duidelijk verbeterd' },
+];
+
+const STRUCTURED_FOLLOWUP_QUESTIONS = [
+  { id:'gevoel_nu', type:'multi', allowOther:true, label:'Hoe voel je je nu over de situatie?', options:[
+    {value:'gefrustreerd', label:'Gefrustreerd'},
+    {value:'verdrietig', label:'Verdrietig'},
+    {value:'boos', label:'Boos'},
+    {value:'onbegrepen', label:'Onbegrepen'},
+    {value:'hoopvol', label:'Hoopvol'},
+    {value:'opgelucht', label:'Opgelucht'},
+    {value:'dankbaar', label:'Dankbaar'},
+    {value:'neutraal', label:'Neutraal, geen uitgesproken gevoel'},
+  ]},
+  { id:'zwaarte_nu', type:'scale', label:'Hoe zwaar weegt dit nu voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
 ];
 
 function renderFollowupItemsForType(items, sectionLabel) {
@@ -1291,6 +1317,8 @@ async function renderFollowupSurvey(round, name, session) {
 
   const noItemsFound = !myTips.length && !myQuestions.length && !myPhrases.length;
 
+  const structuredHTML = STRUCTURED_FOLLOWUP_QUESTIONS.map(q => renderQuestion(q)).join('');
+
   app.innerHTML = `
     <span class="label">Opvolging</span>
     <h1>Hoe staat het er nu voor?</h1>
@@ -1303,6 +1331,11 @@ async function renderFollowupSurvey(round, name, session) {
     <div id="error" class="error-box" style="display:none"></div>
 
     <form id="followupSurveyForm">
+
+      <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+        <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Hoe voel je je nu?</span>
+        <div id="structuredFollowupBody">${structuredHTML}</div>
+      </div>
 
       ${!noItemsFound ? `
       <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
@@ -1321,7 +1354,7 @@ async function renderFollowupSurvey(round, name, session) {
       </div>
 
       <div class="q-block">
-        <label class="q-label">Wat is er positief veranderd dat je tegen ${name === session.category ? 'de ander' : 'de ander'} wil zeggen? (optioneel)</label>
+        <label class="q-label">Wat is er positief veranderd dat je tegen de ander wil zeggen? (optioneel)</label>
         <textarea class="q-textarea" id="positiefVeranderd" maxlength="3000" placeholder="Wat ging goed sinds de vorige keer?"></textarea>
       </div>
 
@@ -1358,6 +1391,9 @@ async function renderFollowupSurvey(round, name, session) {
       </div>
     </div>`;
 
+  const structuredBody = document.getElementById('structuredFollowupBody');
+  structuredBody.addEventListener('change', handleSurveyChange);
+
   const draftRaw = loadDraft(`checkin_survey_${round}`);
   if (draftRaw) {
     try {
@@ -1371,6 +1407,12 @@ async function renderFollowupSurvey(round, name, session) {
 
   function collectFollowupContent() {
     const lines = [];
+
+    const structuredAnswers = collectAnswers(structuredBody);
+    structuredAnswers.filter(a => a.answer).forEach(a => {
+      lines.push(`Vraag: ${a.label}\nAntwoord: ${a.answer}`);
+    });
+
     document.querySelectorAll('[data-followup-item]').forEach(itemEl => {
       const itemText = itemEl.dataset.itemText;
       const section = itemEl.dataset.itemSection;
