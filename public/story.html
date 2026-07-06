@@ -14,12 +14,7 @@
 .other-input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-family:'Karla',sans-serif; margin-top:6px; }
 .scale-row{ display:flex; gap:8px; }
 .scale-option{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border:1px solid var(--line); border-radius:8px; cursor:pointer; background:var(--white); }
-.scale-labels{ display:flex; justify-content:space-between; gap:10px; font-size:.72rem; color:var(--ink-soft); margin-top:8px; line-height:1.3; }
-.scale-labels span{ max-width:48%; }
-@media (max-width:480px){
-  .scale-labels{ flex-direction:column; gap:4px; }
-  .scale-labels span{ max-width:100%; }
-}
+.scale-labels{ display:flex; justify-content:space-between; font-size:.78rem; color:var(--ink-soft); margin-top:8px; font-weight:600; }
 .branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
 .q-textarea{ width:100%; min-height:150px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
 .q-invalid{ outline:2px solid #8A4222; border-radius:10px; }
@@ -164,8 +159,8 @@ const QUESTIONNAIRES = {
         {value:'normaal_praten', label:'Gewoon dat we weer normaal met elkaar kunnen praten'},
         {value:'weet_niet', label:'Ik weet het nog niet, ik wil eerst gehoord worden'},
       ]},
-      { id:'dringendheid', type:'scale', label:'Hoe belangrijk is het voor jou dat dit nu wordt aangepakt?', lowLabel:'Kan nog wachten', highLabel:'Heel dringend' },
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar we komen er wel', highLabel:'Weet niet meer hoe we hier uitkomen' },
+      { id:'dringendheid', type:'scale', label:'Hoe belangrijk is het voor jou dat dit nu wordt aangepakt?', lowLabel:'Kan wachten', highLabel:'Heel dringend' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
       { id:'partner_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je partner het niet weet of niet beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
@@ -263,7 +258,7 @@ const QUESTIONNAIRES = {
         {value:'normaal_contact', label:'Gewoon weer normaal contact'},
         {value:'weet_niet', label:'Ik weet het nog niet'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Weet niet hoe dit ooit goed komt' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat dit familielid het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
@@ -353,7 +348,7 @@ const QUESTIONNAIRES = {
         {value:'begrip', label:'Dat de ander beter begrijpt hoe ik me voelde'},
         {value:'weet_niet', label:'Ik weet het nog niet'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar het went', highLabel:'Weet niet hoe dit ooit goed komt' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je vriend of vriendin het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
@@ -421,7 +416,7 @@ const QUESTIONNAIRES = {
         {value:'stoppen', label:'Dat het gedrag gewoon stopt'},
         {value:'compromis', label:'Een compromis over de ruimte of situatie'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Beheerst mijn dagelijks leven' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overheerst alles' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -491,7 +486,7 @@ const QUESTIONNAIRES = {
         {value:'structurele_verandering', label:'Dat het gedrag structureel verandert'},
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Beheerst mijn werkdagen' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overheerst werk' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -547,7 +542,7 @@ const QUESTIONNAIRES = {
         {value:'gesprek_alle', label:'Een gesprek tussen alle betrokkenen'},
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Beheerst de schooldagen' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Draaglijk', highLabel:'Overheerst school' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -586,7 +581,7 @@ const QUESTIONNAIRES = {
       ]},
       { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
       { id:'gewenste_uitkomst', type:'text', label:'Wat zou voor jou een goede uitkomst zijn?', placeholder:'Beschrijf wat voor jou een goede oplossing zou zijn.' },
-      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Vervelend, maar draaglijk', highLabel:'Weet niet meer hoe dit ooit goed komt' },
+      { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
