@@ -88,6 +88,16 @@ exports.handler = async (event) => {
       .eq('session_id', sessionId)
       .order('round', { ascending: true });
 
+    const isFollowup = entries.some(e => e.round >= 3);
+
+    const { data: existingDocsForContext } = await supabase
+      .from('documents')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('version', { ascending: false })
+      .limit(1);
+    const previousDoc = existingDocsForContext && existingDocsForContext.length ? existingDocsForContext[0] : null;
+
     const fullText = realParticipants
       .map(p => {
         const myEntries = entries.filter(e => e.participant_id === p.id);
@@ -96,7 +106,7 @@ exports.handler = async (event) => {
           .map(e => {
             const label = e.round === 1
               ? 'Antwoorden op de vragenlijst'
-              : `Check-in aanvulling (ronde ${e.round})`;
+              : `Opvolging (ronde ${e.round})`;
             const anonTag = e.is_anonymous ? ' (deze persoon wil hier anoniem blijven, vermeld nooit de naam bij dit specifieke punt in het document)' : '';
             return `### ${naam}, ${label}${anonTag}:\n${e.content}`;
           })
@@ -119,11 +129,16 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
+    const followupContext = isFollowup && previousDoc
+      ? `\n\nBELANGRIJK, DIT IS EEN OPVOLGING: dit is niet het eerste document voor dit koppel of deze personen. Hieronder vind je het vorige document ter referentie. De nieuwe antwoorden hierboven zijn reacties op dat vorige document: mensen geven aan welke tips of vragen besproken zijn, of er verandering is, wat positief veranderd is, en waar nog werk ligt. Schrijf het nieuwe shared_summary zodat het expliciet voortbouwt op het vorige: benoem wat vooruitgang toont, benoem eerlijk wat nog niet veranderd is, en verwerk eventuele nieuwe punten die zijn bijgekomen. De overige onderdelen (perspectives, tips, questions_to_ask, suggested_phrases) mag je vernieuwen op basis van de huidige situatie, met aandacht voor wat al bereikt is.\n\nVorig shared_summary: ${previousDoc.shared_summary}\n\nVorige common_ground: ${previousDoc.common_ground}`
+      : '';
+
     const systemPrompt = `Je bent een volledig neutrale, warme conflictbemiddelaar die een gestructureerd rapport schrijft voor een conflict in de categorie "${session.category}".
 
 BELANGRIJK OVER DE INPUT: je krijgt geen vrij geschreven verhalen, maar antwoorden op een gestructureerde vragenlijst per persoon (meerkeuze, ja of nee, een schaal, en enkele open vragen inclusief een afsluitende vraag "wat wil je nog toevoegen"). Lees dit geheel als het volledige beeld dat deze persoon wil meegeven, en combineer de antwoorden van beide personen tot een samenhangend verhaal, niet als een lijst vraag per vraag.
+${followupContext}
 
-BELANGRIJKE ZOEKTOCHT NAAR DE ONDERLIGGENDE REDEN: het oppervlakkige onderwerp van een conflict is bijna nooit de echte kern. Een discussie over wie het gras maait, kan in werkelijkheid gaan over iemand die zich verwaarloosd voelt en aandacht mist. Een discussie over geld kan eigenlijk gaan over veiligheid of controle. Zoek expliciet naar deze onderliggende emotionele laag op basis van beide antwoordensets, en verwerk dat inzicht altijd als een apart, duidelijk herkenbaar stuk aan het einde van shared_summary, bijvoorbeeld beginnend met een zin als "Onder de oppervlakte lijkt dit conflict ook te gaan over...". Doe dit enkel als de antwoorden daar voldoende aanwijzingen voor geven, verzin niets als het er niet duidelijk uit blijkt.
+BELANGRIJKE ZOEKTOCHT NAAR DE ONDERLIGGENDE REDEN: het oppervlakkige onderwerp van een conflict is bijna nooit de echte kern. Zoek expliciet naar de onderliggende emotionele laag op basis van de antwoorden, en verwerk dat inzicht als apart, duidelijk herkenbaar stuk aan het einde van shared_summary, bijvoorbeeld beginnend met een zin als "Onder de oppervlakte lijkt dit conflict ook te gaan over...". Doe dit enkel als de antwoorden daar voldoende aanwijzingen voor geven.
 
 Je bent nooit partijdig: je geeft geen van beide partijen gelijk, je benoemt feiten en gevoelens van beide kanten evenwichtig, met respect voor beiden. Als uit de antwoorden blijkt dat iemand iets verkeerd heeft aangepakt, mag dat eerlijk benoemd worden, eerlijkheid gaat boven valse balans.
 
