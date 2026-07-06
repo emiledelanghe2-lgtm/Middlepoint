@@ -27,6 +27,9 @@
 
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
+const returnToken = new URLSearchParams(window.location.search).get('from');
+const backLink = returnToken ? `/mijn-gesprekken.html?token=${returnToken}` : '/';
+const backLabel = returnToken ? 'Terug naar Mijn gesprekken' : 'Terug naar startpagina';
 const app = document.getElementById('app');
 
 async function load() {
@@ -77,6 +80,7 @@ function renderDoc(data, displayVersion) {
     </div>` : '';
 
   app.innerHTML = `
+    <a href="${backLink}" class="btn ghost no-print" style="margin-bottom:16px;display:inline-block">← ${backLabel}</a>
     <span class="label">Versie ${doc.version}${allVersions.length > 1 ? ` van ${allVersions.length}` : ''}</span>
     <h1>Jullie document</h1>
 
@@ -153,7 +157,7 @@ function renderDoc(data, displayVersion) {
         <li>Concrete vragen om het gesprek te openen</li>
         <li>Zinnen die je letterlijk kan gebruiken</li>
         <li>De volledige, diepgaande vragenlijst voor beide personen</li>
-        <li>Check-ins om later op terug te komen</li>
+        <li>Check-ins en opvolgdocumenten om later op terug te komen</li>
       </ul>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a href="/pricing.html" class="btn clay">Bekijk de volledige mogelijkheden</a>
@@ -165,11 +169,11 @@ function renderDoc(data, displayVersion) {
       ${isPaid ? `
       <span class="label">Groeidocument</span>
       <h3>Kom later terug</h3>
-      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een nieuwe check-in starten. Beiden vullen opnieuw aan, en er komt een nieuwe versie van het document.</p>
-      <button id="startRoundBtn" class="btn clay">Start een nieuwe check-in</button>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Na een tijdje samen werken aan dit conflict kan je een opvolgdocument invullen. Beiden vullen aan, en er komt een nieuwe versie van het document. Dat kan je op elk moment doen via <a href="/login.html">Mijn gesprekken</a>, je hoeft niet te wachten.</p>
+      <button id="startRoundBtn" class="btn clay">Start een opvolging</button>
       <div id="roundMsg" style="margin-top:12px;color:var(--sage);font-size:.9rem"></div>
       ` : ''}
-      <div style="margin-top:24px"><a href="/" class="btn outline">Terug naar startpagina</a></div>
+      <div style="margin-top:24px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>
     </div>
   `;
 
@@ -187,7 +191,7 @@ function renderDoc(data, displayVersion) {
       const result = await res.json();
       const msg = document.getElementById('roundMsg');
       if (!res.ok) { msg.style.color = '#8A4222'; msg.textContent = result.error; return; }
-      msg.textContent = 'Nieuwe ronde gestart! Ga terug naar je eigen link om aan te vullen.';
+      msg.textContent = 'Opvolging gestart! Ga terug naar je eigen link om aan te vullen.';
     });
   }
 }
