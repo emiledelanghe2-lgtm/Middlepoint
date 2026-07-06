@@ -8,6 +8,7 @@
 <style>
 .q-block{ margin-bottom:26px; }
 .q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
+.q-note{ font-size:.82rem; color:var(--ink-soft); font-style:italic; margin-top:6px; }
 .mc-group{ display:flex; flex-direction:column; gap:8px; }
 .mc-option{ display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:8px; cursor:pointer; font-size:.92rem; background:var(--white); }
 .mc-option input{ margin-top:3px; }
@@ -23,6 +24,7 @@
 .followup-item-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--clay); font-weight:700; margin-bottom:6px; display:block; }
 .followup-item-text{ font-weight:600; margin-bottom:12px; color:var(--ink); }
 .followup-note{ width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:15px; margin-top:8px; resize:vertical; min-height:50px; }
+.confidential-box{ background:#EFF4ED; border:1px solid var(--sage); border-radius:8px; padding:14px 16px; margin-bottom:10px; font-size:.85rem; }
 </style>
 </head>
 <body>
@@ -65,6 +67,8 @@ const CATEGORY_OPTIONS = [
   { value: 'werk', label: "Werk / collega's" },
   { value: 'school', label: 'School' },
 ];
+
+const CONFIDENTIAL_NOTE = 'Dit antwoord wordt nooit getoond aan de andere deelnemer, ook niet in andere woorden of omfloerst. Het helpt ons enkel om een eerlijker en juister beeld van jouw situatie te schetsen.';
 
 const QUESTIONNAIRES = {
   koppel: {
@@ -178,6 +182,7 @@ const QUESTIONNAIRES = {
       { id:'partner_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je partner het niet weet of niet beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan je partner vertelt, maar dat wel zou helpen om jouw gedrag beter te begrijpen? (optioneel)', placeholder:'bv. Eigenlijk voel ik me heel onzeker, maar ik wil sterk overkomen voor mijn partner.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die je partner zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als hij begint met te zeggen dat hij ook zijn steentje wil bijdragen.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -279,6 +284,7 @@ const QUESTIONNAIRES = {
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat dit familielid het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan dit familielid vertelt, maar dat wel zou helpen om jouw gedrag beter te begrijpen? (optioneel)', placeholder:'bv. Ik voel me eigenlijk erg alleen in de familie, maar ik wil niet zwak overkomen.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die dit familielid zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als hij of zij gewoon toegeeft dat het lang heeft aangesleept.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -372,6 +378,7 @@ const QUESTIONNAIRES = {
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je vriend of vriendin het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan je vriend of vriendin vertelt, maar dat wel zou helpen om jouw gedrag beter te begrijpen? (optioneel)', placeholder:'bv. Ik ben eigenlijk jaloers op je andere vrienden, maar ik wil niet clingy overkomen.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die je vriend of vriendin zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon eerlijk zegt wat er speelde.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -439,6 +446,7 @@ const QUESTIONNAIRES = {
         {value:'compromis', label:'Een compromis over de ruimte of situatie'},
       ]},
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overheerst alles' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan de buur vertelt, maar dat wel zou helpen om jouw kant beter te begrijpen? (optioneel)', placeholder:'bv. Ik ben eigenlijk erg gestresseerd door andere zaken, waardoor dit extra zwaar aanvoelt.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die de buur zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon zegt dat die het niet besefte.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -511,6 +519,7 @@ const QUESTIONNAIRES = {
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overheerst werk' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan deze collega vertelt, maar dat wel zou helpen om jouw kant beter te begrijpen? (optioneel)', placeholder:'bv. Ik voel me onzeker in mijn rol, en dat maakt me sneller prikkelbaar.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die deze collega zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon toegeeft dat de werkdruk hoog was.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -569,6 +578,7 @@ const QUESTIONNAIRES = {
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Draaglijk', highLabel:'Overheerst school' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan de andere partij vertelt, maar dat wel zou helpen om jouw kant beter te begrijpen? (optioneel)', placeholder:'bv. Ik voel me eigenlijk erg onzeker op school, en dat maakt dit extra zwaar.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die de andere partij zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon erkent wat er gebeurd is.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -610,6 +620,7 @@ const QUESTIONNAIRES = {
       { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
       { id:'gewenste_uitkomst', type:'text', label:'Wat zou voor jou een goede uitkomst zijn?', placeholder:'Beschrijf wat voor jou een goede oplossing zou zijn.' },
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan de ander vertelt, maar dat wel zou helpen om jouw kant beter te begrijpen? (optioneel)', placeholder:'bv. Er speelt nog iets anders mee in mijn leven dat dit extra zwaar maakt.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die de ander zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die dit gewoon zou erkennen.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
@@ -679,8 +690,10 @@ function renderInput(q) {
     const maxChars = q.isFinal
       ? (currentPlan === 'gratis' ? 1000 : 12000)
       : (currentPlan === 'gratis' ? 800 : 8000);
+    const noteHtml = q.note ? `<div class="q-note">${esc(q.note)}</div>` : '';
     return `<textarea class="q-textarea" data-qid="${esc(q.id)}" maxlength="${maxChars}" placeholder="${escAttr(q.placeholder || '')}"></textarea>
-      <div class="help char-counter" data-for="${esc(q.id)}">0 / ${maxChars.toLocaleString('nl-BE')} tekens</div>`;
+      <div class="help char-counter" data-for="${esc(q.id)}">0 / ${maxChars.toLocaleString('nl-BE')} tekens</div>
+      ${noteHtml}`;
   }
   return '';
 }
@@ -769,8 +782,6 @@ function collectAnswers(container) {
         const val = parseInt(checked.value, 10);
         const low = scaleGroup.dataset.low || 'lichter';
         const high = scaleGroup.dataset.high || 'zwaarder';
-        // BUGFIX: hier stond voorheen letterlijk "4/5", wat als een raw cijfer
-        // in het uiteindelijke document terechtkwam. Nu enkel nog woorden.
         if (val <= 2) answer = `Dichter bij: ${low}`;
         else if (val >= 4) answer = `Dichter bij: ${high}`;
         else answer = 'Ergens in het midden';
@@ -795,7 +806,12 @@ function validateAndBuildContent(container) {
     }
     return null;
   }
-  const lines = answers.filter(a => a.answer).map(a => `Vraag: ${a.label}\nAntwoord: ${a.answer}`);
+  const lines = answers.filter(a => a.answer).map(a => {
+    if (a.qid === 'vertrouwelijke_context') {
+      return `Vraag: [VERTROUWELIJK, NOOIT TONEN AAN DE ANDER] ${a.label}\nAntwoord: ${a.answer}`;
+    }
+    return `Vraag: ${a.label}\nAntwoord: ${a.answer}`;
+  });
   return lines.join('\n\n');
 }
 
@@ -1258,6 +1274,12 @@ const FOLLOWUP_STATUS_OPTIONS = [
   { value: 'duidelijk verbeterd', label: 'Dit is duidelijk verbeterd' },
 ];
 
+const ACTION_STATUS_OPTIONS = [
+  { value: 'ja', label: 'Ja, dat hebben we gedaan' },
+  { value: 'een beetje', label: 'Een beetje' },
+  { value: 'nee', label: 'Nee, nog niet' },
+];
+
 const STRUCTURED_FOLLOWUP_QUESTIONS = [
   { id:'gevoel_nu', type:'multi', allowOther:true, label:'Hoe voel je je nu over de situatie?', options:[
     {value:'gefrustreerd', label:'Gefrustreerd'},
@@ -1272,14 +1294,14 @@ const STRUCTURED_FOLLOWUP_QUESTIONS = [
   { id:'zwaarte_nu', type:'scale', label:'Hoe zwaar weegt dit nu voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
 ];
 
-function renderFollowupItemsForType(items, sectionLabel) {
+function renderFollowupItemsForType(items, sectionLabel, statusOptions) {
   if (!items || !items.length) return '';
   return items.map((item, i) => `
     <div class="followup-item" data-followup-item data-item-text="${escAttr(item)}" data-item-section="${escAttr(sectionLabel)}">
       <span class="followup-item-label">${esc(sectionLabel)}</span>
       <div class="followup-item-text">${esc(item)}</div>
       <div class="mc-group">
-        ${FOLLOWUP_STATUS_OPTIONS.map(o => `
+        ${statusOptions.map(o => `
           <label class="mc-option">
             <input type="radio" name="followup_${cssIdSafe(sectionLabel)}_${i}" value="${esc(o.value)}">
             <span>${esc(o.label)}</span>
@@ -1314,8 +1336,9 @@ async function renderFollowupSurvey(round, name, session) {
   const myTips = previousDoc && previousDoc.tips ? (previousDoc.tips[name] || []) : [];
   const myQuestions = previousDoc && previousDoc.questions_to_ask ? (previousDoc.questions_to_ask[name] || []) : [];
   const myPhrases = previousDoc && previousDoc.suggested_phrases ? (previousDoc.suggested_phrases[name] || []) : [];
+  const sharedActions = previousDoc && previousDoc.shared_actions ? previousDoc.shared_actions : [];
 
-  const noItemsFound = !myTips.length && !myQuestions.length && !myPhrases.length;
+  const noItemsFound = !myTips.length && !myQuestions.length && !myPhrases.length && !sharedActions.length;
 
   const structuredHTML = STRUCTURED_FOLLOWUP_QUESTIONS.map(q => renderQuestion(q)).join('');
 
@@ -1337,12 +1360,18 @@ async function renderFollowupSurvey(round, name, session) {
         <div id="structuredFollowupBody">${structuredHTML}</div>
       </div>
 
+      ${sharedActions.length ? `
+      <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+        <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Concrete afspraken uit jullie document</span>
+        ${renderFollowupItemsForType(sharedActions, 'Afspraak', ACTION_STATUS_OPTIONS)}
+      </div>` : ''}
+
       ${!noItemsFound ? `
       <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
         <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Terugblik op jullie document</span>
-        ${renderFollowupItemsForType(myTips, 'Tip voor jou')}
-        ${renderFollowupItemsForType(myQuestions, 'Vraag die je kon stellen')}
-        ${renderFollowupItemsForType(myPhrases, 'Zin die je kon gebruiken')}
+        ${renderFollowupItemsForType(myTips, 'Tip voor jou', FOLLOWUP_STATUS_OPTIONS)}
+        ${renderFollowupItemsForType(myQuestions, 'Vraag die je kon stellen', FOLLOWUP_STATUS_OPTIONS)}
+        ${renderFollowupItemsForType(myPhrases, 'Zin die je kon gebruiken', FOLLOWUP_STATUS_OPTIONS)}
       </div>` : `
       <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:16px">
         <p style="margin:0;font-size:.9rem">We konden geen specifieke tips of vragen uit jullie vorige document koppelen aan jouw naam. Geen probleem, vul hieronder gerust aan wat voor jou relevant is.</p>
