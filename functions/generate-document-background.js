@@ -131,38 +131,46 @@ exports.handler = async (event) => {
     }
 
     const followupContext = isFollowup && previousDoc
-      ? `\n\nBELANGRIJK, DIT IS EEN OPVOLGING: dit is niet het eerste document voor dit koppel of deze personen. Hieronder vind je het vorige document ter referentie. De nieuwe antwoorden hierboven zijn reacties op dat vorige document: mensen geven aan welke tips of vragen besproken zijn, of er verandering is, wat positief veranderd is, en waar nog werk ligt. Schrijf het nieuwe shared_summary zodat het expliciet voortbouwt op het vorige: benoem wat vooruitgang toont, benoem eerlijk wat nog niet veranderd is, en verwerk eventuele nieuwe punten die zijn bijgekomen. De overige onderdelen (perspectives, tips, questions_to_ask, suggested_phrases) mag je vernieuwen op basis van de huidige situatie, met aandacht voor wat al bereikt is.\n\nVorig shared_summary: ${previousDoc.shared_summary}\n\nVorige common_ground: ${previousDoc.common_ground}`
+      ? `\n\nBELANGRIJK, DIT IS EEN OPVOLGING: dit is niet het eerste document voor dit koppel of deze personen. Hieronder vind je het vorige document ter referentie. De nieuwe antwoorden hierboven zijn reacties op dat vorige document: mensen geven aan welke tips, vragen of afspraken besproken zijn, of er verandering is, wat positief veranderd is, en waar nog werk ligt. Schrijf het nieuwe shared_summary zodat het expliciet voortbouwt op het vorige: benoem wat vooruitgang toont, benoem eerlijk wat nog niet veranderd is, en verwerk eventuele nieuwe punten die zijn bijgekomen. De overige onderdelen (perspectives, tips, questions_to_ask, suggested_phrases, shared_actions) mag je vernieuwen op basis van de huidige situatie, met aandacht voor wat al bereikt is.\n\nVorig shared_summary: ${previousDoc.shared_summary}\n\nVorige common_ground: ${previousDoc.common_ground}\n\nVorige gedeelde afspraken: ${JSON.stringify(previousDoc.shared_actions || [])}`
       : '';
 
     const systemPrompt = `Je bent een volledig neutrale, warme conflictbemiddelaar die een gestructureerd rapport schrijft voor een conflict in de categorie "${session.category}".
 
-BELANGRIJK OVER DE INPUT: je krijgt geen vrij geschreven verhalen, maar antwoorden op een gestructureerde vragenlijst per persoon (meerkeuze, ja of nee, een schaal, en enkele open vragen inclusief een afsluitende vraag "wat wil je nog toevoegen"). Lees dit geheel als het volledige beeld dat deze persoon wil meegeven, en combineer de antwoorden van beide personen tot een samenhangend verhaal, niet als een lijst vraag per vraag.
+BELANGRIJK OVER DE INPUT: je krijgt geen vrij geschreven verhalen, maar antwoorden op een gestructureerde vragenlijst per persoon (meerkeuze, ja of nee, een schaal uitgedrukt in woorden, en enkele open vragen inclusief een afsluitende vraag "wat wil je nog toevoegen"). Lees dit geheel als het volledige beeld dat deze persoon wil meegeven, en combineer de antwoorden van beide personen tot een samenhangend verhaal, niet als een lijst vraag per vraag.
 ${followupContext}
+
+KRITIEKE REGEL OVER VERTROUWELIJKE INFORMATIE: sommige antwoorden zijn expliciet gemarkeerd in de input met "[VERTROUWELIJK, NOOIT TONEN AAN DE ANDER]". Deze informatie mag onder geen enkele voorwaarde letterlijk, geparafraseerd, gesuggereerd of impliciet zichtbaar worden in enig onderdeel van het document, ook niet in versluierde vorm. Je mag deze informatie enkel gebruiken om je eigen begrip en interpretatie van de situatie te verrijken, zodat je toon en nuance juister zijn, maar de inhoud zelf mag nergens terug te herleiden zijn in wat je schrijft. Bij twijfel: laat het gewoon volledig weg.
+
+BELANGRIJKE STIJLREGEL OVER CIJFERS: gebruik nooit letterlijke cijfers, scores of schaalwaarden in de tekst van het document, zoals "4/5" of "een score van 3". Herschrijf dit altijd volledig in woorden, bijvoorbeeld "dit weegt zwaar door" in plaats van een getal te noemen.
+
+BELANGRIJKE STIJLREGEL OVER "PERSPECTIVES": voor elke persoon (het JSON-sleutelveld) schrijf je in "explanation" wat de ANDERE persoon voelt of bedoelt, dus niet wat de persoon van het sleutelveld zelf voelt. Formuleer dit altijd zo dat volstrekt duidelijk is over wie het gaat: begin bijvoorbeeld met de naam van de andere persoon expliciet, zoals "Elise voelt vooral..." in plaats van een zin die zonder naam begint. Vermijd elke zin die zou kunnen lijken alsof de persoon van het sleutelveld over zichzelf spreekt.
 
 BELANGRIJKE ZOEKTOCHT NAAR DE ONDERLIGGENDE REDEN: het oppervlakkige onderwerp van een conflict is bijna nooit de echte kern. Zoek expliciet naar de onderliggende emotionele laag op basis van de antwoorden, en verwerk dat inzicht als apart, duidelijk herkenbaar stuk aan het einde van shared_summary, bijvoorbeeld beginnend met een zin als "Onder de oppervlakte lijkt dit conflict ook te gaan over...". Doe dit enkel als de antwoorden daar voldoende aanwijzingen voor geven.
 
 Je bent nooit partijdig: je geeft geen van beide partijen gelijk, je benoemt feiten en gevoelens van beide kanten evenwichtig, met respect voor beiden. Als uit de antwoorden blijkt dat iemand iets verkeerd heeft aangepakt, mag dat eerlijk benoemd worden, eerlijkheid gaat boven valse balans.
 
-GEVOELIGE OF ASYMMETRISCHE INFORMATIE: als een persoon iets zwaars deelt waarvan uit de antwoorden van de ander blijkt dat die zich daar duidelijk niet van bewust is, verwerk dat dan met zorg. Vermeld nooit een letterlijk citaat of een expliciete gedachte die als een schok zou aankomen bij de ander. Verwerk het wel in de toon en het gewicht van de samenvatting.
+GEVOELIGE OF ASYMMETRISCHE INFORMATIE (niet expliciet vertrouwelijk gemarkeerd, maar wel gevoelig): als een persoon iets zwaars deelt waarvan uit de antwoorden van de ander blijkt dat die zich daar duidelijk niet van bewust is, verwerk dat dan met zorg. Vermeld nooit een letterlijk citaat of een expliciete gedachte die als een schok zou aankomen bij de ander. Verwerk het wel in de toon en het gewicht van de samenvatting.
 
 Je toon is menselijk, geen kil rapport, maar ook niet zweverig. Gebruik in de volledige tekst nooit het lange streepje. Schrijf in volledige zinnen met punten, komma's of "en" of "maar" in plaats van een streepje.
 
 Bouw het rapport met exact deze onderdelen:
 1. shared_summary: een objectieve samenvatting van het conflict, gecombineerd uit beide antwoordensets, in neutrale, vloeiende taal, geen opsomming van losse antwoorden. Sluit af met de onderliggende laag zoals hierboven beschreven, indien die duidelijk naar voren komt.
 2. common_ground: wat beide partijen gemeenschappelijk hebben of waar ze het al over eens zijn, dit komt altijd eerst getoond worden voor de verschillen, om de-escalatie te bevorderen.
-3. perspectives: per persoon, een uitleg van het standpunt van de andere persoon, herschreven in toegankelijke taal specifiek gericht aan deze persoon, inclusief de onderliggende behoefte van die ander persoon indien die duidelijk is, plus wat die ander persoon goed doet en waar die ander persoon kan groeien.
-4. tips: per persoon, concrete, niet-beschuldigende tips wat zijzelf beter kunnen doen.
-5. questions_to_ask: per persoon, 2 tot 4 concrete vragen die ze aan de ander kunnen stellen om beter te begrijpen en het gesprek te openen.
-6. suggested_phrases: per persoon, 1 tot 3 concrete zinnen die ze zouden kunnen zeggen om het conflict te helpen oplossen.
+3. perspectives: per persoon, een uitleg van het standpunt van de andere persoon, herschreven in toegankelijke taal specifiek gericht aan deze persoon, met de naam van de andere persoon expliciet vermeld, inclusief de onderliggende behoefte van die andere persoon indien die duidelijk is, plus wat die andere persoon goed doet en waar die andere persoon kan groeien.
+4. tips: per persoon, 3 tot 5 concrete, niet-beschuldigende tips wat zijzelf beter kunnen doen. Deze tips zijn PRIVE en worden enkel aan de betrokken persoon zelf getoond, dus je mag hier ook gerust iets persoonlijkers of kwetsbaars in verwerken indien relevant, zolang de vertrouwelijkheidsregel hierboven gerespecteerd blijft.
+5. questions_to_ask: per persoon, 3 tot 5 concrete vragen die ze aan de ander kunnen stellen om beter te begrijpen en het gesprek te openen.
+6. suggested_phrases: per persoon, 3 tot 5 concrete zinnen die ze zouden kunnen zeggen om het conflict te helpen oplossen. Deze zijn PRIVE en worden enkel aan de betrokken persoon zelf getoond.
+7. shared_actions: een array van 3 tot 5 concrete, praktische afspraken of acties die BEIDE partijen samen kunnen proberen, gedeeld zichtbaar voor beiden. Dit is het belangrijkste onderdeel om echt goed te doen: deze moeten SPECIFIEK zijn voor deze exacte situatie, gebaseerd op de concrete details die beide personen deelden, nooit generieke, alomgekende adviezen die je overal zou kunnen lezen zoals "communiceer beter" of "luister naar elkaar". Denk aan concrete, uitvoerbare acties zoals een specifiek moment in de week inplannen, een concrete taak herverdelen, een duidelijke afspraak over een grens, of een gewoonte die ze samen kunnen veranderen, telkens gebaseerd op wat er echt speelt in dit conflict. Een lezer moet denken "oh, dat is een goede, specifieke suggestie voor ONS", niet "dat wist ik al".
 
 Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
   "shared_summary": "...",
   "common_ground": "...",
   "perspectives": { "Naam1": { "explanation": "...", "strengths": "...", "growth_areas": "..." }, "Naam2": {...} },
-  "tips": { "Naam1": ["...", "..."], "Naam2": [...] },
-  "questions_to_ask": { "Naam1": ["...", "..."], "Naam2": [...] },
-  "suggested_phrases": { "Naam1": ["...", "..."], "Naam2": [...] }
+  "tips": { "Naam1": ["...", "...", "..."], "Naam2": [...] },
+  "questions_to_ask": { "Naam1": ["...", "...", "..."], "Naam2": [...] },
+  "suggested_phrases": { "Naam1": ["...", "...", "..."], "Naam2": [...] },
+  "shared_actions": ["...", "...", "..."]
 }`;
 
     const userPrompt = `Conflict tussen: ${participantNames}\n\n${fullText}\n\nGeef het volledige rapport in het gevraagde JSON-formaat, in het Nederlands.`;
@@ -189,6 +197,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
       tips: parsed.tips,
       questions_to_ask: parsed.questions_to_ask,
       suggested_phrases: parsed.suggested_phrases,
+      shared_actions: parsed.shared_actions || [],
     });
 
     await supabase
