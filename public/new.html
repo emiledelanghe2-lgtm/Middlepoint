@@ -136,7 +136,7 @@
       <div class="field">
         <label for="organizerEmail">Jouw e-mailadres</label>
         <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
-        <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>. Op de volgende pagina kan je de link naar de andere deelnemer ook gewoon via WhatsApp doorsturen.</div>
+        <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="isThirdParty">
@@ -162,7 +162,7 @@
 
     <div class="form-section">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
-      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Als je een e-mailadres invult, wordt de uitnodigingsmail automatisch verstuurd. Je kan optioneel ook zelf een kort, persoonlijk berichtje toevoegen dat mee in de mail komt te staan.</p>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Als je een e-mailadres invult, wordt de uitnodigingsmail automatisch verstuurd. Op de volgende pagina kan je de persoonlijke link ook altijd zelf nog via WhatsApp of e-mail doorsturen. Je kan hieronder optioneel ook een kort, persoonlijk berichtje toevoegen, dat komt dan mee in zowel de automatische mail als in de WhatsApp- en mailknoppen op de volgende pagina.</p>
       <div id="participantInputs"></div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:4px">+ Nog een deelnemer toevoegen</button>
       <div class="checkbox-row" style="margin-top:16px">
@@ -347,8 +347,8 @@ function addParticipantRow() {
       <input type="email" class="participant-email" placeholder="E-mailadres (aanbevolen)">
     </div>
     <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>
-    <span class="participant-message-label">Persoonlijk berichtje (optioneel, komt mee in de uitnodigingsmail)</span>
-    <textarea class="participant-message" placeholder="bv. Hey, ik heb ons gesprek over het gras via Middlepoint gestart, zou fijn zijn als jij ook je kant deelt."></textarea>`;
+    <span class="participant-message-label">Persoonlijk berichtje (optioneel, komt mee in de mail en het WhatsApp-bericht)</span>
+    <textarea class="participant-message" placeholder="bv. Hey, ik merk dat we elkaar hierin even niet goed verstaan, en ik dacht dat Middlepoint ons hierbij zou kunnen helpen."></textarea>`;
   wrap.appendChild(div);
 
   div.querySelector('.participant-email').addEventListener('blur', e => {
@@ -377,9 +377,20 @@ function copyLink(btn, link) {
   });
 }
 
-function whatsappLink(name, fromName, link) {
-  const text = `Hoi ${name}, ${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
+function whatsappLink(name, fromName, link, customMessage) {
+  const text = customMessage
+    ? `Hoi ${name}, ${customMessage}\n\nJe kan hier terecht: ${link}`
+    : `Hoi ${name}, ${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+function mailLink(name, fromName, link, toEmail, customMessage) {
+  const subject = encodeURIComponent(`${fromName} nodigt je uit via Middlepoint`);
+  const bodyText = customMessage
+    ? `Hoi ${name},\n\n${customMessage}\n\nJe kan hier terecht: ${link}`
+    : `Hoi ${name},\n\n${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
+  const body = encodeURIComponent(bodyText);
+  return `mailto:${toEmail || ''}?subject=${subject}&body=${body}`;
 }
 
 document.getElementById('newSessionForm').addEventListener('submit', async e => {
@@ -471,7 +482,11 @@ async function createSession({ category, organizerName, organizerEmail, organize
       block.className = 'person-block';
       const fullLink = window.location.origin + p.accessLink;
       const mainButtonLabel = isThirdParty && p.isOrganizer ? 'Bekijk status' : 'Vul mijn document in';
-      const waLink = whatsappLink(p.name, organizerName, fullLink);
+      const matchIndex = participantNames.indexOf(p.name);
+      const matchedEmail = matchIndex !== -1 ? participantEmails[matchIndex] : '';
+      const matchedMessage = matchIndex !== -1 ? participantMessages[matchIndex] : '';
+      const waLink = whatsappLink(p.name, organizerName, fullLink, matchedMessage);
+      const mailtoLink = mailLink(p.name, organizerName, fullLink, matchedEmail, matchedMessage);
       block.innerHTML = `
         <div class="who">Persoonlijke link voor ${p.name}${p.isOrganizer ? ' (jij)' : ''}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
@@ -481,14 +496,14 @@ async function createSession({ category, organizerName, organizerEmail, organize
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           ${p.isOrganizer ? `<a href="${p.accessLink}" class="btn clay">${mainButtonLabel}</a>` : ''}
           <a href="${waLink}" target="_blank" class="btn whatsapp">Verstuur via WhatsApp</a>
+          <a href="${mailtoLink}" class="btn outline">Verstuur via mail</a>
         </div>`;
       list.appendChild(block);
       block.querySelector('button').addEventListener('click', ev => copyLink(ev.currentTarget, fullLink));
 
       if (sendInvites && !p.isOrganizer) {
-        const matchIndex = participantNames.indexOf(p.name);
-        const email = matchIndex !== -1 ? participantEmails[matchIndex] : '';
-        const customMessage = matchIndex !== -1 ? participantMessages[matchIndex] : '';
+        const email = matchedEmail;
+        const customMessage = matchedMessage;
         if (email) {
           try {
             const inviteRes = await fetch('/.netlify/functions/send-invite', {
