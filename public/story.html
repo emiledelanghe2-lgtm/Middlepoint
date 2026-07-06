@@ -18,6 +18,11 @@
 .branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
 .q-textarea{ width:100%; min-height:150px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
 .q-invalid{ outline:2px solid #8A4222; border-radius:10px; }
+.who-started{ background:#EFF4ED; border:none; border-radius:var(--radius); padding:14px 18px; margin-bottom:20px; font-size:.9rem; }
+.followup-item{ background:var(--white); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px; }
+.followup-item-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--clay); font-weight:700; margin-bottom:6px; display:block; }
+.followup-item-text{ font-weight:600; margin-bottom:12px; color:var(--ink); }
+.followup-note{ width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:15px; margin-top:8px; resize:vertical; min-height:50px; }
 </style>
 </head>
 <body>
@@ -33,9 +38,14 @@
 
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
+const returnToken = new URLSearchParams(window.location.search).get('from');
 const app = document.getElementById('app');
 let currentPlan = 'gratis';
 let pendingSubmitContent = '';
+
+function docLinkWithReturn(tok) {
+  return `/document.html?token=${tok}${returnToken ? '&from=' + encodeURIComponent(returnToken) : ''}`;
+}
 
 function draftKey(suffix) { return `mp_draft_${suffix}_${token}`; }
 function saveDraft(suffix, value) { try { localStorage.setItem(draftKey(suffix), value); } catch (e) {} }
@@ -827,6 +837,18 @@ function otherNames(data) {
     .join(' en ');
 }
 
+function organizerName(data) {
+  const organizer = (data.allParticipants || []).find(p => p.is_organizer);
+  return organizer ? organizer.display_name : null;
+}
+
+function whoStartedBanner(data) {
+  if (data.participant.isOrganizer) return '';
+  const orgName = organizerName(data);
+  if (!orgName) return '';
+  return `<div class="who-started">Dit gesprek is gestart door <strong>${orgName}</strong>.</div>`;
+}
+
 function attachLinksButton(tok) {
   const btn = document.getElementById('showLinksBtn');
   if (!btn) return;
@@ -912,7 +934,7 @@ function render(data) {
       <h1>Hallo ${participant.name}</h1>
       <p style="color:var(--ink-soft)">Jij bent organisator van dit gesprek. Je hoeft zelf geen verhaal in te vullen. Status: <strong>${statusLabel(session.status)}</strong>.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <a href="/document.html?token=${token}" class="btn clay">Naar het document</a>
+        <a href="${docLinkWithReturn(token)}" class="btn clay">Naar het document</a>
         <a href="/" class="btn outline">Terug naar startpagina</a>
       </div>
       <div style="margin-top:16px"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>
@@ -922,13 +944,14 @@ function render(data) {
   }
 
   if (!round1Done) {
-    renderStoryForm(participant.name, session);
+    renderStoryForm(participant.name, session, data);
   } else if (session.status === 'veiligheid_gestopt') {
     renderCrisisMessage();
   } else if (session.status === 'wachten_op_verhalen') {
     const wie = otherNames(data) || 'de andere deelnemer(s)';
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
+      ${whoStartedBanner(data)}
       <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra die klaar is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>
       ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}`;
     setTimeout(load, 10000);
@@ -957,9 +980,10 @@ function render(data) {
   } else if (session.status === 'klaar') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Jullie document is klaar</h1>
+      ${whoStartedBanner(data)}
       <p style="color:var(--ink-soft)">Het eerlijke, neutrale rapport staat klaar om te bekijken.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <a href="/document.html?token=${token}" class="btn clay">Bekijk document</a>
+        <a href="${docLinkWithReturn(token)}" class="btn clay">Bekijk document</a>
         <a href="/" class="btn outline">Terug naar startpagina</a>
       </div>`;
   } else if ((session.status || '').startsWith('nieuwe_ronde_')) {
@@ -970,10 +994,10 @@ function render(data) {
       app.innerHTML = `<span class="label">${session.category}</span>
         <h1>Bedankt voor de aanvulling</h1>
         <div class="status-box">We wachten nu op de aanvulling van <strong>${wie}</strong>.</div>
-        <div style="margin-top:16px"><a href="/document.html?token=${token}" class="btn outline">Bekijk je huidige document</a></div>`;
+        <div style="margin-top:16px"><a href="${docLinkWithReturn(token)}" class="btn outline">Bekijk je huidige document</a></div>`;
       setTimeout(load, 8000);
     } else {
-      renderCheckinForm(round, participant.name);
+      renderFollowupSurvey(round, participant.name, session);
     }
   } else {
     app.innerHTML = `<div class="status-box">Bezig...</div>`;
@@ -990,7 +1014,7 @@ function statusLabel(status) {
     klaar: 'klaar',
     veiligheid_gestopt: 'gestopt om veiligheidsredenen',
   };
-  return labels[status] || (status || '').startsWith('nieuwe_ronde_') ? 'nieuwe check-in bezig' : (labels[status] || status);
+  return labels[status] || (status || '').startsWith('nieuwe_ronde_') ? 'opvolging bezig' : (labels[status] || status);
 }
 
 function renderCrisisMessage() {
@@ -1006,7 +1030,7 @@ function renderCrisisMessage() {
     </div>`;
 }
 
-function renderStoryForm(name, session) {
+function renderStoryForm(name, session, data) {
   const plan = session.plan || 'gratis';
   currentPlan = plan;
   const questionnaire = getQuestionnaire(session.category);
@@ -1019,9 +1043,10 @@ function renderStoryForm(name, session) {
   app.innerHTML = `
     <span class="label">Jouw kant van het verhaal</span>
     <h1>Vertel wat er speelt</h1>
-    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
+    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:12px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>. Is dit niet jouw naam? Sluit deze pagina en vraag de juiste link op bij wie het gesprek startte, of <a href="/login.html">bekijk je eigen gesprekken</a>.
     </div>
+    ${whoStartedBanner(data)}
 
     ${categoryEditorHTML(session.category)}
 
@@ -1067,7 +1092,7 @@ function renderStoryForm(name, session) {
   surveyBody.addEventListener('change', handleSurveyChange);
   surveyBody.addEventListener('input', handleSurveyInput);
 
-  attachCategoryEditor(session, () => renderStoryForm(name, session));
+  attachCategoryEditor(session, () => renderStoryForm(name, session, data));
 
   const draftRaw = loadDraft('story_answers');
   if (draftRaw) {
@@ -1213,80 +1238,202 @@ function renderFollowupForm(questions, name) {
   });
 }
 
-function renderCheckinForm(round, name) {
-  const draftSuffix = `checkin_${round}`;
-  const existingDraft = loadDraft(draftSuffix);
+/* ===================== NIEUW: RIJKE OPVOLGVRAGENLIJST ===================== */
+
+const FOLLOWUP_STATUS_OPTIONS = [
+  { value: 'nog niet besproken', label: 'Nog niet besproken' },
+  { value: 'besproken, nog geen verandering', label: 'Besproken, maar nog geen verandering' },
+  { value: 'duidelijk verbeterd', label: 'Dit is duidelijk verbeterd' },
+];
+
+function renderFollowupItemsForType(items, sectionLabel) {
+  if (!items || !items.length) return '';
+  return items.map((item, i) => `
+    <div class="followup-item" data-followup-item data-item-text="${escAttr(item)}" data-item-section="${escAttr(sectionLabel)}">
+      <span class="followup-item-label">${esc(sectionLabel)}</span>
+      <div class="followup-item-text">${esc(item)}</div>
+      <div class="mc-group">
+        ${FOLLOWUP_STATUS_OPTIONS.map(o => `
+          <label class="mc-option">
+            <input type="radio" name="followup_${cssIdSafe(sectionLabel)}_${i}" value="${esc(o.value)}">
+            <span>${esc(o.label)}</span>
+          </label>`).join('')}
+      </div>
+      <textarea class="followup-note" placeholder="Wil je hier iets bij toelichten? (optioneel)"></textarea>
+    </div>`).join('');
+}
+
+function cssIdSafe(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+async function renderFollowupSurvey(round, name, session) {
   app.innerHTML = `
-    <span class="label">Check-in</span>
+    <span class="label">Opvolging</span>
     <h1>Hoe staat het er nu voor?</h1>
     <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
       Je vult dit in als <strong>${name}</strong>.
     </div>
-    ${existingDraft ? '<div class="draft-notice">We hebben een eerder bewaard concept teruggevonden en alvast ingevuld.</div>' : ''}
-    <p style="color:var(--ink-soft)">Vul aan wat er veranderd of bijgekomen is sinds de vorige keer. Na het indienen kan je dit niet meer aanpassen.</p>
-    <p style="margin-bottom:20px"><a href="/document.html?token=${token}" style="font-weight:600">Bekijk eerst nog eens je huidige document</a></p>
+    <div class="status-box">Een moment, we halen jullie vorige document op...</div>`;
+
+  let previousDoc = null;
+  try {
+    const res = await fetch(`/.netlify/functions/get-document?token=${token}`);
+    const data = await res.json();
+    if (res.ok && data.documents && data.documents.length) {
+      previousDoc = data.documents[0];
+    }
+  } catch (e) { /* geen probleem, we tonen dan gewoon geen items */ }
+
+  const myTips = previousDoc && previousDoc.tips ? (previousDoc.tips[name] || []) : [];
+  const myQuestions = previousDoc && previousDoc.questions_to_ask ? (previousDoc.questions_to_ask[name] || []) : [];
+  const myPhrases = previousDoc && previousDoc.suggested_phrases ? (previousDoc.suggested_phrases[name] || []) : [];
+
+  const noItemsFound = !myTips.length && !myQuestions.length && !myPhrases.length;
+
+  app.innerHTML = `
+    <span class="label">Opvolging</span>
+    <h1>Hoe staat het er nu voor?</h1>
+    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
+      Je vult dit in als <strong>${name}</strong>.
+    </div>
+    <p style="margin-bottom:20px"><a href="${docLinkWithReturn(token)}" style="font-weight:600">Bekijk eerst nog eens jullie vorige document</a></p>
+    <p style="color:var(--ink-soft)">Alles hieronder is optioneel. Vul in wat voor jou relevant is, sla gerust over wat niet van toepassing is. Na het indienen kan je dit niet meer aanpassen.</p>
+
     <div id="error" class="error-box" style="display:none"></div>
-    <form id="checkinForm">
-      <div class="field">
-        <textarea id="checkinText" required placeholder="Wat is er veranderd sinds de vorige keer?">${existingDraft}</textarea>
+
+    <form id="followupSurveyForm">
+
+      ${!noItemsFound ? `
+      <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+        <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Terugblik op jullie document</span>
+        ${renderFollowupItemsForType(myTips, 'Tip voor jou')}
+        ${renderFollowupItemsForType(myQuestions, 'Vraag die je kon stellen')}
+        ${renderFollowupItemsForType(myPhrases, 'Zin die je kon gebruiken')}
+      </div>` : `
+      <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:16px">
+        <p style="margin:0;font-size:.9rem">We konden geen specifieke tips of vragen uit jullie vorige document koppelen aan jouw naam. Geen probleem, vul hieronder gerust aan wat voor jou relevant is.</p>
+      </div>`}
+
+      <div class="q-block">
+        <label class="q-label">Is er iets nieuws bijgekomen sinds de vorige keer? (optioneel)</label>
+        <textarea class="q-textarea" id="nieuwePunten" maxlength="3000" placeholder="Beschrijf gerust als er een nieuw punt is opgedoken."></textarea>
       </div>
+
+      <div class="q-block">
+        <label class="q-label">Wat is er positief veranderd dat je tegen ${name === session.category ? 'de ander' : 'de ander'} wil zeggen? (optioneel)</label>
+        <textarea class="q-textarea" id="positiefVeranderd" maxlength="3000" placeholder="Wat ging goed sinds de vorige keer?"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Waar ligt voor jou nog het meeste werk? (optioneel)</label>
+        <textarea class="q-textarea" id="nogWerk" maxlength="3000" placeholder="Wat vraagt nog aandacht?"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Wil je zelf een nieuwe tip of openingszin voorstellen? (optioneel)</label>
+        <textarea class="q-textarea" id="eigenTipOpvolging" maxlength="2000" placeholder="bv. Het zou fijn zijn als..."></textarea>
+      </div>
+
       <div class="checkbox-row">
-        <input type="checkbox" id="anon3">
-        <label for="anon3">Vermeld mijn naam niet bij deze aanvulling (anoniem)</label>
+        <input type="checkbox" id="anonFollowup">
+        <label for="anonFollowup">Vermeld mijn naam niet bij deze aanvulling (anoniem)</label>
       </div>
+
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button type="button" id="saveDraftBtn3" class="btn outline" style="flex:1;padding:14px">Bewaar als concept</button>
-        <button type="button" id="submitFinalBtn3" class="btn clay" style="flex:1;padding:14px">Definitief indienen</button>
+        <button type="button" id="saveDraftFollowupBtn" class="btn outline" style="flex:1;padding:14px">Bewaar als concept</button>
+        <button type="button" id="submitFollowupBtn" class="btn clay" style="flex:1;padding:14px">Definitief indienen</button>
       </div>
-      <div id="draftSavedMsg3" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel.</div>
+      <div id="draftSavedFollowupMsg" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Concept bewaard op dit toestel.</div>
     </form>
 
-    <div id="confirmSubmitModal3" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+    <div id="confirmFollowupModal" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
       <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
         <h3 style="margin-bottom:12px">Definitief indienen?</h3>
-        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je deze aanvulling niet meer aanpassen.</p>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">Na het indienen kan je deze opvolging niet meer aanpassen.</p>
         <div style="display:flex;gap:10px">
-          <button type="button" id="cancelSubmit3" class="btn outline" style="flex:1">Nog even wachten</button>
-          <button type="button" id="confirmSubmit3" class="btn clay" style="flex:1">Ja, indienen</button>
+          <button type="button" id="cancelFollowupSubmit" class="btn outline" style="flex:1">Nog even wachten</button>
+          <button type="button" id="confirmFollowupSubmit" class="btn clay" style="flex:1">Ja, indienen</button>
         </div>
       </div>
     </div>`;
 
-  document.getElementById('saveDraftBtn3').addEventListener('click', () => {
-    saveDraft(draftSuffix, document.getElementById('checkinText').value);
-    const msg = document.getElementById('draftSavedMsg3');
+  const draftRaw = loadDraft(`checkin_survey_${round}`);
+  if (draftRaw) {
+    try {
+      const draft = JSON.parse(draftRaw);
+      if (draft.nieuwePunten) document.getElementById('nieuwePunten').value = draft.nieuwePunten;
+      if (draft.positiefVeranderd) document.getElementById('positiefVeranderd').value = draft.positiefVeranderd;
+      if (draft.nogWerk) document.getElementById('nogWerk').value = draft.nogWerk;
+      if (draft.eigenTipOpvolging) document.getElementById('eigenTipOpvolging').value = draft.eigenTipOpvolging;
+    } catch (e) {}
+  }
+
+  function collectFollowupContent() {
+    const lines = [];
+    document.querySelectorAll('[data-followup-item]').forEach(itemEl => {
+      const itemText = itemEl.dataset.itemText;
+      const section = itemEl.dataset.itemSection;
+      const checked = itemEl.querySelector('input:checked');
+      const note = itemEl.querySelector('.followup-note').value.trim();
+      if (checked || note) {
+        let line = `Vraag: Reactie op "${section}": ${itemText}\nAntwoord: ${checked ? checked.value : 'geen status aangeduid'}`;
+        if (note) line += `. Toelichting: ${note}`;
+        lines.push(line);
+      }
+    });
+    const nieuwePunten = document.getElementById('nieuwePunten').value.trim();
+    if (nieuwePunten) lines.push(`Vraag: Is er iets nieuws bijgekomen sinds de vorige keer?\nAntwoord: ${nieuwePunten}`);
+    const positief = document.getElementById('positiefVeranderd').value.trim();
+    if (positief) lines.push(`Vraag: Wat is er positief veranderd dat je wil zeggen?\nAntwoord: ${positief}`);
+    const nogWerk = document.getElementById('nogWerk').value.trim();
+    if (nogWerk) lines.push(`Vraag: Waar ligt nog het meeste werk?\nAntwoord: ${nogWerk}`);
+    const eigenTip = document.getElementById('eigenTipOpvolging').value.trim();
+    if (eigenTip) lines.push(`Vraag: Zelf voorgestelde tip of openingszin voor de opvolging\nAntwoord: ${eigenTip}`);
+    return lines.join('\n\n');
+  }
+
+  document.getElementById('saveDraftFollowupBtn').addEventListener('click', () => {
+    saveDraft(`checkin_survey_${round}`, JSON.stringify({
+      nieuwePunten: document.getElementById('nieuwePunten').value,
+      positiefVeranderd: document.getElementById('positiefVeranderd').value,
+      nogWerk: document.getElementById('nogWerk').value,
+      eigenTipOpvolging: document.getElementById('eigenTipOpvolging').value,
+    }));
+    const msg = document.getElementById('draftSavedFollowupMsg');
     msg.style.display = 'block';
     setTimeout(() => { msg.style.display = 'none'; }, 4000);
   });
 
-  document.getElementById('submitFinalBtn3').addEventListener('click', () => {
+  document.getElementById('submitFollowupBtn').addEventListener('click', () => {
+    const content = collectFollowupContent();
     const errorBox = document.getElementById('error');
     errorBox.style.display = 'none';
-    if (!document.getElementById('checkinText').value.trim()) {
-      errorBox.textContent = 'Schrijf eerst je aanvulling voor je indient.';
+    if (!content) {
+      errorBox.textContent = 'Vul minstens iets in voor je indient, alles hoeft niet, maar helemaal leeg kan niet.';
       errorBox.style.display = 'block';
       return;
     }
-    document.getElementById('confirmSubmitModal3').style.display = 'flex';
+    pendingSubmitContent = content;
+    document.getElementById('confirmFollowupModal').style.display = 'flex';
   });
 
-  document.getElementById('cancelSubmit3').addEventListener('click', () => {
-    document.getElementById('confirmSubmitModal3').style.display = 'none';
+  document.getElementById('cancelFollowupSubmit').addEventListener('click', () => {
+    document.getElementById('confirmFollowupModal').style.display = 'none';
   });
 
-  document.getElementById('confirmSubmit3').addEventListener('click', async () => {
-    const content = document.getElementById('checkinText').value.trim();
-    const isAnonymous = document.getElementById('anon3').checked;
+  document.getElementById('confirmFollowupSubmit').addEventListener('click', async () => {
+    const isAnonymous = document.getElementById('anonFollowup').checked;
     const errorBox = document.getElementById('error');
-    document.getElementById('confirmSubmitModal3').style.display = 'none';
+    document.getElementById('confirmFollowupModal').style.display = 'none';
     try {
       const res = await fetch('/.netlify/functions/submit-checkin', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, content, isAnonymous }),
+        body: JSON.stringify({ token, content: pendingSubmitContent, isAnonymous }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      clearDraft(draftSuffix);
+      clearDraft(`checkin_survey_${round}`);
       load();
     } catch (err) {
       errorBox.textContent = err.message;
