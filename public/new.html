@@ -419,12 +419,26 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
   if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
 
+  // BUGFIX: voorheen werden namen, e-mails en berichtjes elk apart en los van
+  // elkaar ingezameld. Als er een lege naamrij tussenzat (bijvoorbeeld een
+  // toegevoegde rij die niet werd ingevuld), schoven de e-mails en berichtjes
+  // een positie op ten opzichte van de namen, waardoor een bericht bedoeld
+  // voor de ene persoon bij de andere naam terechtkwam. Nu bouwen we eerst
+  // per rij een samenhangend object, en filteren we pas daarna leeg rijen weg,
+  // zodat naam, e-mail en bericht altijd bij elkaar horen.
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
   const messageInputs = Array.from(document.querySelectorAll('.participant-message'));
-  const participantNames = nameInputs.map(i => i.value.trim()).filter(Boolean);
-  const participantEmails = nameInputs.map((_, i) => emailInputs[i] ? emailInputs[i].value.trim() : '');
-  const participantMessages = nameInputs.map((_, i) => messageInputs[i] ? messageInputs[i].value.trim() : '');
+  const participantRows = nameInputs
+    .map((input, i) => ({
+      name: input.value.trim(),
+      email: emailInputs[i] ? emailInputs[i].value.trim() : '',
+      message: messageInputs[i] ? messageInputs[i].value.trim() : '',
+    }))
+    .filter(row => row.name);
+  const participantNames = participantRows.map(r => r.name);
+  const participantEmails = participantRows.map(r => r.email);
+  const participantMessages = participantRows.map(r => r.message);
 
   if (!organizerName || participantNames.length === 0) {
     errorBox.textContent = 'Vul je naam en minstens één deelnemer in.';
