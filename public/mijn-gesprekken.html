@@ -1,14 +1,5 @@
 <!DOCTYPE html>
 <html lang="nl">
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-79QY4HGN40');
-</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -98,6 +89,25 @@ async function startFollowup(accessLinkWithReturn, btn) {
     btn.disabled = false;
     btn.textContent = 'Vul opvolgdocument in';
     alert(err.message);
+  }
+}
+
+async function deleteSession(sessionId, btn) {
+  if (!confirm('Weet je zeker dat je dit gesprek definitief wil verwijderen? Dit kan niet ongedaan gemaakt worden.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Bezig...';
+  try {
+    const res = await fetch('/.netlify/functions/delete-session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ magicToken: token, sessionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    load();
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Verwijder gesprek';
   }
 }
 
@@ -192,7 +202,10 @@ async function load() {
           ${followupButton}
           ${s.isOrganizer ? `<button class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
         </div>
-        ${s.isOrganizer ? `<div id="${linksBoxId}" style="display:none;margin-top:8px"></div>` : ''}`;
+        ${s.isOrganizer ? `<div id="${linksBoxId}" style="display:none;margin-top:8px"></div>` : ''}
+        <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px">
+          <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteSession('${s.sessionId}', this)">Verwijder gesprek</button>
+        </div>`;
 
       list.appendChild(card);
     });
