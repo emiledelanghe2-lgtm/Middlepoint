@@ -1,14 +1,5 @@
 <!DOCTYPE html>
 <html lang="nl">
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-79QY4HGN40');
-</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +12,7 @@
   .app-wrap { max-width: 100%; padding: 20px; }
   .doc-section { break-inside: avoid; }
 }
+.doc-quote{ border-left:3px solid var(--clay); padding-left:18px; margin:32px 0; font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; color:var(--ink); }
 </style>
 </head>
 <body>
@@ -40,6 +32,42 @@ const returnToken = new URLSearchParams(window.location.search).get('from');
 const backLink = returnToken ? `/mijn-gesprekken.html?token=${returnToken}` : '/';
 const backLabel = returnToken ? 'Terug naar Mijn gesprekken' : 'Terug naar startpagina';
 const app = document.getElementById('app');
+
+const QUOTES = {
+  koppel: {
+    main: 'Een relatie groeit niet door nooit te botsen, maar door elkaar te blijven kiezen na elke botsing.',
+    followup: 'Vooruitgang zit niet in perfectie, maar in het samen blijven proberen.',
+  },
+  familie: {
+    main: 'Familie kies je niet, begrip wel.',
+    followup: 'Oude patronen doorbreken begint met één klein, nieuw gesprek.',
+  },
+  vrienden: {
+    main: 'Een goede vriendschap overleeft geen stilte, wel eerlijkheid.',
+    followup: 'Wat je samen hersteld hebt, is vaak sterker dan wat nooit gebroken was.',
+  },
+  buren: {
+    main: 'Goede buren maken geen ruzie, ze maken afspraken.',
+    followup: 'Een klein gebaar van begrip weegt vaak zwaarder dan een groot gelijk.',
+  },
+  werk: {
+    main: 'Samenwerken begint met elkaar willen begrijpen, niet met gelijk willen krijgen.',
+    followup: 'Verandering op de werkvloer groeit stap voor stap, niet in één gesprek.',
+  },
+  school: {
+    main: 'Wie goed luistert, leert het meest.',
+    followup: 'Elke kleine stap vooruit telt, ook als het probleem nog niet helemaal opgelost is.',
+  },
+  andere: {
+    main: 'Begrip is het begin van elke oplossing.',
+    followup: 'Vooruitgang, hoe klein ook, is de moeite waard om te vieren.',
+  },
+};
+
+function getQuote(category, isFollowup) {
+  const set = QUOTES[category] || QUOTES.andere;
+  return isFollowup ? set.followup : set.main;
+}
 
 async function load() {
   const res = await fetch(`/.netlify/functions/get-document?token=${token}`);
@@ -69,38 +97,36 @@ function shareViaEmail() {
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
-function versionLabel(d, mostRecentVersion) {
-  const base = d.version === 1 ? 'Versie 1, origineel' : `Versie ${d.version}, opvolging`;
-  return d.version === mostRecentVersion ? `${base} (meest recent)` : base;
+function docTitleFor(version) {
+  return version === 1 ? 'Origineel document' : 'Opvolgdocument';
 }
 
 function renderDoc(data, displayVersion) {
   const allVersions = data.documents;
   const doc = displayVersion ? allVersions.find(d => d.version === displayVersion) : allVersions[0];
-  const mostRecentVersion = allVersions[0].version;
   const isPaid = data.isPaid || false;
   const myName = data.myName;
+  const category = data.category || 'andere';
+  const isFollowupDoc = doc.version >= 2;
+  const followupAlreadyUsed = allVersions.some(d => d.version >= 2);
 
   const perspectiveEntries = Object.entries(doc.perspectives || {});
   const questionEntries = Object.entries(doc.questions_to_ask || {});
-  // BELANGRIJK: tips en suggested_phrases zijn nu prive. Enkel de eigen naam
-  // van de kijker wordt getoond, niet de tips/zinnen van de andere deelnemer.
   const myTipEntries = Object.entries(doc.tips || {}).filter(([name]) => name === myName);
   const myPhraseEntries = Object.entries(doc.suggested_phrases || {}).filter(([name]) => name === myName);
   const sharedActions = doc.shared_actions || [];
 
   const versionPicker = allVersions.length > 1 ? `
-    <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:8px">Elke keer dat jullie samen een opvolging invullen, komt er een nieuwe versie bij. De vorige versies blijven ook bewaard.</p>
     <div class="field" style="max-width:320px">
-      <label>Versie bekijken</label>
+      <label>Bekijk</label>
       <select id="versionSelect">
-        ${allVersions.map(d => `<option value="${d.version}" ${d.version === doc.version ? 'selected' : ''}>${versionLabel(d, mostRecentVersion)}</option>`).join('')}
+        ${allVersions.map(d => `<option value="${d.version}" ${d.version === doc.version ? 'selected' : ''}>${docTitleFor(d.version)}</option>`).join('')}
       </select>
     </div>` : '';
 
   app.innerHTML = `
     <a href="${backLink}" class="btn ghost no-print" style="margin-bottom:16px;display:inline-block">← ${backLabel}</a>
-    <span class="label">${doc.version === 1 ? 'Origineel document' : `Opvolging, versie ${doc.version}`}${allVersions.length > 1 ? ` (${allVersions.length} versies in totaal)` : ''}</span>
+    <span class="label">${docTitleFor(doc.version)}</span>
     <h1>Jullie document</h1>
 
     <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
@@ -144,16 +170,6 @@ function renderDoc(data, displayVersion) {
     </div>` : ''}
 
     <div class="doc-section">
-      <span class="label">Alleen voor jou</span>
-      <h3>Jouw persoonlijke tips</h3>
-      <p style="color:var(--ink-soft);font-size:.85rem;margin-bottom:14px">Dit onderdeel is enkel zichtbaar voor jou, niet voor de andere deelnemer.</p>
-      ${myTipEntries.map(([name, tips]) => `
-        <div class="person-block">
-          <ul class="tip-list">${tips.map(t => `<li>${t}</li>`).join('')}</ul>
-        </div>`).join('')}
-    </div>
-
-    <div class="doc-section">
       <span class="label">Gesprek openen</span>
       <h3>Vragen om aan elkaar te stellen</h3>
       ${questionEntries.map(([name, qs]) => `
@@ -165,13 +181,21 @@ function renderDoc(data, displayVersion) {
 
     <div class="doc-section">
       <span class="label">Alleen voor jou</span>
-      <h3>Wat jij zou kunnen zeggen</h3>
-      <p style="color:var(--ink-soft);font-size:.85rem;margin-bottom:14px">Dit onderdeel is enkel zichtbaar voor jou, niet voor de andere deelnemer.</p>
-      ${myPhraseEntries.map(([name, phrases]) => `
-        <div class="person-block">
-          <ul class="tip-list">${phrases.map(p => `<li>"${p}"</li>`).join('')}</ul>
-        </div>`).join('')}
+      <h3>Jouw persoonlijke onderdeel</h3>
+      <p style="color:var(--ink-soft);font-size:.85rem;margin-bottom:16px">Dit hele onderdeel is enkel zichtbaar voor jou, niet voor de andere deelnemer.</p>
+      ${myTipEntries.length ? `
+      <div class="person-block">
+        <div class="who">Tips voor jezelf</div>
+        <ul class="tip-list">${myTipEntries[0][1].map(t => `<li>${t}</li>`).join('')}</ul>
+      </div>` : ''}
+      ${myPhraseEntries.length ? `
+      <div class="person-block">
+        <div class="who">Wat je zou kunnen zeggen</div>
+        <ul class="tip-list">${myPhraseEntries[0][1].map(p => `<li>"${p}"</li>`).join('')}</ul>
+      </div>` : ''}
     </div>
+
+    <div class="doc-quote no-print">"${getQuote(category, isFollowupDoc)}"</div>
     ` : `
     <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:28px;border-bottom:none">
       <span class="label">Er is meer</span>
@@ -183,7 +207,6 @@ function renderDoc(data, displayVersion) {
         <li>Concrete vragen om het gesprek te openen</li>
         <li>Concrete, gedeelde afspraken om samen te proberen</li>
         <li>Zinnen die je letterlijk kan gebruiken, enkel zichtbaar voor jou</li>
-        <li>De volledige, diepgaande vragenlijst voor beide personen</li>
         <li>Eén opvolgdocument om later op terug te komen</li>
       </ul>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -193,13 +216,18 @@ function renderDoc(data, displayVersion) {
     </div>`}
 
     <div class="doc-section no-print" style="text-align:center;border-bottom:none">
-      ${isPaid ? `
+      ${isPaid ? (followupAlreadyUsed ? `
+      <span class="label">Groeidocument</span>
+      <h3>Dit gesprek is afgerond</h3>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Jullie hebben de opvolging voor dit gesprek al gebruikt. Elk gesprek geeft recht op één opvolgdocument. Wil je nog iets anders bespreken? Start gerust een nieuw gesprek.</p>
+      <a href="/new.html" class="btn clay">Start een nieuw gesprek</a>
+      ` : `
       <span class="label">Groeidocument</span>
       <h3>Kom later terug</h3>
-      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Reageer op de tips en afspraken uit jullie document, laat weten wat al beter gaat, en vul aan wat nog speelt. Dit gesprek geeft recht op één opvolgdocument. Dat kan op elk moment dat het jou past via <a href="/login.html">Mijn gesprekken</a>, je hoeft niet te wachten, maar je kan het maar één keer per gesprek doen.</p>
+      <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 18px">Reageer op de tips en afspraken uit jullie document, laat weten wat al beter gaat, en vul aan wat nog speelt. Dit gesprek geeft recht op één opvolgdocument. Dat kan op elk moment dat het jou past via <a href="/login.html">Mijn gesprekken</a>.</p>
       <button id="startRoundBtn" class="btn clay">Start een opvolging</button>
       <div id="roundMsg" style="margin-top:12px;font-size:.9rem"></div>
-      ` : ''}
+      `) : ''}
       <div style="margin-top:24px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>
     </div>
   `;
@@ -210,7 +238,7 @@ function renderDoc(data, displayVersion) {
     });
   }
 
-  if (isPaid) {
+  if (isPaid && !followupAlreadyUsed) {
     document.getElementById('startRoundBtn').addEventListener('click', async () => {
       const btn = document.getElementById('startRoundBtn');
       const msg = document.getElementById('roundMsg');
