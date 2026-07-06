@@ -166,6 +166,7 @@ const QUESTIONNAIRES = {
       { id:'partner_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je partner het niet weet of niet beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die je partner zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als hij begint met te zeggen dat hij ook zijn steentje wil bijdragen.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -266,6 +267,7 @@ const QUESTIONNAIRES = {
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat dit familielid het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die dit familielid zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als hij of zij gewoon toegeeft dat het lang heeft aangesleept.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -358,6 +360,7 @@ const QUESTIONNAIRES = {
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je vriend of vriendin het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die je vriend of vriendin zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon eerlijk zegt wat er speelde.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -424,6 +427,7 @@ const QUESTIONNAIRES = {
         {value:'compromis', label:'Een compromis over de ruimte of situatie'},
       ]},
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overheerst alles' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die de buur zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon zegt dat die het niet besefte.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -495,6 +499,7 @@ const QUESTIONNAIRES = {
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overheerst werk' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die deze collega zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon toegeeft dat de werkdruk hoog was.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -552,6 +557,7 @@ const QUESTIONNAIRES = {
         {value:'erkenning', label:'Alleen al erkenning van wat er gebeurd is'},
       ]},
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment?', lowLabel:'Draaglijk', highLabel:'Overheerst school' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die de andere partij zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die gewoon erkent wat er gebeurd is.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
@@ -592,6 +598,7 @@ const QUESTIONNAIRES = {
       { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
       { id:'gewenste_uitkomst', type:'text', label:'Wat zou voor jou een goede uitkomst zijn?', placeholder:'Beschrijf wat voor jou een goede oplossing zou zijn.' },
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die de ander zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als die dit gewoon zou erkennen.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
     ]
   },
