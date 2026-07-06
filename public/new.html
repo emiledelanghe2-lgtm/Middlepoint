@@ -102,7 +102,7 @@
       <span class="form-section-title">1. Kies je plan</span>
       <div class="plan-grid" id="planSelector"></div>
       <div id="planDetail" style="display:none"></div>
-      <div id="freeNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">De gratis versie geeft een eerste overzicht met een beknopte vragenlijst. Voor de volledige, diepgaande vragenlijst en het complete document, kies een betaald plan. <a href="/pricing.html">Meer info</a></div>
+      <div id="freeNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">De gratis versie geeft een eerste overzicht met een beknopte vragenlijst. Voor de volledige, diepgaande vragenlijst, het complete document en opvolging nadien, kies een betaald plan. <a href="/pricing.html">Meer info</a></div>
       <div id="paidNotice" style="display:none;margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Na het invullen ga je naar de beveiligde betaalpagina.</div>
       <div id="activeSubNotice" style="display:none;margin-top:14px">
         <div class="customer-info">
@@ -187,6 +187,9 @@
     <h3>Klaar! Hieronder jullie links</h3>
     <div id="linksList"></div>
     <div id="inviteStatus" style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)"></div>
+    <div id="followupHint" style="margin-top:20px;padding:16px;background:#EFF4ED;border-radius:var(--radius);font-size:.88rem;display:none">
+      Zodra jullie document klaar is, kan je trouwens op elk moment dat het jou past een opvolgdocument invullen via <a href="/login.html" style="font-weight:600">Mijn gesprekken</a>, je hoeft daar niet mee te wachten.
+    </div>
     <div style="margin-top:24px">
       <a href="/" class="btn outline">Terug naar startpagina</a>
     </div>
@@ -206,18 +209,18 @@ const planSelector = document.getElementById('planSelector');
 const planFeatures = {
   gratis: {
     has: ['Eerste eerlijk overzicht', 'Beknopte vragenlijst', 'Gedeelde grond'],
-    hasNot: ['Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    hasNot: ['Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Opvolgdocument nadien'],
   },
   los: {
-    has: ['1 volledig gesprek', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Check-ins achteraf'],
+    has: ['1 volledig gesprek', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Opvolgdocument nadien'],
     hasNot: [],
   },
   starter: {
-    has: ['3 gesprekken per maand', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    has: ['3 gesprekken per maand', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Opvolgdocument nadien'],
     hasNot: [],
   },
   plus: {
-    has: ['10 gesprekken per maand', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Check-ins achteraf'],
+    has: ['10 gesprekken per maand', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Opvolgdocument nadien'],
     hasNot: [],
   },
 };
@@ -419,13 +422,6 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
   if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
 
-  // BUGFIX: voorheen werden namen, e-mails en berichtjes elk apart en los van
-  // elkaar ingezameld. Als er een lege naamrij tussenzat (bijvoorbeeld een
-  // toegevoegde rij die niet werd ingevuld), schoven de e-mails en berichtjes
-  // een positie op ten opzichte van de namen, waardoor een bericht bedoeld
-  // voor de ene persoon bij de andere naam terechtkwam. Nu bouwen we eerst
-  // per rij een samenhangend object, en filteren we pas daarna leeg rijen weg,
-  // zodat naam, e-mail en bericht altijd bij elkaar horen.
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
   const messageInputs = Array.from(document.querySelectorAll('.participant-message'));
@@ -538,6 +534,9 @@ async function createSession({ category, organizerName, organizerEmail, organize
     }
 
     document.getElementById('inviteStatus').innerHTML = inviteMessages.join('<br>');
+    if (plan !== 'gratis') {
+      document.getElementById('followupHint').style.display = 'block';
+    }
     document.getElementById('result').style.display = 'block';
     document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
