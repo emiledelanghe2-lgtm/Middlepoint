@@ -41,7 +41,7 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
-async function sendDocumentReadyEmail(toEmail, toName, link) {
+async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     await fetch('https://api.resend.com/emails', {
@@ -61,6 +61,7 @@ async function sendDocumentReadyEmail(toEmail, toName, link) {
             <p style="margin:28px 0">
               <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk het document</a>
             </p>
+            ${isPaid ? '<p style="color:#666;font-size:.9rem">Later, wanneer het jou past, kan je via Mijn gesprekken ook een opvolgdocument invullen om te zien hoe het gaat en wat er veranderd is. Daar hoef je niet mee te wachten, dat kan al vanaf nu.</p>' : ''}
             <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang tot het gesprek.</p>
           </div>`,
       }),
@@ -196,10 +197,11 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
       .eq('id', sessionId);
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
+    const isPaidPlan = (session.plan || 'gratis') !== 'gratis';
     await Promise.all(
       participants
         .filter(p => p.email)
-        .map(p => sendDocumentReadyEmail(p.email, p.display_name, `${siteUrl}/document.html?token=${p.access_token}`))
+        .map(p => sendDocumentReadyEmail(p.email, p.display_name, `${siteUrl}/document.html?token=${p.access_token}`, isPaidPlan))
     );
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
