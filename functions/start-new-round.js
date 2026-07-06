@@ -14,22 +14,32 @@ exports.handler = async (event) => {
     if (!participant) {
       return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
     }
-    if (participant.sessions.status !== 'klaar') {
+
+    const status = participant.sessions.status || '';
+
+    // BUGFIX: als de opvolgronde al bezig is (gestart door de andere persoon),
+    // moet deze persoon gewoon kunnen instappen, niet geblokkeerd worden.
+    const activeRoundMatch = status.match(/^nieuwe_ronde_(\d+)$/);
+    if (activeRoundMatch) {
+      return { statusCode: 200, body: JSON.stringify({ ok: true, round: parseInt(activeRoundMatch[1], 10) }) };
+    }
+
+    if (status !== 'klaar') {
       return { statusCode: 400, body: JSON.stringify({ error: 'Dit document is nog niet afgerond, dus nog geen nieuwe ronde mogelijk.' }) };
     }
 
-    // NIEUW: elk gesprek geeft recht op precies één opvolging, nooit meer.
-    // We checken of er al ooit een opvolgronde (round 3 of hoger) is gestart
-    // voor deze sessie, ongeacht of die volledig werd afgerond.
-    const { data: allEntries } = await supabase
-      .from('entries')
-      .select('round')
-      .eq('session_id', participant.session_id);
-    const alreadyUsedFollowup = (allEntries || []).some(e => e.round >= 3);
-    if (alreadyUsedFollowup) {
+    // Elk gesprek geeft recht op precies één opvolging. Check of die al
+    // volledig werd afgerond (dus of er al een tweede documentversie bestaat).
+    const { data: existingDocs } = await supabase
+      .from('documents')
+      .select('version')
+      .eq('session_id', participant.session_id)
+      .order('version', { ascending: false })
+      .limit(1);
+    if (existingDocs && existingDocs.length && existingDocs[0].version >= 2) {
       return {
         statusCode: 403,
-        body: JSON.stringify({ error: 'Je hebt de opvolging voor dit gesprek al gebruikt. Elk gesprek geeft recht op één opvolgdocument.' }),
+        body: JSON.stringify({ error: 'Je hebt de opvolging voor dit gesprek al gebruikt. Elk gesprek geeft recht op één opvolgdocument. Start gerust een nieuw gesprek als er meer te bespreken is.' }),
       };
     }
 
