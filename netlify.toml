@@ -12,3 +12,5 @@
   from = "/*"
   to = "/index.html"
   status = 404
+[functions."send-followup-reminder-scheduled"]
+  schedule = "@daily"
