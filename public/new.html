@@ -377,19 +377,22 @@ function copyLink(btn, link) {
   });
 }
 
+function buildInviteText(name, fromName, link, customMessage) {
+  const intro = customMessage
+    ? `Hoi ${name}, ${customMessage}`
+    : `Hoi ${name}, ${fromName} heeft een gesprek gestart via Middlepoint.`;
+  const explanation = 'Middlepoint is een tool waarmee we elk apart en anoniem onze kant van de situatie delen via een korte vragenlijst, zodat er nadien een eerlijk, neutraal overzicht ontstaat. Niemand leest jouw antwoorden rechtstreeks.';
+  return `${intro}\n\n${explanation}\n\nJe kan hier terecht: ${link}`;
+}
+
 function whatsappLink(name, fromName, link, customMessage) {
-  const text = customMessage
-    ? `Hoi ${name}, ${customMessage}\n\nJe kan hier terecht: ${link}`
-    : `Hoi ${name}, ${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
+  const text = buildInviteText(name, fromName, link, customMessage);
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }
 
 function mailLink(name, fromName, link, toEmail, customMessage) {
   const subject = encodeURIComponent(`${fromName} nodigt je uit via Middlepoint`);
-  const bodyText = customMessage
-    ? `Hoi ${name},\n\n${customMessage}\n\nJe kan hier terecht: ${link}`
-    : `Hoi ${name},\n\n${fromName} nodigt je uit voor een gesprek via Middlepoint: ${link}`;
-  const body = encodeURIComponent(bodyText);
+  const body = encodeURIComponent(buildInviteText(name, fromName, link, customMessage));
   return `mailto:${toEmail || ''}?subject=${subject}&body=${body}`;
 }
 
