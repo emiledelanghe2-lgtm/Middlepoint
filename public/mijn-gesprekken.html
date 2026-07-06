@@ -48,6 +48,11 @@ function planLabel(plan) {
   return labels[plan] || plan;
 }
 
+function withReturnParam(link) {
+  const sep = link.includes('?') ? '&' : '?';
+  return `${link}${sep}from=${encodeURIComponent(token)}`;
+}
+
 async function loadSessionLinks(sessionToken, containerId) {
   const box = document.getElementById(containerId);
   box.innerHTML = '<p style="color:var(--ink-soft);font-size:.85rem">Even laden...</p>';
@@ -68,18 +73,18 @@ async function loadSessionLinks(sessionToken, containerId) {
   }
 }
 
-async function startFollowup(accessLink, btn) {
-  const token = accessLink.split('token=')[1];
+async function startFollowup(accessLinkWithReturn, btn) {
+  const t = new URLSearchParams(accessLinkWithReturn.split('?')[1]).get('token');
   btn.disabled = true;
   btn.textContent = 'Even geduld...';
   try {
     const res = await fetch('/.netlify/functions/start-new-round', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token: t }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    window.location.href = accessLink;
+    window.location.href = accessLinkWithReturn;
   } catch (err) {
     btn.disabled = false;
     btn.textContent = 'Vul opvolgdocument in';
@@ -150,13 +155,14 @@ async function load() {
       const isFollowupBezig = (s.status || '').startsWith('nieuwe_ronde_');
       const statusText = statusLabel(s.status);
       const linksBoxId = `linksBox_${idx}`;
-      const fullAccessLink = window.location.origin + s.accessLink;
+      const accessLinkWithReturn = withReturnParam(s.accessLink);
+      const documentLinkWithReturn = s.documentLink ? withReturnParam(s.documentLink) : null;
 
       let followupButton = '';
       if (isKlaar && s.plan && s.plan !== 'gratis') {
-        followupButton = `<button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="startFollowup('${fullAccessLink}', this)">Vul opvolgdocument in</button>`;
+        followupButton = `<button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="startFollowup('${window.location.origin}${accessLinkWithReturn}', this)">Vul opvolgdocument in</button>`;
       } else if (isFollowupBezig) {
-        followupButton = `<a href="${s.accessLink}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Ga verder met opvolging</a>`;
+        followupButton = `<a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Ga verder met opvolging</a>`;
       }
 
       card.innerHTML = `
@@ -172,8 +178,8 @@ async function load() {
           </span>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-          <a href="${s.accessLink}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
-          ${isKlaar || isFollowupBezig ? `<a href="${s.documentLink}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
+          <a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
+          ${documentLinkWithReturn ? `<a href="${documentLinkWithReturn}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
           ${followupButton}
           ${s.isOrganizer ? `<button class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
         </div>
