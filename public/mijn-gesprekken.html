@@ -39,7 +39,7 @@ function statusLabel(status) {
     klaar: 'Klaar',
     veiligheid_gestopt: 'Gestopt om veiligheidsredenen',
   };
-  if ((status || '').startsWith('nieuwe_ronde_')) return 'Check-in bezig';
+  if ((status || '').startsWith('nieuwe_ronde_')) return 'Opvolging bezig';
   return labels[status] || status;
 }
 
@@ -65,6 +65,25 @@ async function loadSessionLinks(sessionToken, containerId) {
       </div>`).join('');
   } catch (err) {
     box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
+  }
+}
+
+async function startFollowup(accessLink, btn) {
+  const token = accessLink.split('token=')[1];
+  btn.disabled = true;
+  btn.textContent = 'Even geduld...';
+  try {
+    const res = await fetch('/.netlify/functions/start-new-round', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    window.location.href = accessLink;
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Vul opvolgdocument in';
+    alert(err.message);
   }
 }
 
@@ -106,14 +125,14 @@ async function load() {
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
       <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong>${data.email}</strong></p>
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:32px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
         ${isPaidPlan ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
       </div>
 
       ${isPaidPlan ? `
-      <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:16px">
-        <p style="margin:0;font-size:.85rem">Wil je van plan wisselen of je abonnement opzeggen? Klik op "Abonnement beheren of opzeggen" hierboven. Je wordt doorgestuurd naar de beveiligde Stripe-pagina waar je alles zelf kan regelen.</p>
+      <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:16px">
+        <p style="margin:0;font-size:.85rem">Al je documenten blijven hier altijd terug te vinden, ook je opvolgdocumenten. Zodra jullie document klaar is, kan je hieronder op elk moment een opvolging starten, je hoeft daar niet op te wachten.</p>
       </div>` : ''}
 
       <div id="sessionsList"></div>
@@ -128,8 +147,17 @@ async function load() {
       card.style.marginBottom = '16px';
 
       const isKlaar = s.status === 'klaar';
+      const isFollowupBezig = (s.status || '').startsWith('nieuwe_ronde_');
       const statusText = statusLabel(s.status);
       const linksBoxId = `linksBox_${idx}`;
+      const fullAccessLink = window.location.origin + s.accessLink;
+
+      let followupButton = '';
+      if (isKlaar && s.plan && s.plan !== 'gratis') {
+        followupButton = `<button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="startFollowup('${fullAccessLink}', this)">Vul opvolgdocument in</button>`;
+      } else if (isFollowupBezig) {
+        followupButton = `<a href="${s.accessLink}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Ga verder met opvolging</a>`;
+      }
 
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
@@ -139,13 +167,14 @@ async function load() {
               ${new Date(s.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
           </div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:4px 10px;border-radius:999px;background:${isKlaar ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar ? 'var(--sage)' : 'var(--clay)'}">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:4px 10px;border-radius:999px;background:${isKlaar || isFollowupBezig ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar || isFollowupBezig ? 'var(--sage)' : 'var(--clay)'}">
             ${statusText}
           </span>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
           <a href="${s.accessLink}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
-          ${isKlaar ? `<a href="${s.documentLink}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
+          ${isKlaar || isFollowupBezig ? `<a href="${s.documentLink}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
+          ${followupButton}
           ${s.isOrganizer ? `<button class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
         </div>
         ${s.isOrganizer ? `<div id="${linksBoxId}" style="display:none;margin-top:8px"></div>` : ''}`;
