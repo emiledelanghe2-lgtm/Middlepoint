@@ -131,7 +131,13 @@ exports.handler = async (event) => {
     }
 
     const followupContext = isFollowup && previousDoc
-      ? `\n\nBELANGRIJK, DIT IS EEN OPVOLGING: dit is niet het eerste document voor dit koppel of deze personen. Hieronder vind je het vorige document ter referentie. De nieuwe antwoorden hierboven zijn reacties op dat vorige document: mensen geven aan welke tips, vragen of afspraken besproken zijn, of er verandering is, wat positief veranderd is, en waar nog werk ligt. Schrijf het nieuwe shared_summary zodat het expliciet voortbouwt op het vorige: benoem wat vooruitgang toont, benoem eerlijk wat nog niet veranderd is, en verwerk eventuele nieuwe punten die zijn bijgekomen. De overige onderdelen (perspectives, tips, questions_to_ask, suggested_phrases, shared_actions) mag je vernieuwen op basis van de huidige situatie, met aandacht voor wat al bereikt is.\n\nVorig shared_summary: ${previousDoc.shared_summary}\n\nVorige common_ground: ${previousDoc.common_ground}\n\nVorige gedeelde afspraken: ${JSON.stringify(previousDoc.shared_actions || [])}`
+      ? `\n\nBELANGRIJK, DIT IS EEN OPVOLGDOCUMENT, GEEN NIEUW CONFLICTRAPPORT: dit document moet aanvoelen als een voortgangsrapport, niet als een herhaling van de originele analyse. De mensen hebben net gereageerd op tips, vragen, zinnen en afspraken uit hun vorige document (welke ze gebruikt hebben, of het hielp, wat nog niet veranderde) en hebben eventueel iets nieuws of positiefs gedeeld.
+
+Herschrijf shared_summary VOLLEDIG als een voortgangsverhaal: begin met wat er sinds de vorige keer daadwerkelijk beter gaat, benoem concreet welke afspraken of tips gewerkt hebben, wees eerlijk over wat nog moeilijk blijft, en verwerk expliciet eventuele nieuwe punten. Dit mag NOOIT lezen als "hier is het conflict opnieuw uitgelegd", het moet lezen als "hier is hoe het nu met jullie gaat".
+
+common_ground wordt "waar jullie nu meer op een lijn zitten dan voorheen". perspectives wordt "hoe de ander dit nu ervaart, wat die waardeert aan de inspanning van de ander, en wat nog steeds moeilijk is voor die ander". tips en suggested_phrases zijn nieuwe, aangescherpte adviezen gebaseerd op wat wel en niet werkte. shared_actions herwerk je op basis van welke vorige afspraken gebruikt zijn: bevestig wat werkt, pas aan wat niet werkte, en voeg enkel iets nieuws toe als dat duidelijk nodig is.
+
+Vorig shared_summary: ${previousDoc.shared_summary}\n\nVorige common_ground: ${previousDoc.common_ground}\n\nVorige gedeelde afspraken: ${JSON.stringify(previousDoc.shared_actions || [])}`
       : '';
 
     const systemPrompt = `Je bent een volledig neutrale, warme conflictbemiddelaar die een gestructureerd rapport schrijft voor een conflict in de categorie "${session.category}".
