@@ -38,6 +38,7 @@ function statusLabel(status) {
     document_genereren: 'Document wordt opgesteld',
     klaar: 'Klaar',
     veiligheid_gestopt: 'Gestopt om veiligheidsredenen',
+    document_mislukt: 'Er ging iets mis, neem contact op',
   };
   if ((status || '').startsWith('nieuwe_ronde_')) return 'Opvolging bezig';
   return labels[status] || status;
@@ -156,7 +157,7 @@ async function load() {
 
       ${isPaidPlan ? `
       <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:16px">
-        <p style="margin:0;font-size:.85rem">Al je documenten blijven hier altijd terug te vinden, ook je opvolgdocumenten. Zodra jullie document klaar is, kan je hieronder op elk moment een opvolging starten, je hoeft daar niet op te wachten.</p>
+        <p style="margin:0;font-size:.85rem">Al je documenten blijven hier altijd terug te vinden, ook je opvolgdocumenten en je eigen ingevulde antwoorden. Zodra jullie document klaar is, kan je hieronder op elk moment een opvolging starten, je hoeft daar niet op te wachten.</p>
       </div>` : ''}
 
       <div id="sessionsList"></div>
@@ -177,8 +178,13 @@ async function load() {
       const accessLinkWithReturn = withReturnParam(s.accessLink);
       const documentLinkWithReturn = s.documentLink ? withReturnParam(s.documentLink) : null;
 
+      // s.followupUsed moet nog door get-my-sessions.js meegegeven worden. Tot dat er is,
+      // valt dit terug op "niet gebruikt", dus de knop kan tijdelijk nog verkeerd tonen
+      // na een al ingevulde opvolging.
+      const followupUsed = !!s.followupUsed;
+
       let followupButton = '';
-      if (isKlaar && s.plan && s.plan !== 'gratis') {
+      if (isKlaar && s.plan && s.plan !== 'gratis' && !followupUsed) {
         followupButton = `<button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="startFollowup('${window.location.origin}${accessLinkWithReturn}', this)">Vul opvolgdocument in</button>`;
       } else if (isFollowupBezig) {
         followupButton = `<a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Ga verder met opvolging</a>`;
