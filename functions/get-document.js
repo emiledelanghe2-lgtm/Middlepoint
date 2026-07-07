@@ -22,15 +22,14 @@ exports.handler = async (event) => {
       .select('*')
       .eq('session_id', participant.session_id)
       .order('version', { ascending: false });
-
     const plan = participant.sessions.plan || 'gratis';
     const isPaid = plan !== 'gratis';
-
     return {
       statusCode: 200,
       body: JSON.stringify({
         myName: participant.display_name,
         sessionStatus: participant.sessions.status,
+        category: participant.sessions.category,
         isPaid,
         documents: documents || [],
       }),
