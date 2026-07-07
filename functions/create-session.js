@@ -14,9 +14,52 @@ exports.handler = async (event) => {
   }
   try {
     const body = JSON.parse(event.body || '{}');
-    const { category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan, includeFollowups } = body;
+    const {
+      category,
+      organizerName,
+      participantNames,
+      participantEmails,
+      organizerRole,
+      organizerEmail,
+      organizerSeesDocument,
+      organizerParticipates,
+      participantsReceiveDocument,
+      plan,
+      includeFollowups,
+    } = body;
+
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
       return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
+    }
+
+    // organizerParticipates: standaard true (organisator doet zelf mee).
+    // Enkel false als de frontend dit expliciet meegeeft (derde persoon, bv. therapeut/HR).
+    const participates = organizerParticipates !== false;
+
+    // Minstens 2 echte deelnemers die de vragenlijst zelf invullen:
+    // - doet de organisator zelf mee: organisator + minstens 1 naam in participantNames
+    // - doet de organisator niet mee (derde partij): minstens 2 namen in participantNames
+    const minParticipantNames = participates ? 1 : 2;
+    if (participantNames.length < minParticipantNames) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: participates
+            ? 'Er is minstens 1 andere deelnemer naast jezelf nodig.'
+            : 'Als derde persoon (je doet zelf niet mee) zijn er minstens 2 deelnemers nodig voor een gesprek.',
+        }),
+      };
+    }
+
+    const emails = Array.isArray(participantEmails) ? participantEmails : [];
+
+    // E-mailadres is verplicht voor elke echte deelnemer die de vragenlijst invult.
+    const missingEmailIndex = participantNames.findIndex((_, i) => !emails[i] || !emails[i].trim());
+    if (missingEmailIndex !== -1) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: `E-mailadres ontbreekt voor deelnemer "${participantNames[missingEmailIndex]}". Een e-mailadres is verplicht voor elke deelnemer.` }),
+      };
     }
 
     const supabase = getSupabase();
@@ -36,7 +79,6 @@ exports.handler = async (event) => {
       const periodEnd = customer.period_end ? new Date(customer.period_end) : null;
       const periodStillValid = periodEnd ? now < periodEnd : true;
 
-      // Gratis: eenmalig per e-mailadres, voor altijd
       if (sessionPlan === 'gratis' && customer.free_session_used) {
         return {
           statusCode: 403,
@@ -47,9 +89,6 @@ exports.handler = async (event) => {
         };
       }
 
-      // BUGFIX: 'los' (eenmalig) heeft GEEN doorlopende limiet. Elke aankoop via Stripe
-      // geeft recht op exact 1 nieuw gesprek en mag dus altijd opnieuw gekocht worden.
-      // Enkel abonnementen (starter/plus/pro) hebben een limiet binnen de lopende maand.
       if (['starter', 'plus', 'pro'].includes(customerPlan) && periodStillValid) {
         const limit = PLAN_LIMITS[customerPlan] ?? 3;
         if (used >= limit) {
@@ -65,8 +104,6 @@ exports.handler = async (event) => {
       }
     }
 
-    const emails = Array.isArray(participantEmails) ? participantEmails : [];
-
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
       .insert({
@@ -74,6 +111,8 @@ exports.handler = async (event) => {
         organizer_role: organizerRole || null,
         organizer_email: normalizedEmail,
         organizer_sees_document: organizerSeesDocument !== false,
+        organizer_participates: participates,
+        participants_receive_document: participates ? true : (participantsReceiveDocument !== false),
         plan: sessionPlan,
         include_followups: includeFollowups !== false,
       })
@@ -81,21 +120,24 @@ exports.handler = async (event) => {
       .single();
     if (sessionError) throw sessionError;
 
-    const isOrganizerAlsoParticipant = !organizerRole;
+    // De organisator krijgt altijd een eigen participants-rij en toegangslink, ook als
+    // hij zelf niet meedoet: die link geeft dan enkel toegang om het document te bekijken,
+    // niet om de vragenlijst in te vullen (dat wordt elders, in story.html, afgehandeld
+    // op basis van sessions.organizer_participates).
     let participantsToInsert;
-    if (isOrganizerAlsoParticipant) {
+    if (participates) {
       participantsToInsert = [organizerName, ...participantNames].map((name, i) => ({
         session_id: session.id,
         display_name: name,
         is_organizer: i === 0,
-        email: i === 0 ? normalizedEmail : (emails[i - 1] || null),
+        email: i === 0 ? normalizedEmail : emails[i - 1].toLowerCase().trim(),
       }));
     } else {
       participantsToInsert = participantNames.map((name, i) => ({
         session_id: session.id,
         display_name: name,
         is_organizer: false,
-        email: emails[i] || null,
+        email: emails[i].toLowerCase().trim(),
       }));
       participantsToInsert.push({
         session_id: session.id,
@@ -111,8 +153,6 @@ exports.handler = async (event) => {
       .select();
     if (participantsError) throw participantsError;
 
-    // Sessie-teller bijwerken. Voor 'los' resetten we telkens naar 1/1, zodat een
-    // volgende aankoop altijd opnieuw als een nieuwe, geldige aankoop telt.
     const now = new Date();
     if (customer) {
       const samesPlan = customer.plan === sessionPlan;
@@ -146,6 +186,8 @@ exports.handler = async (event) => {
       statusCode: 200,
       body: JSON.stringify({
         sessionId: session.id,
+        organizerParticipates: participates,
+        participantsReceiveDocument: participates ? true : (participantsReceiveDocument !== false),
         participants: participants.map(p => ({
           id: p.id,
           name: p.display_name,
