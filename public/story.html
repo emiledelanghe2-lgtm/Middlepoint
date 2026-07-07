@@ -895,11 +895,22 @@ function attachLinksButton(tok) {
       const res = await fetch(`/.netlify/functions/get-session-links?token=${tok}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      box.innerHTML = data.links.map(l => `
+     box.innerHTML = data.links.map((l, i) => `
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
           <span style="font-size:.82rem;color:var(--ink-soft);min-width:90px">${l.name}${l.isOrganizer ? ' (jij)' : ''}</span>
-          <input type="text" readonly value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
+          <input type="text" readonly id="linkInput_${i}" value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
+          <button type="button" class="icon-btn copy-link-btn" data-target="linkInput_${i}" title="Kopieer link" style="flex-shrink:0">📋</button>
         </div>`).join('');
+      box.querySelectorAll('.copy-link-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = document.getElementById(btn.dataset.target);
+          navigator.clipboard.writeText(input.value).then(() => {
+            const old = btn.textContent;
+            btn.textContent = '✓';
+            setTimeout(() => { btn.textContent = old; }, 1500);
+          });
+        });
+      });
     } catch (err) {
       box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
     }
