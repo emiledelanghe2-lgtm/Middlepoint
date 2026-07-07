@@ -6,6 +6,16 @@
 <title>Beheer | Middlepoint</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/style.css">
+<style>
+.admin-tabs{ display:flex; gap:8px; margin-bottom:24px; border-bottom:1px solid var(--line); }
+.admin-tab{ padding:10px 18px; font-family:'IBM Plex Mono',monospace; font-size:.82rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; background:none; border-top:none; border-left:none; border-right:none; }
+.admin-tab.active{ color:var(--clay); border-bottom-color:var(--clay); }
+table.leads-table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+table.leads-table th{ text-align:left; padding:8px 10px; border-bottom:2px solid var(--line); font-family:'IBM Plex Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); }
+table.leads-table td{ padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+.plan-badge{ display:inline-block; padding:2px 8px; border-radius:6px; font-size:.75rem; font-weight:600; background:var(--clay-soft); color:var(--clay); }
+.plan-badge.gratis{ background:#EFF4ED; color:var(--sage); }
+</style>
 </head>
 <body>
 <header class="nav-bar">
@@ -16,7 +26,7 @@
 
 <div class="app-wrap" id="app">
   <span class="label">Beheer</span>
-  <h1>Testimonials goedkeuren</h1>
+  <h1>Middlepoint beheerpaneel</h1>
 
   <div id="loginBox" class="card" style="max-width:400px">
     <div class="field">
@@ -27,15 +37,36 @@
     <div id="loginError" class="error-box" style="display:none;margin-top:12px"></div>
   </div>
 
-  <div id="listBox" style="display:none;margin-top:24px"></div>
+  <div id="mainBox" style="display:none;margin-top:24px">
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab active" data-tab="testimonials">Testimonials</button>
+      <button type="button" class="admin-tab" data-tab="leads">Leads</button>
+    </div>
+    <div id="testimonialsPanel"></div>
+    <div id="leadsPanel" style="display:none"></div>
+  </div>
 </div>
 
 <script>
 let adminPassword = '';
+let testimonialsLoaded = false;
+let leadsLoaded = false;
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
   adminPassword = document.getElementById('adminPassword').value;
   await loadTestimonials();
+});
+
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('testimonialsPanel').style.display = target === 'testimonials' ? 'block' : 'none';
+    document.getElementById('leadsPanel').style.display = target === 'leads' ? 'block' : 'none';
+    if (target === 'testimonials' && !testimonialsLoaded) loadTestimonials();
+    if (target === 'leads' && !leadsLoaded) loadLeads();
+  });
 });
 
 async function loadTestimonials() {
@@ -50,13 +81,14 @@ async function loadTestimonials() {
     if (!res.ok) throw new Error(data.error);
 
     document.getElementById('loginBox').style.display = 'none';
-    const listBox = document.getElementById('listBox');
-    listBox.style.display = 'block';
+    document.getElementById('mainBox').style.display = 'block';
+    testimonialsLoaded = true;
 
+    const panel = document.getElementById('testimonialsPanel');
     const pending = data.testimonials.filter(t => t.status === 'pending');
     const other = data.testimonials.filter(t => t.status !== 'pending');
 
-    listBox.innerHTML = `
+    panel.innerHTML = `
       <h3 style="margin-bottom:12px">Nog te beoordelen (${pending.length})</h3>
       ${pending.length ? pending.map(t => testimonialCard(t, true)).join('') : '<p style="color:var(--ink-soft)">Niets in de wachtrij.</p>'}
       <h3 style="margin:32px 0 12px">Eerder behandeld</h3>
@@ -102,6 +134,56 @@ async function updateTestimonial(id, action, btn) {
   } catch (err) {
     alert(err.message);
     btn.disabled = false;
+  }
+}
+
+async function loadLeads() {
+  const panel = document.getElementById('leadsPanel');
+  panel.innerHTML = '<p style="color:var(--ink-soft)">Even laden...</p>';
+  try {
+    const res = await fetch('/.netlify/functions/admin-get-leads', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    leadsLoaded = true;
+
+    const leads = data.leads || [];
+    const paidCount = leads.filter(l => l.plan !== 'gratis').length;
+
+    panel.innerHTML = `
+      <p style="color:var(--ink-soft);margin-bottom:16px">${leads.length} unieke e-mailadressen, waarvan ${paidCount} met een betaald plan of eerdere aankoop.</p>
+      <div style="overflow-x:auto">
+        <table class="leads-table">
+          <thead>
+            <tr>
+              <th>E-mail</th>
+              <th>Plan</th>
+              <th>Gratis gebruikt</th>
+              <th>Gesprekken totaal</th>
+              <th>Laatste categorie</th>
+              <th>Laatste gesprek</th>
+              <th>Klant sinds</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${leads.map(l => `
+              <tr>
+                <td>${l.email}</td>
+                <td><span class="plan-badge ${l.plan === 'gratis' ? 'gratis' : ''}">${l.plan}</span></td>
+                <td>${l.freeSessionUsed ? 'Ja' : 'Nee'}</td>
+                <td>${l.totalSessionsCreated}</td>
+                <td>${l.lastSessionCategory || '–'}</td>
+                <td>${l.lastSessionAt ? new Date(l.lastSessionAt).toLocaleDateString('nl-BE') : '–'}</td>
+                <td>${l.createdAt ? new Date(l.createdAt).toLocaleDateString('nl-BE') : '–'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (err) {
+    panel.innerHTML = `<div class="error-box">${err.message}</div>`;
   }
 }
 </script>
