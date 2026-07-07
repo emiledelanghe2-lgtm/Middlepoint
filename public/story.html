@@ -50,6 +50,7 @@
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
 const returnToken = new URLSearchParams(window.location.search).get('from');
+const viewMode = new URLSearchParams(window.location.search).get('view');
 const backLink = returnToken ? `/mijn-gesprekken.html?token=${returnToken}` : '/';
 const backLabel = returnToken ? 'Terug naar Mijn gesprekken' : 'Terug naar startpagina';
 const app = document.getElementById('app');
