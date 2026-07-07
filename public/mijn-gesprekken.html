@@ -203,7 +203,8 @@ async function load() {
           </span>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-          <a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
+         <a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
+          <a href="${accessLinkWithReturn}&view=antwoorden" class="btn outline" style="padding:9px 16px;font-size:.85rem">Bekijk mijn antwoorden</a>
           ${documentLinkWithReturn ? `<a href="${documentLinkWithReturn}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
           ${followupButton}
           ${s.isOrganizer ? `<button class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
