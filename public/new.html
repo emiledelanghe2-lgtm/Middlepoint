@@ -147,6 +147,11 @@
         <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
         <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
       </div>
+      <div class="field" id="organizerEmailConfirmField" style="display:none">
+        <label for="organizerEmailConfirm">Herhaal je e-mailadres</label>
+        <input type="email" id="organizerEmailConfirm" placeholder="jij@email.be" autocomplete="email">
+        <div class="help">Even dubbel typen om tikfouten te vermijden. Dit adres bepaalt of je later kan inloggen bij Mijn gesprekken.</div>
+      </div>
       <div class="checkbox-row">
         <input type="checkbox" id="isThirdParty">
         <label for="isThirdParty">Ik neem zelf niet deel (bv. ik ben HR, leerkracht of therapeut)</label>
@@ -166,17 +171,22 @@
           <input type="checkbox" id="organizerSeesDocument" checked>
           <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
         </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="participantsReceiveDocument" checked>
+          <label for="participantsReceiveDocument">De deelnemers ontvangen zelf ook het afgewerkte document en een mail</label>
+        </div>
+        <div class="help" style="margin-top:-6px;margin-bottom:12px">Zet je dit uit, dan krijgen enkel jij het document en de mail te zien, niet de deelnemers zelf. Zij krijgen wel nog steeds de uitnodiging om hun deel in te vullen. Je kan dit later altijd nog wijzigen via Mijn gesprekken.</div>
       </div>
     </div>
 
     <div class="form-section">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
-      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Als je een e-mailadres invult, wordt de uitnodigingsmail automatisch verstuurd. Op de volgende pagina kan je de persoonlijke link ook altijd zelf nog via WhatsApp of e-mail doorsturen. Je kan hieronder optioneel ook een kort, persoonlijk berichtje toevoegen, dat komt dan mee in zowel de automatische mail als in de WhatsApp- en mailknoppen op de volgende pagina.</p>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:12px">Vul naam en e-mailadres in. Een e-mailadres is verplicht voor elke deelnemer, want daarmee kan die persoon later zijn eigen document terugvinden. De uitnodigingsmail wordt automatisch verstuurd. Op de volgende pagina kan je de persoonlijke link ook altijd zelf nog via WhatsApp of e-mail doorsturen. Je kan hieronder optioneel ook een kort, persoonlijk berichtje toevoegen, dat komt dan mee in zowel de automatische mail als in de WhatsApp- en mailknoppen op de volgende pagina.</p>
       <div id="participantInputs"></div>
       <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:4px">+ Nog een deelnemer toevoegen</button>
       <div class="checkbox-row" style="margin-top:16px">
-        <input type="checkbox" id="sendInvites">
-        <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar deelnemers waarvan ik een e-mailadres invulde</label>
+        <input type="checkbox" id="sendInvites" checked>
+        <label for="sendInvites">Stuur automatisch een uitnodigingsmail naar de deelnemers</label>
       </div>
     </div>
 
@@ -213,6 +223,7 @@ function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e)
 
 let selectedPlanId = 'gratis';
 let activeSubscription = null;
+let organizerEmailIsNew = true;
 const planSelector = document.getElementById('planSelector');
 
 const planFeatures = {
@@ -290,6 +301,7 @@ function updatePlanUI() {
 }
 
 async function checkEmail(email) {
+  const confirmField = document.getElementById('organizerEmailConfirmField');
   if (!email || !email.includes('@')) return;
   try {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
@@ -297,6 +309,8 @@ async function checkEmail(email) {
 
     if (!data.known) {
       activeSubscription = null;
+      organizerEmailIsNew = true;
+      confirmField.style.display = 'block';
       document.getElementById('limitBox').style.display = 'none';
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('submitBtn').style.opacity = '1';
@@ -304,6 +318,9 @@ async function checkEmail(email) {
     }
 
     activeSubscription = data;
+    organizerEmailIsNew = false;
+    confirmField.style.display = 'none';
+    document.getElementById('organizerEmailConfirm').value = '';
     const isSubscriptionPlan = ['starter', 'plus', 'pro'].includes(data.plan);
 
     document.getElementById('limitBox').style.display = 'none';
@@ -337,6 +354,10 @@ async function checkEmail(email) {
     updatePlanUI();
   } catch (err) {
     console.error('Email check mislukt:', err);
+    // Bij twijfel (bv. netwerkfout) veilig aannemen dat het adres nieuw is,
+    // zodat het bevestigingsveld toch getoond wordt.
+    organizerEmailIsNew = true;
+    confirmField.style.display = 'block';
   }
 }
 
@@ -345,8 +366,7 @@ document.getElementById('organizerEmail').addEventListener('blur', e => {
 });
 
 function checkAutoSendInvites() {
-  const hasEmail = Array.from(document.querySelectorAll('.participant-email')).some(i => i.value.trim());
-  document.getElementById('sendInvites').checked = hasEmail;
+  document.getElementById('sendInvites').checked = true;
 }
 
 function addParticipantRow() {
@@ -356,18 +376,22 @@ function addParticipantRow() {
   div.innerHTML = `
     <div class="participant-row">
       <input type="text" class="participant-name" placeholder="Naam van de deelnemer">
-      <input type="email" class="participant-email" placeholder="E-mailadres (aanbevolen)">
+      <input type="email" class="participant-email" placeholder="E-mailadres (verplicht)" required>
     </div>
-    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Zonder e-mailadres ontvangt deze persoon geen melding wanneer het document klaar is.</div>
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">E-mailadres is verplicht voor deze deelnemer.</div>
     <span class="participant-message-label">Persoonlijk berichtje (optioneel, komt mee in de mail en het WhatsApp-bericht)</span>
     <textarea class="participant-message" placeholder="bv. Hey, ik merk dat we elkaar hierin even niet goed verstaan, en ik dacht dat Middlepoint ons hierbij zou kunnen helpen."></textarea>`;
   wrap.appendChild(div);
 
-  div.querySelector('.participant-email').addEventListener('blur', e => {
-    div.querySelector('.participant-warning').style.display = e.target.value.trim() ? 'none' : 'block';
-    checkAutoSendInvites();
+  div.querySelector('.participant-name').addEventListener('input', () => {
+    if (div.querySelector('.participant-name').value.trim()) {
+      div.querySelector('.participant-warning').style.display = div.querySelector('.participant-email').value.trim() ? 'none' : 'block';
+    }
   });
-  div.querySelector('.participant-email').addEventListener('input', checkAutoSendInvites);
+  div.querySelector('.participant-email').addEventListener('blur', e => {
+    const nameFilled = div.querySelector('.participant-name').value.trim();
+    div.querySelector('.participant-warning').style.display = (nameFilled && !e.target.value.trim()) ? 'block' : 'none';
+  });
 }
 
 addParticipantRow();
@@ -424,12 +448,25 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
   const organizerName = document.getElementById('organizerName').value.trim();
   const organizerEmail = document.getElementById('organizerEmail').value.trim();
+  const organizerEmailConfirm = document.getElementById('organizerEmailConfirm').value.trim();
   const isThirdParty = document.getElementById('isThirdParty').checked;
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
+  const participantsReceiveDocument = isThirdParty ? document.getElementById('participantsReceiveDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
 
   if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
+
+  // Zorg dat we de meest actuele "is dit een nieuw e-mailadres"-status hebben
+  await checkEmail(organizerEmail);
+  if (organizerEmailIsNew) {
+    if (!organizerEmailConfirm || organizerEmailConfirm.toLowerCase() !== organizerEmail.toLowerCase()) {
+      errorBox.textContent = 'De twee e-mailadressen komen niet overeen. Controleer even of je jouw adres correct herhaald hebt.';
+      errorBox.style.display = 'block';
+      document.getElementById('organizerEmailConfirmField').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+  }
 
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
@@ -451,6 +488,19 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     return;
   }
 
+  if (isThirdParty && participantNames.length < 2) {
+    errorBox.textContent = 'Omdat je zelf niet deelneemt, zijn er minstens 2 deelnemers nodig voor een gesprek.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const missingEmailIndex = participantRows.findIndex(r => !r.email);
+  if (missingEmailIndex !== -1) {
+    errorBox.textContent = `Vul een e-mailadres in voor "${participantRows[missingEmailIndex].name}". Dit is verplicht voor elke deelnemer.`;
+    errorBox.style.display = 'block';
+    return;
+  }
+
   const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
   if (selectedPlanId !== 'gratis' && !hasActiveSub) {
@@ -462,24 +512,29 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     }
     savePending({
       category, organizerName, organizerEmail, organizerRole,
-      organizerSeesDocument, sendInvites, participantNames, participantEmails, participantMessages,
+      organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages,
       plan: selectedPlanId, isThirdParty
     });
     window.location.href = selectedPlan.ctaLink;
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan }) {
   const errorBox = document.getElementById('error');
   const limitBox = document.getElementById('limitBox');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail, organizerSeesDocument, plan }),
+      body: JSON.stringify({
+        category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail,
+        organizerSeesDocument, plan,
+        organizerParticipates: !isThirdParty,
+        participantsReceiveDocument,
+      }),
     });
     const data = await res.json();
 
