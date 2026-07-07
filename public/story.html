@@ -77,7 +77,7 @@ const CATEGORY_OPTIONS = [
   { value: 'school', label: 'School' },
 ];
 
-const CONFIDENTIAL_NOTE = 'Dit antwoord wordt nooit getoond aan de andere deelnemer, ook niet in andere woorden of omfloerst. Het helpt ons enkel om een eerlijker en juister beeld van jouw situatie te schetsen.';
+const CONFIDENTIAL_NOTE = 'Dit antwoord wordt nooit getoond aan de andere deelnemer, ook niet in een andere vorm of verwoording. Het helpt ons enkel om een eerlijker en juister beeld van jouw situatie te schetsen.';
 
 const QUESTIONNAIRES = {
   koppel: {
@@ -963,7 +963,7 @@ function render(data) {
   const { participant, session, myEntries, myFollowups } = data;
   const round1Done = myEntries.some(e => e.round === 1);
   const round2Done = myEntries.some(e => e.round === 2);
-  const isPureThirdParty = participant.isOrganizer && !!session.organizer_role;
+  const isPureThirdParty = participant.isOrganizer && session.organizer_participates === false;
 
   if (isPureThirdParty) {
     app.innerHTML = `<span class="label">${session.category}</span>
@@ -988,7 +988,7 @@ function render(data) {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
       ${whoStartedBanner(data)}
-      <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra die klaar is, gaan we verder. Deze pagina herlaadt zelf, je mag ze gerust sluiten en later teruggaan.</div>
+      <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra iedereen klaar is, gaat het document automatisch aan de slag. Je krijgt een mail zodra het klaar is, en je vindt dit gesprek altijd terug via <a href="/login.html">Mijn gesprekken</a>. Je mag deze pagina gerust sluiten.</div>
       ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}
       <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
     setTimeout(load, 10000);
@@ -996,7 +996,7 @@ function render(data) {
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
-      <div class="status-box">We bekijken jullie antwoorden. Dit duurt meestal 1-2 minuten. Deze pagina herlaadt zelf.</div>`;
+      <div class="status-box">We bekijken jullie antwoorden. Je hoeft niet te wachten: je vindt dit gesprek altijd terug via <a href="/login.html">Mijn gesprekken</a>, en je krijgt een mail zodra er nieuws is. Deze pagina herlaadt zelf.</div>`;
     setTimeout(load, 8000);
   } else if (session.status === 'wachten_op_vervolgvragen' && myFollowups && !round2Done) {
     renderFollowupForm(myFollowups, participant.name);
@@ -1011,8 +1011,8 @@ function render(data) {
     setTimeout(load, 8000);
   } else if (session.status === 'document_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
-      <h1>Bijna klaar</h1>
-      <div class="status-box">Het document wordt nu opgesteld. Dit duurt meestal 1-2 minuten. Deze pagina herlaadt zelf.</div>`;
+      <h1>Jullie document wordt gemaakt</h1>
+      <div class="status-box">Je document wordt verwerkt en is zo dadelijk klaar. Dit kan enkele minuten duren, en iets langer als er meer dan twee deelnemers zijn. Je hoeft niet te wachten: je vindt dit gesprek altijd terug via <a href="/login.html">Mijn gesprekken</a>, en je krijgt automatisch een mail zodra het document klaar is.</div>`;
     setTimeout(load, 8000);
   } else if (session.status === 'klaar') {
     app.innerHTML = `<span class="label">${session.category}</span>
@@ -1051,7 +1051,9 @@ function statusLabel(status) {
     klaar: 'klaar',
     veiligheid_gestopt: 'gestopt om veiligheidsredenen',
   };
-  return labels[status] || (status || '').startsWith('nieuwe_ronde_') ? 'opvolging bezig' : (labels[status] || status);
+  if (labels[status]) return labels[status];
+  if ((status || '').startsWith('nieuwe_ronde_')) return 'opvolging bezig';
+  return status;
 }
 
 function renderCrisisMessage() {
