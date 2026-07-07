@@ -991,6 +991,11 @@ function render(data) {
     return;
   }
 
+  if (viewMode === 'antwoorden') {
+    renderMyAnswersView(data.participant, data.myEntries);
+    return;
+  }
+
   if (!round1Done) {
     renderStoryForm(participant.name, session, data);
   } else if (session.status === 'veiligheid_gestopt') {
