@@ -1020,11 +1020,16 @@ function render(data) {
       <h1>Bedankt, ${participant.name}</h1>
       <div class="status-box">We wachten nu op <strong>${wie}</strong>. Deze pagina herlaadt zelf.</div>`;
     setTimeout(load, 8000);
-  } else if (session.status === 'document_genereren') {
+ } else if (session.status === 'document_genereren') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Jullie document wordt gemaakt</h1>
       <div class="status-box">Je document wordt verwerkt en is zo dadelijk klaar. Dit kan enkele minuten duren, en iets langer als er meer dan twee deelnemers zijn. Je hoeft niet te wachten: je vindt dit gesprek altijd terug via <a href="/login.html">Mijn gesprekken</a>, en je krijgt automatisch een mail zodra het document klaar is.</div>`;
     setTimeout(load, 8000);
+  } else if (session.status === 'document_mislukt') {
+    app.innerHTML = `<span class="label">${session.category}</span>
+      <h1>Er ging iets mis</h1>
+      <div class="error-box">Het opstellen van jullie document is helaas mislukt. Dit is aan onze kant, niet aan iets dat jij verkeerd deed. We zijn hiervan automatisch verwittigd. Neem gerust contact op via <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a> als je hier snel bij geholpen wil worden.</div>
+      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
   } else if (session.status === 'klaar') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Jullie document is klaar</h1>
