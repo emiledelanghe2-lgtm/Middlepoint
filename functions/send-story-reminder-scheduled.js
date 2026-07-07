@@ -51,7 +51,7 @@ exports.handler = async () => {
     for (const session of candidates) {
       const { data: participants } = await supabase
         .from('participants')
-        .select('id, display_name, email, is_organizer')
+        .select('id, display_name, email, is_organizer, access_token')
         .eq('session_id', session.id);
 
       if (!participants || !participants.length) continue;
