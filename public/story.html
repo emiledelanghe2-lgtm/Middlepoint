@@ -1319,7 +1319,20 @@ function renderFollowupItemsForType(items, sectionLabel, statusOptions) {
       <textarea class="followup-note" placeholder="Wil je hier iets bij toelichten? (optioneel)"></textarea>
     </div>`).join('');
 }
-
+function renderFollowupChecklist(items, groupId, questionLabel, notePlaceholder) {
+  if (!items || !items.length) return '';
+  const checks = items.map(item => `
+    <label class="mc-option">
+      <input type="checkbox" class="followup-check" data-group="${groupId}" value="${escAttr(item)}">
+      <span>${esc(item)}</span>
+    </label>`).join('');
+  return `
+    <div class="followup-group" data-followup-group="${groupId}">
+      <label class="q-label" style="margin-bottom:8px">${esc(questionLabel)}</label>
+      <div class="mc-group">${checks}</div>
+      <textarea class="followup-note" placeholder="${escAttr(notePlaceholder)}"></textarea>
+    </div>`;
+}
 function cssIdSafe(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 }
@@ -1372,15 +1385,15 @@ async function renderFollowupSurvey(round, name, session) {
       ${sharedActions.length ? `
       <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
         <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Concrete afspraken uit jullie document</span>
-        ${renderFollowupItemsForType(sharedActions, 'Afspraak', ACTION_STATUS_OPTIONS)}
+        ${renderFollowupChecklist(sharedActions, 'acties', 'Welke afspraken hebben jullie geprobeerd? (meerdere mogelijk)', 'Hoe ging dat, of wat werkte nog niet? (optioneel)')}
       </div>` : ''}
 
       ${!noItemsFound ? `
       <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
         <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Terugblik op jullie document</span>
-        ${renderFollowupItemsForType(myTips, 'Tip voor jou', FOLLOWUP_STATUS_OPTIONS)}
-        ${renderFollowupItemsForType(myQuestions, 'Vraag die je kon stellen', FOLLOWUP_STATUS_OPTIONS)}
-        ${renderFollowupItemsForType(myPhrases, 'Zin die je kon gebruiken', FOLLOWUP_STATUS_OPTIONS)}
+        ${renderFollowupChecklist(myTips, 'tips', 'Welke tips heb je gebruikt of besproken? (meerdere mogelijk)', 'Hoe ging dat? (optioneel)')}
+        ${renderFollowupChecklist(myQuestions, 'vragen', 'Welke vragen heb je gesteld? (meerdere mogelijk)', 'Wat kwam daaruit? (optioneel)')}
+        ${renderFollowupChecklist(myPhrases, 'zinnen', 'Welke zinnen heb je gebruikt? (meerdere mogelijk)', 'Hoe reageerde de ander? (optioneel)')}
       </div>` : `
       <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:16px">
         <p style="margin:0;font-size:.9rem">We konden geen specifieke tips of vragen uit jullie vorige document koppelen aan jouw naam. Geen probleem, vul hieronder gerust aan wat voor jou relevant is.</p>
@@ -1451,13 +1464,12 @@ async function renderFollowupSurvey(round, name, session) {
       lines.push(`Vraag: ${a.label}\nAntwoord: ${a.answer}`);
     });
 
-    document.querySelectorAll('[data-followup-item]').forEach(itemEl => {
-      const itemText = itemEl.dataset.itemText;
-      const section = itemEl.dataset.itemSection;
-      const checked = itemEl.querySelector('input:checked');
-      const note = itemEl.querySelector('.followup-note').value.trim();
-      if (checked || note) {
-        let line = `Vraag: Reactie op "${section}": ${itemText}\nAntwoord: ${checked ? checked.value : 'geen status aangeduid'}`;
+    document.querySelectorAll('[data-followup-group]').forEach(groupEl => {
+      const groupId = groupEl.dataset.followupGroup;
+      const checked = Array.from(groupEl.querySelectorAll('.followup-check:checked')).map(c => c.value);
+      const note = groupEl.querySelector('.followup-note').value.trim();
+      if (checked.length || note) {
+        let line = `Vraag: Reactie op onderdeel "${groupId}"\nAntwoord: ${checked.length ? 'Gebruikt of besproken: ' + checked.join(' | ') : 'Niets specifiek aangevinkt'}`;
         if (note) line += `. Toelichting: ${note}`;
         lines.push(line);
       }
