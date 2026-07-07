@@ -47,7 +47,7 @@ exports.handler = async (event) => {
     if (pError || !participant) {
       return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
     }
-    const isPureThirdParty = participant.is_organizer && !!participant.sessions.organizer_role;
+    const isPureThirdParty = participant.is_organizer && participant.sessions.organizer_participates === false;
     if (isPureThirdParty) {
       return { statusCode: 400, body: JSON.stringify({ error: 'De organisator vult zelf geen verhaal in.' }) };
     }
@@ -64,9 +64,9 @@ exports.handler = async (event) => {
       .select('id, is_organizer, display_name, email, access_token')
       .eq('session_id', participant.session_id);
 
-    const sessionOrganizerRole = participant.sessions.organizer_role;
+    const sessionOrganizerParticipates = participant.sessions.organizer_participates !== false;
     const requiredIds = allParticipants
-      .filter(p => !(p.is_organizer && sessionOrganizerRole))
+      .filter(p => !(p.is_organizer && !sessionOrganizerParticipates))
       .map(p => p.id);
 
     const { data: round1Entries } = await supabase
@@ -88,11 +88,6 @@ exports.handler = async (event) => {
       );
     }
 
-    // AANGEPAST: geen vervolgvragen-stap meer. De vragenlijst die de gebruiker nu
-    // invult op story.html is al gestructureerd en diepgaand genoeg, dus zodra
-    // iedereen zijn antwoorden heeft ingediend, gaat het rechtstreeks naar
-    // documentgeneratie. generate-followups-background.js wordt hierdoor niet
-    // meer aangeroepen voor nieuwe sessies.
     if (everyoneSubmitted) {
       await supabase
         .from('sessions')
