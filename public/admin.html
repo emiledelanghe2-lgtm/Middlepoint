@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beheer | Middlepoint</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav">
+  <a href="/" class="brand">middle<span>point</span></a>
+</nav>
+</header>
+
+<div class="app-wrap" id="app">
+  <span class="label">Beheer</span>
+  <h1>Testimonials goedkeuren</h1>
+
+  <div id="loginBox" class="card" style="max-width:400px">
+    <div class="field">
+      <label for="adminPassword">Wachtwoord</label>
+      <input type="password" id="adminPassword" placeholder="Wachtwoord">
+    </div>
+    <button type="button" id="loginBtn" class="btn clay" style="width:100%;padding:12px">Inloggen</button>
+    <div id="loginError" class="error-box" style="display:none;margin-top:12px"></div>
+  </div>
+
+  <div id="listBox" style="display:none;margin-top:24px"></div>
+</div>
+
+<script>
+let adminPassword = '';
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  adminPassword = document.getElementById('adminPassword').value;
+  await loadTestimonials();
+});
+
+async function loadTestimonials() {
+  const errorBox = document.getElementById('loginError');
+  errorBox.style.display = 'none';
+  try {
+    const res = await fetch('/.netlify/functions/admin-get-testimonials', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    document.getElementById('loginBox').style.display = 'none';
+    const listBox = document.getElementById('listBox');
+    listBox.style.display = 'block';
+
+    const pending = data.testimonials.filter(t => t.status === 'pending');
+    const other = data.testimonials.filter(t => t.status !== 'pending');
+
+    listBox.innerHTML = `
+      <h3 style="margin-bottom:12px">Nog te beoordelen (${pending.length})</h3>
+      ${pending.length ? pending.map(t => testimonialCard(t, true)).join('') : '<p style="color:var(--ink-soft)">Niets in de wachtrij.</p>'}
+      <h3 style="margin:32px 0 12px">Eerder behandeld</h3>
+      ${other.length ? other.map(t => testimonialCard(t, false)).join('') : '<p style="color:var(--ink-soft)">Nog niets.</p>'}
+    `;
+
+    document.querySelectorAll('[data-approve]').forEach(btn => {
+      btn.addEventListener('click', () => updateTestimonial(btn.dataset.approve, 'approved', btn));
+    });
+    document.querySelectorAll('[data-reject]').forEach(btn => {
+      btn.addEventListener('click', () => updateTestimonial(btn.dataset.reject, 'rejected', btn));
+    });
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+  }
+}
+
+function testimonialCard(t, showActions) {
+  const statusColor = t.status === 'approved' ? 'var(--sage)' : t.status === 'rejected' ? '#8A4222' : 'var(--clay)';
+  return `
+    <div class="card" style="margin-bottom:14px">
+      <p style="margin:0 0 8px;font-style:italic">"${t.content}"</p>
+      <p style="margin:0 0 8px;font-size:.85rem;color:var(--ink-soft)">${t.is_anonymous || !t.display_name ? 'Anoniem' : t.display_name} · <span style="color:${statusColor};font-weight:600">${t.status}</span></p>
+      ${showActions ? `
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button type="button" class="btn clay" style="padding:8px 16px;font-size:.85rem" data-approve="${t.id}">Goedkeuren</button>
+        <button type="button" class="btn outline" style="padding:8px 16px;font-size:.85rem" data-reject="${t.id}">Weigeren</button>
+      </div>` : ''}
+    </div>`;
+}
+
+async function updateTestimonial(id, action, btn) {
+  btn.disabled = true;
+  try {
+    const res = await fetch('/.netlify/functions/admin-update-testimonial', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, id, action }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadTestimonials();
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
