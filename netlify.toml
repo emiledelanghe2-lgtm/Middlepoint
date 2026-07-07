@@ -14,3 +14,5 @@
   status = 404
 [functions."send-followup-reminder-scheduled"]
   schedule = "@daily"
+[functions."send-story-reminder-scheduled"]
+  schedule = "@daily"
