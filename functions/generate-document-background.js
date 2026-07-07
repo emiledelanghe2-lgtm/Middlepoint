@@ -213,8 +213,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, met een item per deelnemer 
     // Meer deelnemers = meer tekst nodig in het antwoord (elk krijgt eigen tips, vragen,
     // zinnen en perspectief). Zonder dit schaalt het maximum niet mee en wordt het
     // antwoord afgekapt bij 3 of meer deelnemers, waardoor de JSON ongeldig wordt.
-    const maxTokens = Math.min(4000 + Math.max(0, participantCount - 2) * 1600, 8000);
-
+const maxTokens = Math.min(4000 + Math.max(0, participantCount - 2) * 1600, 16000);
     const aiResponse = await callClaude(systemPrompt, userPrompt, maxTokens);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
 
