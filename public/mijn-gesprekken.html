@@ -61,21 +61,58 @@ async function loadSessionLinks(sessionToken, containerId) {
     const res = await fetch(`/.netlify/functions/get-session-links?token=${sessionToken}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    box.innerHTML = data.links.map(l => `
+  box.innerHTML = data.links.map(l => `
       <div style="margin-bottom:10px">
-        <div style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px">${l.name}${l.isOrganizer ? ' (jij)' : ''}</div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px">${l.name}${l.isOrganizer ? ' (jij)' : ''} · ${l.email || 'geen e-mailadres'}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
           <input type="text" readonly value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
           <button onclick="navigator.clipboard.writeText('${window.location.origin}${l.accessLink}')" class="icon-btn" title="Kopieer">📋</button>
         </div>
+        ${!l.isOrganizer ? `
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="email" id="emailEdit_${l.id}" placeholder="Nieuw e-mailadres" value="${l.email || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:.78rem">
+          <button type="button" class="btn outline" style="padding:6px 10px;font-size:.75rem" onclick="updateParticipantEmail('${l.id}', 'emailEdit_${l.id}', this)">Wijzig e-mail</button>
+        </div>
+        <div id="emailEditMsg_${l.id}" style="font-size:.75rem;margin-top:4px"></div>` : ''}
       </div>`).join('');
   } catch (err) {
     box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
   }
 }
 
-async function startFollowup(accessLinkWithReturn, btn) {
-  const t = new URLSearchParams(accessLinkWithReturn.split('?')[1]).get('token');
+async function updateParticipantEmail(participantId, inputId, btn) {
+  const input = document.getElementById(inputId);
+  const msg = document.getElementById(`emailEditMsg_${participantId}`);
+  const newEmail = input.value.trim();
+  msg.textContent = '';
+  msg.style.color = '';
+  if (!newEmail || !newEmail.includes('@')) {
+    msg.style.color = '#8A4222';
+    msg.textContent = 'Vul een geldig e-mailadres in.';
+    return;
+  }
+  btn.disabled = true;
+  const oldLabel = btn.textContent;
+  btn.textContent = 'Bezig...';
+  try {
+    const res = await fetch('/.netlify/functions/update-participant-email', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizerToken: token, participantId, newEmail }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    msg.style.color = 'var(--sage)';
+    msg.textContent = 'Gelukt. Deze persoon kreeg een mail met zijn link naar dit nieuwe adres.';
+  } catch (err) {
+    msg.style.color = '#8A4222';
+    msg.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldLabel;
+  }
+}
+
+async function startFollowup(accessLinkWithReturn, btn) {  const t = new URLSearchParams(accessLinkWithReturn.split('?')[1]).get('token');
   btn.disabled = true;
   btn.textContent = 'Even geduld...';
   try {
