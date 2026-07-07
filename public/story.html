@@ -1005,8 +1005,9 @@ function render(data) {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Bedankt, ${participant.name}</h1>
       ${whoStartedBanner(data)}
-      <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra iedereen klaar is, gaat het document automatisch aan de slag. Je krijgt een mail zodra het klaar is, en je vindt dit gesprek altijd terug via <a href="/login.html">Mijn gesprekken</a>. Je mag deze pagina gerust sluiten.</div>
-      ${participant.isOrganizer ? `<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}
+     <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra iedereen klaar is, gaat het document automatisch aan de slag. Je krijgt een mail zodra het klaar is, en je vindt dit gesprek altijd terug via <a href="/login.html">Mijn gesprekken</a>. Je mag deze pagina gerust sluiten.</div>
+      <div style="margin-top:16px"><a href="?token=${token}&view=antwoorden" class="btn outline" style="padding:9px 16px;font-size:.85rem">Bekijk mijn ingevulde antwoorden</a></div>
+      ${participant.isOrganizer ?`<div style="margin-top:16px;text-align:center"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">Bekijk alle links opnieuw</button><div id="linksBox" style="margin-top:14px"></div></div>` : ''}
       <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
     setTimeout(load, 10000);
     if (participant.isOrganizer) attachLinksButton(token);
@@ -1043,6 +1044,7 @@ function render(data) {
       <p style="color:var(--ink-soft)">Het eerlijke, neutrale rapport staat klaar om te bekijken.</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="${docLinkWithReturn(token)}" class="btn clay">Bekijk document</a>
+        <a href="?token=${token}&view=antwoorden" class="btn outline">Bekijk mijn ingevulde antwoorden</a>
         <a href="${backLink}" class="btn outline">${backLabel}</a>
       </div>`;
   } else if ((session.status || '').startsWith('nieuwe_ronde_')) {
@@ -1078,8 +1080,59 @@ function statusLabel(status) {
   return status;
 }
 
-function renderCrisisMessage() {
+function parseAnswerBlocks(content) {
+  return content.split('\n\n').map(block => {
+    const lines = block.split('\n');
+    const qLine = lines.find(l => l.startsWith('Vraag:')) || '';
+    const aLine = lines.find(l => l.startsWith('Antwoord:')) || '';
+    let question = qLine.replace('Vraag:', '').trim();
+    const answer = aLine.replace('Antwoord:', '').trim();
+    let confidential = false;
+    if (question.includes('[VERTROUWELIJK, NOOIT TONEN AAN DE ANDER]')) {
+      confidential = true;
+      question = question.replace('[VERTROUWELIJK, NOOIT TONEN AAN DE ANDER]', '').trim();
+    }
+    return { question, answer, confidential };
+  }).filter(b => b.question || b.answer);
+}
+
+function renderMyAnswersView(participant, myEntries) {
+  const sorted = [...myEntries].sort((a, b) => a.round - b.round);
+  if (!sorted.length) {
+    app.innerHTML = `<span class="label">Mijn antwoorden</span>
+      <h1>Nog niets ingevuld</h1>
+      <p style="color:var(--ink-soft)">Je hebt voor dit gesprek nog geen antwoorden ingediend.</p>
+      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
+    return;
+  }
+  const sectionsHTML = sorted.map(entry => {
+    const title = entry.round === 1 ? 'Origineel document' : `Opvolging (ronde ${entry.round})`;
+    const blocks = parseAnswerBlocks(entry.content);
+    const blocksHTML = blocks.map(b => `
+      <div class="q-block" style="margin-bottom:20px">
+        <label class="q-label">${esc(b.question)}${b.confidential ? ' <span style="font-size:.75rem;color:var(--clay);font-weight:400">(vertrouwelijk, niet getoond aan de ander)</span>' : ''}</label>
+        <p style="color:var(--ink-soft);white-space:pre-wrap">${esc(b.answer)}</p>
+      </div>`).join('');
+    return `
+      <div class="doc-section" style="margin-bottom:32px">
+        <span class="label">${title}</span>
+        ${blocksHTML}
+      </div>`;
+  }).join('');
+
   app.innerHTML = `
+    <a href="${backLink}" class="btn ghost" style="margin-bottom:16px;display:inline-block">← ${backLabel}</a>
+    <span class="label">Mijn antwoorden</span>
+    <h1>Wat jij hebt ingevuld</h1>
+    <p style="color:var(--ink-soft);margin-bottom:24px">Dit is enkel zichtbaar voor jou. Je kan dit hier terug nalezen, maar niet meer aanpassen.</p>
+    ${sectionsHTML}
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <a href="${backLink}" class="btn outline">${backLabel}</a>
+      <a href="/login.html" class="btn outline">Naar Mijn gesprekken</a>
+    </div>`;
+}
+
+function renderCrisisMessage() {  app.innerHTML = `
     <span class="label">Belangrijk</span>
     <h1>Dit overstijgt wat wij kunnen helpen oplossen</h1>
     <p style="color:var(--ink-soft)">Op basis van wat er geschreven is, denken we dat professionele of gespecialiseerde hulp nu belangrijker is dan een document. Je staat er niet alleen voor.</p>
