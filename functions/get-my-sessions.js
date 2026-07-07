@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+
 exports.handler = async (event) => {
   try {
     const token = event.queryStringParameters && event.queryStringParameters.token;
@@ -32,6 +33,17 @@ exports.handler = async (event) => {
         }),
       };
     }
+
+    const sessionIds = participants.map(p => p.session_id);
+    const { data: allDocs } = await supabase
+      .from('documents')
+      .select('session_id, version')
+      .in('session_id', sessionIds);
+    const maxVersionBySession = {};
+    (allDocs || []).forEach(d => {
+      maxVersionBySession[d.session_id] = Math.max(maxVersionBySession[d.session_id] || 0, d.version);
+    });
+
     const sessions = participants.map(p => {
       const isDocAvailable = p.sessions.status === 'klaar' || (p.sessions.status || '').startsWith('nieuwe_ronde_');
       return {
@@ -42,6 +54,7 @@ exports.handler = async (event) => {
         isOrganizer: p.is_organizer,
         accessLink: `/story.html?token=${p.access_token}`,
         documentLink: isDocAvailable ? `/document.html?token=${p.access_token}` : null,
+        followupUsed: (maxVersionBySession[p.session_id] || 0) >= 2,
         createdAt: p.created_at,
       };
     });
