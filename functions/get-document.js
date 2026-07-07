@@ -23,8 +23,6 @@ exports.handler = async (event) => {
       return { statusCode: 403, body: JSON.stringify({ error: 'De organisator heeft geen toegang tot dit document.' }) };
     }
 
-    // Als de organisator een pure derde partij is en besliste dat de deelnemers het
-    // document niet zelf te zien krijgen, blokkeren we de toegang voor die deelnemers.
     if (!participant.is_organizer && session.organizer_participates === false && session.participants_receive_document === false) {
       return { statusCode: 403, body: JSON.stringify({ error: 'Dit document is enkel zichtbaar voor de organisator van dit gesprek.' }) };
     }
@@ -34,6 +32,15 @@ exports.handler = async (event) => {
       .select('*')
       .eq('session_id', participant.session_id)
       .order('version', { ascending: false });
+
+    const { data: allParticipants } = await supabase
+      .from('participants')
+      .select('display_name, email')
+      .eq('session_id', participant.session_id);
+    const missingEmailNames = (allParticipants || [])
+      .filter(p => !p.email)
+      .map(p => p.display_name);
+
     const plan = session.plan || 'gratis';
     const isPaid = plan !== 'gratis';
     return {
@@ -44,6 +51,7 @@ exports.handler = async (event) => {
         sessionStatus: session.status,
         category: session.category,
         isPaid,
+        missingEmailNames,
         documents: documents || [],
       }),
     };
