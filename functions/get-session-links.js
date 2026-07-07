@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+
 exports.handler = async (event) => {
   try {
     const token = event.queryStringParameters && event.queryStringParameters.token;
@@ -19,16 +20,17 @@ exports.handler = async (event) => {
     }
     const { data: allParticipants, error: apError } = await supabase
       .from('participants')
-      .select('display_name, access_token, is_organizer')
+      .select('id, display_name, access_token, is_organizer, email')
       .eq('session_id', participant.session_id);
     if (apError) throw apError;
-
     return {
       statusCode: 200,
       body: JSON.stringify({
         links: allParticipants.map(p => ({
+          id: p.id,
           name: p.display_name,
           isOrganizer: p.is_organizer,
+          email: p.email,
           accessLink: `/story.html?token=${p.access_token}`,
         })),
       }),
