@@ -186,7 +186,16 @@ async function load() {
     app.innerHTML = `
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
-      <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong>${data.email}</strong></p>
+     <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong id="currentEmailDisplay">${data.email}</strong> · <button type="button" id="changeEmailToggle" class="btn outline" style="padding:4px 10px;font-size:.75rem;vertical-align:middle">Wijzig e-mailadres</button></p>
+      <div id="changeEmailBox" style="display:none;max-width:420px;margin-bottom:16px" class="card">
+        <div class="field">
+          <label for="newEmailInput">Nieuw e-mailadres</label>
+          <input type="email" id="newEmailInput" placeholder="nieuw@email.be">
+        </div>
+        <button type="button" id="submitEmailChange" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bevestigen</button>
+        <div id="changeEmailMsg" style="margin-top:8px;font-size:.85rem"></div>
+        <p style="font-size:.78rem;color:var(--ink-soft);margin-top:8px">Dit wijzigt je e-mailadres overal: al je gesprekken, je plan en je login bij Mijn gesprekken.</p>
+      </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
         ${isPaidPlan ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
@@ -201,6 +210,41 @@ async function load() {
       <div style="margin-top:32px">
         <a href="/new.html" class="btn outline">Start een nieuw gesprek</a>
       </div>`;
+document.getElementById('changeEmailToggle').addEventListener('click', () => {
+      const box = document.getElementById('changeEmailBox');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    });
+    document.getElementById('submitEmailChange').addEventListener('click', async () => {
+      const btn = document.getElementById('submitEmailChange');
+      const msg = document.getElementById('changeEmailMsg');
+      const newEmail = document.getElementById('newEmailInput').value.trim();
+      msg.textContent = '';
+      msg.style.color = '';
+      if (!newEmail || !newEmail.includes('@')) {
+        msg.style.color = '#8A4222';
+        msg.textContent = 'Vul een geldig e-mailadres in.';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Bezig...';
+      try {
+        const res = await fetch('/.netlify/functions/update-my-email', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newEmail }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error);
+        msg.style.color = 'var(--sage)';
+        msg.textContent = 'Gelukt! Je e-mailadres is overal gewijzigd. Deze pagina herlaadt zo.';
+        setTimeout(() => window.location.reload(), 1800);
+      } catch (err) {
+        msg.style.color = '#8A4222';
+        msg.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Bevestigen';
+      }
+    });
 
     const list = document.getElementById('sessionsList');
     data.sessions.forEach((s, idx) => {
