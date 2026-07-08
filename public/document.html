@@ -35,6 +35,24 @@ const backLink = returnToken ? `/mijn-gesprekken.html?token=${returnToken}` : '/
 const backLabel = returnToken ? 'Terug naar Mijn gesprekken' : 'Terug naar startpagina';
 const app = document.getElementById('app');
 
+async function goToMijnGesprekken() {
+  if (returnToken) {
+    window.location.href = `/mijn-gesprekken.html?token=${encodeURIComponent(returnToken)}`;
+    return;
+  }
+  try {
+    const res = await fetch(`/.netlify/functions/get-my-sessions-link?token=${token}`);
+    const data = await res.json();
+    if (res.ok && data.link) {
+      window.location.href = data.link;
+    } else {
+      window.location.href = '/login.html';
+    }
+  } catch (e) {
+    window.location.href = '/login.html';
+  }
+}
+
 const QUOTES = {
   koppel: {
     main: 'Een relatie groeit niet door nooit te botsen, maar door elkaar te blijven kiezen na elke botsing.',
@@ -117,8 +135,6 @@ function renderDoc(data, displayVersion) {
 
   const perspectiveEntries = Object.entries(doc.perspectives || {});
   const questionEntries = Object.entries(doc.questions_to_ask || {});
-  // Derde-persoon-toeschouwer (bv. therapeut/HR) ziet alle privé-onderdelen van beide
-  // deelnemers samen. Een gewone deelnemer ziet enkel zijn eigen onderdeel.
   const myTipEntries = isThirdPartyViewer ? Object.entries(doc.tips || {}) : Object.entries(doc.tips || {}).filter(([name]) => name === myName);
   const myPhraseEntries = isThirdPartyViewer ? Object.entries(doc.suggested_phrases || {}) : Object.entries(doc.suggested_phrases || {}).filter(([name]) => name === myName);
   const sharedActions = doc.shared_actions || [];
@@ -143,15 +159,15 @@ function renderDoc(data, displayVersion) {
 
   const mainSectionsHTML = isFollowupDoc ? `
     <div class="doc-section">
-      <span class="label">Voortgang</span>
-      <h3>Wat er beter gaat</h3>
-      <p>${doc.common_ground}</p>
+      <span class="label">Terugblik</span>
+      <h3>Korte samenvatting</h3>
+      <p>${doc.shared_summary}</p>
     </div>
 
     <div class="doc-section">
-      <span class="label">Terugblik</span>
-      <h3>Waar het over ging</h3>
-      <p>${doc.shared_summary}</p>
+      <span class="label">Voortgang</span>
+      <h3>Wat er beter gaat</h3>
+      <p>${doc.common_ground}</p>
     </div>` : `
     <div class="doc-section">
       <span class="label">Objectief overzicht</span>
@@ -183,9 +199,10 @@ function renderDoc(data, displayVersion) {
     ${mainSectionsHTML}
 
     ${isPaid ? `
+    ${!isFollowupDoc ? `
     <div class="doc-section">
       <span class="label">Perspectief</span>
-      <h3>${isFollowupDoc ? 'Waar nog aandacht nodig is' : 'Hoe de ander het ziet'}</h3>
+      <h3>Hoe de ander het ziet</h3>
       ${perspectiveEntries.map(([name, p]) => `
         <div class="person-block">
           <div class="who">Voor ${name}: hoe de ander dit ziet</div>
@@ -193,7 +210,7 @@ function renderDoc(data, displayVersion) {
           <p><strong>Wat de ander goed doet:</strong> ${p.strengths}</p>
           <p><strong>Waar groei mogelijk is voor de ander:</strong> ${p.growth_areas}</p>
         </div>`).join('')}
-    </div>
+    </div>` : ''}
 
     ${sharedActions.length ? `
     <div class="doc-section">
@@ -202,6 +219,7 @@ function renderDoc(data, displayVersion) {
       <ul class="tip-list">${sharedActions.map(a => `<li>${a}</li>`).join('')}</ul>
     </div>` : ''}
 
+    ${!isFollowupDoc ? `
     <div class="doc-section">
       <span class="label">Gesprek openen</span>
       <h3>Vragen om aan elkaar te stellen</h3>
@@ -210,7 +228,7 @@ function renderDoc(data, displayVersion) {
           <div class="who">${name} kan vragen</div>
           <ul class="tip-list">${qs.map(q => `<li>${q}</li>`).join('')}</ul>
         </div>`).join('')}
-    </div>
+    </div>` : ''}
 
     <div class="doc-section">
       <span class="label">${isThirdPartyViewer ? 'Persoonlijke onderdelen' : 'Alleen voor jou'}</span>
@@ -265,7 +283,7 @@ function renderDoc(data, displayVersion) {
       `) : ''}
       <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <a href="${backLink}" class="btn outline">${backLabel}</a>
-        <a href="/login.html" class="btn outline">Naar Mijn gesprekken</a>
+        <button type="button" class="btn outline" onclick="goToMijnGesprekken()">Naar Mijn gesprekken</button>
       </div>
     </div>
   `;
