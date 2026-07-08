@@ -80,8 +80,7 @@ async function loadSessionLinks(sessionToken, containerId) {
     box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
   }
 }
-
-async function updateParticipantEmail(participantId, inputId, btn) {
+async function updateParticipantEmail(sessionToken, participantId, inputId, btn) {
   const input = document.getElementById(inputId);
   const msg = document.getElementById(`emailEditMsg_${participantId}`);
   const newEmail = input.value.trim();
@@ -98,7 +97,7 @@ async function updateParticipantEmail(participantId, inputId, btn) {
   try {
     const res = await fetch('/.netlify/functions/update-participant-email', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ organizerToken: token, participantId, newEmail }),
+    body: JSON.stringify({ organizerToken: sessionToken, participantId, newEmail }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
