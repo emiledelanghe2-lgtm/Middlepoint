@@ -996,9 +996,15 @@ function render(data) {
   const isPureThirdParty = participant.isOrganizer && session.organizer_participates === false;
 
   if (isPureThirdParty) {
+    const statusList = (data.participantsStatus || []).map(p => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+        <span style="color:${p.submitted ? 'var(--sage)' : 'var(--ink-soft)'};font-weight:700">${p.submitted ? '✓' : '○'}</span>
+        <span>${p.name}${p.submitted ? ' heeft ingevuld' : ' nog niet ingevuld'}</span>
+      </div>`).join('');
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Hallo ${participant.name}</h1>
       <p style="color:var(--ink-soft)">Jij bent organisator van dit gesprek. Je hoeft zelf geen verhaal in te vullen. Status: <strong>${statusLabel(session.status)}</strong>.</p>
+      ${statusList ? `<div class="card" style="margin-bottom:20px">${statusList}</div>` : ''}
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <a href="${docLinkWithReturn(token)}" class="btn clay">Naar het document</a>
         <a href="${backLink}" class="btn outline">${backLabel}</a>
@@ -1183,8 +1189,12 @@ function renderStoryForm(name, session, data) {
       Je vult dit in als <strong>${name}</strong>. Is dit niet jouw naam? Sluit deze pagina en vraag de juiste link op bij wie het gesprek startte, of <a href="/login.html">bekijk je eigen gesprekken</a>.
     </div>
     ${whoStartedBanner(data)}
-
-    ${categoryEditorHTML(session.category)}
+${data.otherEntriesCount === 0 ? categoryEditorHTML(session.category) : `
+    <div class="field" style="margin-bottom:24px">
+      <label>Soort situatie</label>
+      <div class="status-box" style="text-align:left;margin:0">${session.category}</div>
+      <div class="help">De andere deelnemer heeft al ingediend, de categorie kan nu niet meer gewijzigd worden.</div>
+    </div>`}
 
     <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:18px">
       <p style="margin:0;font-size:.88rem">Wat je hier invult, lezen de andere deelnemers nooit rechtstreeks. We combineren beide antwoorden tot een gedeeld, zorgvuldig overzicht, met respect voor jullie allebei.</p>
@@ -1227,8 +1237,9 @@ function renderStoryForm(name, session, data) {
   const surveyBody = document.getElementById('surveyBody');
   surveyBody.addEventListener('change', handleSurveyChange);
   surveyBody.addEventListener('input', handleSurveyInput);
-
-  attachCategoryEditor(session, () => renderStoryForm(name, session, data));
+if (data.otherEntriesCount === 0) {
+    attachCategoryEditor(session, () => renderStoryForm(name, session, data));
+  }
 
   const draftRaw = loadDraft('story_answers');
   if (draftRaw) {
