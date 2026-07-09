@@ -1,5 +1,46 @@
 const { getSupabase } = require('./_supabase');
 
+async function callClaude(systemPrompt, userPrompt, maxTokens) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens || 300,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Claude API fout (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  return data.content.map(b => b.text || '').join('\n');
+}
+
+async function checkSafety(text) {
+  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van iemand over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
+
+Stop enkel bij: actieve suicidale gedachten of plannen, kindermisbruik, seksueel geweld of verkrachting, een poging tot doodslag of moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
+
+Stop niet bij: gewone ruzies, een klap of duw zonder verdere escalatie, verwijten over wie wat deed, emotionele pijn, jaloezie, ontrouw, financiele conflicten, opvoedingsconflicten, of vage uitspraken zonder concrete ernst. Twijfel je, kies dan voor niet stoppen.
+
+Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|geweld|misbruik|geen", "korte_reden": "..."}`;
+
+  const response = await callClaude(systemPrompt, text, 300);
+  const cleaned = response.replace(/```json|```/g, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    return { stop: false, categorie: 'geen', korte_reden: '' };
+  }
+}
+
 async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
@@ -49,6 +90,29 @@ exports.handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: 'Er is momenteel geen open check-in ronde voor deze sessie.' }) };
     }
     const round = parseInt(match[1], 10);
+
+    // NIEUW: zelfde veiligheidscheck als bij het originele verhaal, meteen bij
+    // deze individuele indiening.
+    const safety = await checkSafety(content);
+    if (safety.stop) {
+      await supabase.from('entries').insert({
+        session_id: participant.session_id,
+        participant_id: participant.id,
+        round,
+        content,
+        is_anonymous: !!isAnonymous,
+      });
+      await supabase
+        .from('sessions')
+        .update({
+          status: 'veiligheid_gestopt',
+          safety_category: safety.categorie,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', participant.session_id);
+      return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
+    }
+
     await supabase.from('entries').insert({
       session_id: participant.session_id,
       participant_id: participant.id,
@@ -60,9 +124,9 @@ exports.handler = async (event) => {
       .from('participants')
       .select('id, is_organizer, display_name, email, access_token')
       .eq('session_id', participant.session_id);
-    const sessionOrganizerRole = participant.sessions.organizer_role;
+    const sessionOrganizerParticipates = participant.sessions.organizer_participates !== false;
     const requiredIds = allParticipants
-      .filter(p => !(p.is_organizer && sessionOrganizerRole))
+      .filter(p => !(p.is_organizer && !sessionOrganizerParticipates))
       .map(p => p.id);
     const { data: roundEntries } = await supabase
       .from('entries')
@@ -74,10 +138,6 @@ exports.handler = async (event) => {
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
 
-    // NIEUW: verwittig de andere deelnemer(s) dat deze persoon zijn opvolging heeft
-    // ingediend, net zoals dat al gebeurde bij het allereerste verhaal. Enkel als
-    // niet iedereen al klaar is, anders zou de "document klaar"-mail vlak erna
-    // dubbelop zijn.
     if (!everyoneSubmitted) {
       const others = allParticipants.filter(p => p.id !== participant.id && p.email);
       await Promise.all(
