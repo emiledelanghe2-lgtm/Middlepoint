@@ -1,5 +1,46 @@
 const { getSupabase } = require('./_supabase');
 
+async function callClaude(systemPrompt, userPrompt, maxTokens) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: maxTokens || 300,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Claude API fout (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  return data.content.map(b => b.text || '').join('\n');
+}
+
+async function checkSafety(text) {
+  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van iemand over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
+
+Stop enkel bij: actieve suicidale gedachten of plannen, kindermisbruik, seksueel geweld of verkrachting, een poging tot doodslag of moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
+
+Stop niet bij: gewone ruzies, een klap of duw zonder verdere escalatie, verwijten over wie wat deed, emotionele pijn, jaloezie, ontrouw, financiele conflicten, opvoedingsconflicten, of vage uitspraken zonder concrete ernst. Twijfel je, kies dan voor niet stoppen.
+
+Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|geweld|misbruik|geen", "korte_reden": "..."}`;
+
+  const response = await callClaude(systemPrompt, text, 300);
+  const cleaned = response.replace(/```json|```/g, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    return { stop: false, categorie: 'geen', korte_reden: '' };
+  }
+}
+
 async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
@@ -51,6 +92,30 @@ exports.handler = async (event) => {
     if (isPureThirdParty) {
       return { statusCode: 400, body: JSON.stringify({ error: 'De organisator vult zelf geen verhaal in.' }) };
     }
+
+    // NIEUW: veiligheidscheck meteen bij elke individuele indiening, niet pas wachten
+    // tot ook de andere deelnemer klaar is. Zo krijgt iemand in nood meteen de juiste
+    // hulplijnen te zien, in plaats van dagen te moeten wachten op de ander.
+    const safety = await checkSafety(content);
+    if (safety.stop) {
+      await supabase.from('entries').insert({
+        session_id: participant.session_id,
+        participant_id: participant.id,
+        round: 1,
+        content,
+        is_anonymous: !!isAnonymous,
+      });
+      await supabase
+        .from('sessions')
+        .update({
+          status: 'veiligheid_gestopt',
+          safety_category: safety.categorie,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', participant.session_id);
+      return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
+    }
+
     await supabase.from('entries').insert({
       session_id: participant.session_id,
       participant_id: participant.id,
