@@ -5,9 +5,9 @@ function emailButtonHtml(link, label, color) {
   <tr>
     <td align="center" style="border-radius:8px;">
       <!--[if mso]>
-      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${link}" style="height:48px;v-text-anchor:middle;width:260px;" arcsize="16%" strokecolor="${bg}" fillcolor="${bg}">
+     <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${link}" style="height:50px;v-text-anchor:middle;width:320px;" arcsize="16%" strokecolor="${bg}" fillcolor="${bg}">
       <w:anchorlock/>
-      <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:600;">${label}</center>
+      <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;white-space:nowrap;">${label}</center>
       </v:roundrect>
       <![endif]-->
       <!--[if !mso]><!-->
