@@ -42,6 +42,8 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
+const { emailButtonHtml } = require('./_email-button');
+
 async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
@@ -59,9 +61,7 @@ async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Het document is klaar. Je kan het nu rustig samen bekijken.</p>
-            <p style="margin:28px 0">
-              <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk het document</a>
-            </p>
+           ${emailButtonHtml(link, 'Bekijk het document')}
             ${isPaid ? '<p style="color:#666;font-size:.9rem">Wanneer het jou past, kan je via Mijn gesprekken één opvolgdocument invullen om te zien hoe het gaat en wat er veranderd is. Daar hoef je niet mee te wachten, dat kan al vanaf nu, maar dit kan slechts één keer per gesprek.</p>' : ''}
             <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang tot het gesprek.</p>
           </div>`,
