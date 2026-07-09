@@ -100,13 +100,19 @@ const CONFIDENTIAL_NOTE = 'Dit antwoord wordt nooit getoond aan de andere deelne
 
 const QUESTIONNAIRES = {
   koppel: {
-    freeIds: ['duur_samen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    freeIds: ['duur_samen','woonsituatie','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
     questions: [
       { id:'duur_samen', type:'single', label:'Hoelang zijn jullie al samen?', options:[
         {value:'minder dan 1 jaar', label:'Minder dan 1 jaar'},
         {value:'1 tot 3 jaar', label:'1 tot 3 jaar'},
         {value:'3 tot 10 jaar', label:'3 tot 10 jaar'},
         {value:'meer dan 10 jaar', label:'Meer dan 10 jaar'},
+      ]},
+      { id:'woonsituatie', type:'single', allowOther:true, label:'Wat is jullie woonsituatie?', options:[
+        {value:'samenwonend zonder kinderen', label:'Samenwonend, zonder kinderen'},
+        {value:'samenwonend met kinderen', label:'Samenwonend, met kinderen'},
+        {value:'niet samenwonend', label:'Niet samenwonend'},
+        {value:'gedeeltelijk samenwonend of co-ouderschap', label:'Gedeeltelijk samenwonend of co-ouderschap'},
       ]},
       { id:'duur_probleem', type:'single', label:'Hoelang speelt dit specifieke probleem al?', options:[
         {value:'enkele dagen', label:'Enkele dagen'},
@@ -210,6 +216,9 @@ const QUESTIONNAIRES = {
       { id:'partner_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat je partner het niet weet of niet beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
       },
+      { id:'al_hulp_gezocht', type:'yesno', label:'Hebben jullie hier al professionele hulp voor gezocht, zoals een therapeut of relatiebemiddelaar?',
+        branch:{ ja:{ id:'hulp_ervaring', type:'text', label:'Hoe verliep dat, en wat nemen jullie daaruit mee?' } }
+      },
       { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan je partner vertelt, maar dat wel zou helpen om jouw gedrag beter te begrijpen? (optioneel)', placeholder:'bv. Eigenlijk voel ik me heel onzeker, maar ik wil sterk overkomen voor mijn partner.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die je partner zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als hij begint met te zeggen dat hij ook zijn steentje wil bijdragen.' },
       { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is er nog iets belangrijks dat je kwijt wil, dat niet aan bod kwam in de vragen hierboven?' },
@@ -311,6 +320,9 @@ const QUESTIONNAIRES = {
       { id:'zwaarte', type:'scale', label:'Hoe zwaar weegt dit op dit moment voor jou?', lowLabel:'Draaglijk', highLabel:'Overweldigend' },
       { id:'ander_beseft_niet', type:'yesno', label:'Is er iets waarvan je denkt dat dit familielid het niet weet of beseft?',
         branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'Wat zou je willen dat die weet?' } }
+      },
+      { id:'al_hulp_gezocht', type:'yesno', label:'Hebben jullie hier al professionele hulp voor gezocht, zoals een familiebemiddelaar of therapeut?',
+        branch:{ ja:{ id:'hulp_ervaring', type:'text', label:'Hoe verliep dat, en wat nemen jullie daaruit mee?' } }
       },
       { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is er iets dat je zelf voelt of meemaakt, dat je liever niet rechtstreeks aan dit familielid vertelt, maar dat wel zou helpen om jouw gedrag beter te begrijpen? (optioneel)', placeholder:'bv. Ik voel me eigenlijk erg alleen in de familie, maar ik wil niet zwak overkomen.' },
       { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Wil je zelf een tip of openingszin voorstellen die dit familielid zou kunnen gebruiken? (optioneel)', placeholder:'bv. Het zou fijn zijn als hij of zij gewoon toegeeft dat het lang heeft aangesleept.' },
@@ -554,8 +566,9 @@ const QUESTIONNAIRES = {
   },
 
   school: {
-    freeIds: ['betrokkenen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_betrokkene','gewenste_uitkomst','wat_toevoegen'],
+    freeIds: ['leeftijd_leerjaar','betrokkenen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_betrokkene','gewenste_uitkomst','wat_toevoegen'],
     questions: [
+      { id:'leeftijd_leerjaar', type:'text', label:'Wat is de leeftijd of het leerjaar van het betrokken kind?', placeholder:'bv. 9 jaar, 4de leerjaar' },
       { id:'betrokkenen', type:'single', allowOther:true, label:'Wie zijn er betrokken?', options:[
         {value:'twee_leerlingen', label:'Twee leerlingen'},
         {value:'leerling_leerkracht', label:'Leerling en leerkracht'},
@@ -613,8 +626,9 @@ const QUESTIONNAIRES = {
   },
 
   andere: {
-    freeIds: ['duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    freeIds: ['relatie_tot_ander','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
     questions: [
+      { id:'relatie_tot_ander', type:'text', label:'Hoe zou je jullie onderlinge relatie omschrijven?', placeholder:'bv. huisgenoten, verre familie, een kennis via de sportclub...' },
       { id:'duur_probleem', type:'single', label:'Hoelang speelt dit al?', options:[
         {value:'enkele dagen', label:'Enkele dagen'},
         {value:'enkele weken', label:'Enkele weken'},
@@ -627,6 +641,11 @@ const QUESTIONNAIRES = {
         {value:'wekelijks', label:'Wekelijks'},
         {value:'af en toe maar zwaar', label:'Af en toe, maar het weegt zwaar door'},
         {value:'een incident', label:'Het was een eenmalig, ernstig incident'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Wie kaart dit meestal aan?', options:[
+        {value:'meestal ik', label:'Meestal ik'},
+        {value:'meestal de ander', label:'Meestal de ander'},
+        {value:'ongeveer evenveel', label:'Ongeveer evenveel, wij allebei'},
       ]},
       { id:'kern_open', type:'text', label:'Beschrijf in je eigen woorden waar dit voor jou ten gronde om draait', placeholder:'Wat is, in jouw woorden, het echte probleem?' },
       { id:'al_geprobeerd', type:'yesno', label:'Hebben jullie dit al eerder proberen aan te pakken?',
@@ -644,6 +663,13 @@ const QUESTIONNAIRES = {
         {value:'machteloos', label:'Machteloos'},
         {value:'moe', label:'Moe van de herhaling'},
         {value:'neutraal', label:'Neutraal, geen uitgesproken gevoel'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Spelen er nog andere zaken mee die het moeilijker maken?', options:[
+        {value:'stress', label:'Stress of drukte in het leven'},
+        {value:'gezondheid', label:'Gezondheid'},
+        {value:'geld', label:'Geld'},
+        {value:'verandering', label:'Een grote verandering of overgang'},
+        {value:'geen', label:'Nee, het draait echt om dit ene probleem'},
       ]},
       { id:'gevoel_ander', type:'text', label:'Wat denk je dat de andere partij op dit moment voelt?', placeholder:'Beschrijf zo goed als je kan hoe de ander hier waarschijnlijk naar kijkt.' },
       { id:'gewenste_uitkomst', type:'text', label:'Wat zou voor jou een goede uitkomst zijn?', placeholder:'Beschrijf wat voor jou een goede oplossing zou zijn.' },
