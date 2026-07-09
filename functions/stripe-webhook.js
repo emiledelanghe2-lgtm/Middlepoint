@@ -14,7 +14,7 @@ function mapAmountToPlan(amountInCents, isRecurring) {
 }
 
 function sessionsForPlan(plan) {
-  const limits = { gratis: 1, los: 1, starter: 3, plus: 10, pro: 30 };
+  const limits = { gratis: 1, los: 1, starter: 3, plus: 10, pro: 9999 };
   return limits[plan] || 1;
 }
 
