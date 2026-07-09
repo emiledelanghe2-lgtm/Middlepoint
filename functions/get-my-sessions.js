@@ -56,6 +56,7 @@ exports.handler = async (event) => {
         documentLink: isDocAvailable ? `/document.html?token=${p.access_token}` : null,
         followupUsed: (maxVersionBySession[p.session_id] || 0) >= 2,
         createdAt: p.created_at,
+        updatedAt: p.sessions.updated_at,
       };
     });
     return {
