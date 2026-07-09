@@ -248,9 +248,8 @@ document.getElementById('changeEmailToggle').addEventListener('click', () => {
 
     const list = document.getElementById('sessionsList');
     data.sessions.forEach((s, idx) => {
-      const card = document.createElement('div');
-      card.className = 'person-block';
-      card.style.marginBottom = '16px';
+     const card = document.createElement('div');
+      card.className = 'session-card';
 
       const isKlaar = s.status === 'klaar';
       const isFollowupBezig = (s.status || '').startsWith('nieuwe_ronde_');
@@ -272,26 +271,25 @@ document.getElementById('changeEmailToggle').addEventListener('click', () => {
       }
 
       card.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div class="session-card-header">
           <div>
             <div class="who">${s.category}</div>
-            <div style="font-size:.85rem;color:var(--ink-soft);margin-top:4px">
+            <div class="session-card-meta">
               Gestart op ${new Date(s.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}${s.updatedAt ? ` · laatst bijgewerkt ${new Date(s.updatedAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
             </div>
           </div>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:4px 10px;border-radius:999px;background:${isKlaar || isFollowupBezig ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar || isFollowupBezig ? 'var(--sage)' : 'var(--clay)'}">
+          <span class="session-status-badge" style="background:${isKlaar || isFollowupBezig ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar || isFollowupBezig ? 'var(--sage)' : 'var(--clay)'}">
             ${statusText}
           </span>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-         <a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Mijn verhaal / status</a>
-          <a href="${accessLinkWithReturn}&view=antwoorden" class="btn outline" style="padding:9px 16px;font-size:.85rem">Bekijk mijn antwoorden</a>
-          ${documentLinkWithReturn ? `<a href="${documentLinkWithReturn}" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bekijk document</a>` : ''}
+        <div class="session-card-actions">
+          <a href="${accessLinkWithReturn}" class="btn outline">Mijn verhaal / status</a>
+          ${documentLinkWithReturn ? `<a href="${documentLinkWithReturn}" class="btn clay">Bekijk document</a>` : ''}
           ${followupButton}
-          ${s.isOrganizer ? `<button class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
+          ${s.isOrganizer ? `<button class="btn outline" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
         </div>
         ${s.isOrganizer ? `<div id="${linksBoxId}" style="display:none;margin-top:8px"></div>` : ''}
-        <div style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px">
+        <div class="session-card-footer">
           <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteSession('${s.sessionId}', this)">Verwijder gesprek</button>
         </div>`;
 
