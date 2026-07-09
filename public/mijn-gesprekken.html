@@ -276,7 +276,7 @@ document.getElementById('changeEmailToggle').addEventListener('click', () => {
           <div>
             <div class="who">${s.category}</div>
             <div style="font-size:.85rem;color:var(--ink-soft);margin-top:4px">
-              ${new Date(s.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}
+              Gestart op ${new Date(s.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}${s.updatedAt ? ` · laatst bijgewerkt ${new Date(s.updatedAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
             </div>
           </div>
           <span style="font-family:'IBM Plex Mono',monospace;font-size:.72rem;padding:4px 10px;border-radius:999px;background:${isKlaar || isFollowupBezig ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar || isFollowupBezig ? 'var(--sage)' : 'var(--clay)'}">
