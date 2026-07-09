@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -22,6 +23,20 @@ exports.handler = async (event) => {
     const locked = status === 'document_genereren' || status === 'klaar' || status.startsWith('nieuwe_ronde_');
     if (locked) {
       return { statusCode: 400, body: JSON.stringify({ error: 'De categorie kan niet meer aangepast worden op dit moment.' }) };
+    }
+    // NIEUW: ook blokkeren zodra een ANDERE deelnemer al zijn antwoorden indiende,
+    // ook al staat de sessiestatus zelf nog op 'wachten_op_verhalen'. Anders zou
+    // iemand de categorie nog kunnen wijzigen nadat de ander al onder de oude
+    // categorie antwoordde, wat tegenstrijdige input in het document zou geven.
+    const { data: otherEntries } = await supabase
+      .from('entries')
+      .select('id')
+      .eq('session_id', participant.session_id)
+      .eq('round', 1)
+      .neq('participant_id', participant.id)
+      .limit(1);
+    if (otherEntries && otherEntries.length > 0) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'De andere deelnemer heeft al ingediend, de categorie kan nu niet meer aangepast worden.' }) };
     }
     await supabase
       .from('sessions')
