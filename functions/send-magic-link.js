@@ -1,5 +1,7 @@
 const { getSupabase } = require('./_supabase');
+const { emailButtonHtml } = require('./_email-button');
 const crypto = require('crypto');
+
 async function sendMagicLinkEmail(toEmail, magicLink) {
   if (!process.env.RESEND_API_KEY) {
     console.error('RESEND_API_KEY niet ingesteld');
@@ -19,14 +21,14 @@ async function sendMagicLinkEmail(toEmail, magicLink) {
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
           <h2 style="color:#3A4A5C">Jouw toegangslink</h2>
           <p>Klik op de knop hieronder om in te loggen en al jouw gesprekken en documenten te bekijken.</p>
-          <p style="margin:28px 0">
-            <a href="${magicLink}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk mijn gesprekken</a>
-          </p>
+          ${emailButtonHtml(magicLink, 'Bekijk mijn gesprekken')}
           <p style="color:#888;font-size:.85rem">Deze link is 24 uur geldig. Als je deze mail niet aangevraagd hebt, kan je hem gewoon negeren.</p>
+          <p style="color:#888;font-size:.85rem">Verkeerd e-mailadres? Zodra je ingelogd bent, kan je dat wijzigen bovenaan de pagina 'Mijn gesprekken'.</p>
         </div>`,
     }),
   });
 }
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
