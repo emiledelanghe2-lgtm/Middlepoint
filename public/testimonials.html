@@ -24,18 +24,39 @@
 </head>
 <body>
 <header class="nav-bar">
-<nav class="nav">
+<nav class="nav" aria-label="Hoofdnavigatie">
   <a href="/" class="brand">middle<span>point</span></a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/">Home</a>
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
-    <a href="/testimonials.html" class="current">Getuigenissen</a>
+    <a href="/testimonials.html" class="current" aria-current="page">Getuigenissen</a>
     <a href="/login.html">Mijn gesprekken</a>
+  </div>
+  <div class="nav-actions">
     <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
 </nav>
 </header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
 
 <section class="section" style="max-width:720px">
   <span class="label">Getuigenissen</span>
@@ -64,7 +85,9 @@
 
   <span class="label">Wat anderen schreven</span>
   <div id="testimonialsList" style="margin-top:16px">
-    <p style="color:var(--ink-soft)">Even laden...</p>
+    <div class="skeleton skeleton-block"></div>
+    <div class="skeleton skeleton-block"></div>
+    <div class="skeleton skeleton-block"></div>
   </div>
 </section>
 
