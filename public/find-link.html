@@ -8,21 +8,42 @@
 </head>
 <body>
 <header class="nav-bar">
-<nav class="nav">
+<nav class="nav" aria-label="Hoofdnavigatie">
   <a href="/" class="brand">middle<span>point</span></a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/">Home</a>
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
-    <a href="/login.html">Mijn gesprekken</a>
+    <a href="/login.html" class="current" aria-current="page">Mijn gesprekken</a>
+  </div>
+  <div class="nav-actions">
     <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
 </nav>
 </header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
 <div class="app-wrap" style="text-align:center;padding-top:72px">
   <span class="label">Je gesprekken terugvinden</span>
-<h1 style="margin-bottom:16px">Gebruik 'Mijn gesprekken'</h1>
+  <h1 style="margin-bottom:16px">Gebruik 'Mijn gesprekken'</h1>
   <p style="color:var(--ink-soft);max-width:420px;margin:0 auto 32px">Vul je e-mailadres in op de loginpagina en je ontvangt een link waarmee je al je gesprekken en documenten kan terugvinden.</p>
   <a href="/login.html" class="btn clay" style="padding:14px 28px">Naar Mijn gesprekken</a>
 </div>
