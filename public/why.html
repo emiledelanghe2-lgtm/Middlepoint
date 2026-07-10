@@ -21,26 +21,42 @@
 <meta property="og:locale" content="nl_BE">
 <link rel="canonical" href="https://middlepoint.net/why.html">
 <link rel="stylesheet" href="/style.css">
-<style>
-.faq-item{ background:var(--white); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-bottom:12px; }
-.faq-item summary{ cursor:pointer; font-weight:600; color:var(--ink); }
-.faq-item p{ margin:12px 0 0; color:var(--ink-soft); }
-</style>
 </head>
 <body>
 <header class="nav-bar">
-<nav class="nav">
+<nav class="nav" aria-label="Hoofdnavigatie">
   <a href="/" class="brand">middle<span>point</span></a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/">Home</a>
-    <a href="/why.html" class="current">Waarom Middlepoint</a>
+    <a href="/why.html" class="current" aria-current="page">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
     <a href="/login.html">Mijn gesprekken</a>
+  </div>
+  <div class="nav-actions">
     <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
 </nav>
 </header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
 
 <section class="section" style="max-width:720px">
   <span class="label">Waarom Middlepoint</span>
@@ -95,9 +111,7 @@
     <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:.75rem;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase">Stephen R. Covey</div>
   </blockquote>
 
-  <span class="label" style="display:block;margin-bottom:16px">Veelgestelde vragen</span>
-
- <div class="card" style="margin-bottom:24px;text-align:center;padding:32px">
+  <div class="card" style="margin-bottom:24px;text-align:center;padding:32px">
     <span class="label" style="display:block;margin-bottom:10px">Nog vragen?</span>
     <h3 style="margin-bottom:12px">Bekijk onze veelgestelde vragen</h3>
     <p style="color:var(--ink-soft);margin-bottom:20px">Antwoorden op wat mensen ons het vaakst vragen, over privacy, hoe het werkt, en meer.</p>
@@ -108,11 +122,12 @@
 
 <footer class="footer">
   <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">De plek om elkaar terug te vinden.</p>
-  <p style="margin:0;font-size:.82rem">
-    Vragen of feedback? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Vragen? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
     &nbsp;·&nbsp; <a href="/login.html">Mijn gesprekken</a>
     &nbsp;·&nbsp; <a href="/privacy.html">Privacybeleid</a>
   </p>
+  <a href="/faq.html" class="hint-chip" style="text-decoration:none">Veelgestelde vragen</a>
 </footer>
 </body>
 </html>
