@@ -6,7 +6,6 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-79QY4HGN40');
 </script>
 <head>
@@ -17,17 +16,38 @@
 </head>
 <body>
 <header class="nav-bar">
-<nav class="nav">
+<nav class="nav" aria-label="Hoofdnavigatie">
   <a href="/" class="brand">middle<span>point</span></a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/">Home</a>
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
+  </div>
+  <div class="nav-actions">
     <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
 </nav>
 </header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
 <div class="app-wrap" style="max-width:480px">
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
   <span class="label">Mijn gesprekken</span>
@@ -44,7 +64,7 @@
     </div>
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Stuur mij een toegangslink</button>
   </form>
-<p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)">Heb je nog geen gesprek gestart? <a href="/new.html">Begin hier</a>.</p>
+  <p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)">Heb je nog geen gesprek gestart? <a href="/new.html">Begin hier</a>.</p>
   <p style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)">Verkeerd e-mailadres ingesteld? Log in en wijzig het bovenaan de pagina 'Mijn gesprekken'.</p>
 </div>
 <script>
