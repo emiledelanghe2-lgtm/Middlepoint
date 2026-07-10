@@ -99,6 +99,22 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .nav-links a{ color:var(--ink); font-size:.92rem; transition: color .15s ease; }
 .nav-links a:hover{ color:var(--clay); }
 .nav-links a.current{ color:var(--clay); font-weight:700; }
+
+/* Hamburgermenu, klaar voor gebruik: knop enkel zichtbaar op mobiel */
+.nav-toggle{
+  display:none;
+  background:none;
+  border:1px solid var(--line);
+  border-radius:8px;
+  width:40px;
+  height:40px;
+  cursor:pointer;
+  font-size:1.2rem;
+  color:var(--ink);
+  align-items:center;
+  justify-content:center;
+}
+
 .btn{
   display:inline-block;
   background:var(--clay);
@@ -124,7 +140,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .btn:disabled{ cursor:not-allowed; }
 
 /* --- Hero --- */
-.hero{ padding:56px 24px 72px; max-width:1080px; margin:0 auto; }
+.hero{ padding:40px 24px 48px; max-width:1080px; margin:0 auto; }
 .hero h1{
   text-align:center;
   font-size:clamp(2rem, 5vw, 3.2rem);
@@ -181,8 +197,8 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 
 /* --- Sections --- */
-.section{ padding:56px 24px; max-width:1080px; margin:0 auto; }
-.section-head{ max-width:600px; margin-bottom:32px; }
+.section{ padding:40px 24px; max-width:1080px; margin:0 auto; }
+.section-head{ max-width:600px; margin-bottom:24px; }
 .section-head .label{ margin-bottom:8px; display:block; }
 .section-head h2{ font-size:clamp(1.6rem, 3.5vw, 2.3rem); position:relative; padding-bottom:14px; }
 .section-head h2::after{
@@ -302,6 +318,31 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   font-size:.88rem;
 }
 
+/* --- Skeleton laadanimatie, i.p.v. platte "Even laden..." tekst --- */
+.skeleton{
+  background: linear-gradient(90deg, var(--line) 25%, #F3EADC 50%, var(--line) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius:8px;
+}
+@keyframes skeleton-shimmer{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+.skeleton-line{ height:14px; margin-bottom:10px; width:100%; }
+.skeleton-line.short{ width:40%; }
+.skeleton-block{ height:80px; margin-bottom:16px; }
+
+/* --- Inline bevestiging (i.p.v. alert()) --- */
+.inline-confirm{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--sage);
+  font-size:.85rem;
+  font-weight:600;
+}
+
 /* --- Document weergave --- */
 .doc-section{ margin-bottom:36px; padding-bottom:36px; border-bottom:1px solid var(--line); }
 .doc-section:last-child{ border-bottom:none; }
@@ -316,33 +357,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .testimonial-card{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:26px; margin-bottom:18px; }
 .testimonial-card p.quote{ font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; margin:0 0 12px; }
 .testimonial-card .author{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
-
-/* --- Mobiel --- */
-@media (max-width:480px){
-  .section{ padding:40px 16px; }
-  .app-wrap{ padding:32px 16px 72px; }
-  .hero{ padding:36px 16px 52px; }
-  .balance .side{ padding:22px 18px; }
-
-  .nav{
-    flex-wrap:nowrap;
-    padding:12px 14px;
-    gap:8px;
-    overflow-x:auto;
-    -ms-overflow-style:none;
-    scrollbar-width:none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .nav::-webkit-scrollbar{ display:none; }
-  .nav .brand{ font-size:1.05rem; }
-  .nav-links{ gap:14px; flex-wrap:nowrap; flex-shrink:0; }
-  .nav-links a{ font-size:.8rem; white-space:nowrap; padding:6px 0; }
-  .nav-links a.btn{ padding:8px 14px; font-size:.8rem; }
-
-/* Grotere touch targets op mobiel */
-  .btn{ min-height:44px; }
-  .icon-btn{ width:44px; height:44px; }
-}
 
 /* --- Sessiekaarten (Mijn gesprekken) --- */
 .session-card{
@@ -373,8 +387,49 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .session-card-actions .btn{ padding:9px 16px; font-size:.85rem; }
 .session-card-footer{ border-top:1px solid var(--line); padding-top:10px; margin-top:4px; }
 
+/* --- Mobiel --- */
 @media (max-width:480px){
+  .section{ padding:28px 16px; }
+  .app-wrap{ padding:32px 16px 72px; }
+  .hero{ padding:36px 16px 52px; }
+  .balance .side{ padding:22px 18px; }
+
+  .nav{
+    flex-wrap:nowrap;
+    padding:12px 14px;
+    gap:8px;
+    position:relative;
+  }
+  .nav .brand{ font-size:1.05rem; }
+
+  /* Hamburgermenu op mobiel: knop zichtbaar, links verborgen tot open */
+  .nav-toggle{ display:inline-flex; }
+  .nav-links{
+    display:none;
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    background:var(--white);
+    border:1px solid var(--line);
+    border-top:none;
+    border-radius:0 0 12px 12px;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+    padding:8px;
+    box-shadow:0 12px 24px rgba(43,38,32,.08);
+  }
+  .nav-links.open{ display:flex; }
+  .nav-links a{ width:100%; padding:12px 10px; border-radius:8px; font-size:.95rem; }
+  .nav-links a:hover, .nav-links a.current{ background:var(--clay-soft); }
+  .nav-links a.btn{ text-align:center; margin-top:4px; }
+
   .session-card-header{ flex-direction:column; align-items:flex-start; gap:6px; }
   .session-card-actions{ flex-direction:column; }
   .session-card-actions .btn{ width:100%; text-align:center; }
+
+  /* Grotere touch targets op mobiel */
+  .btn{ min-height:44px; }
+  .icon-btn{ width:44px; height:44px; }
 }
