@@ -76,24 +76,6 @@
     });
   })();
 </script>
-<script>
-  (function() {
-    const toggle = document.getElementById('navToggle');
-    const links = document.getElementById('navLinks');
-    toggle.addEventListener('click', () => {
-      const isOpen = links.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-      toggle.textContent = isOpen ? '✕' : '☰';
-    });
-    links.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        links.classList.remove('open');
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.textContent = '☰';
-      });
-    });
-  })();
-</script>
 
 <main>
 <section class="hero">
@@ -284,6 +266,16 @@
   <a href="/faq.html" class="hint-chip" style="text-decoration:none">Veelgestelde vragen</a>
 </footer>
 
-<script src="/tabs.js"></script>
+<script>
+  document.querySelectorAll('.audience-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.audience-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.audience-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById(tab.dataset.target);
+      if (panel) panel.classList.add('active');
+    });
+  });
+</script>
 </body>
 </html>
