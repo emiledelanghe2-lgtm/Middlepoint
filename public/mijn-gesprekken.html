@@ -8,21 +8,45 @@
 </head>
 <body>
 <header class="nav-bar">
-<nav class="nav">
+<nav class="nav" aria-label="Hoofdnavigatie">
   <a href="/" class="brand">middle<span>point</span></a>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/">Home</a>
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
-    <a href="/login.html" class="current">Mijn gesprekken</a>
+    <a href="/login.html" class="current" aria-current="page">Mijn gesprekken</a>
+  </div>
+  <div class="nav-actions">
     <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
 </nav>
 </header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
 
 <div class="app-wrap" id="app">
-  <div class="status-box">Even laden...</div>
+  <div class="skeleton skeleton-line short"></div>
+  <div class="skeleton skeleton-line" style="height:32px;width:60%;margin-bottom:20px"></div>
+  <div class="skeleton skeleton-block"></div>
+  <div class="skeleton skeleton-block"></div>
 </div>
 
 <script>
@@ -61,14 +85,14 @@ async function loadSessionLinks(sessionToken, containerId) {
     const res = await fetch(`/.netlify/functions/get-session-links?token=${sessionToken}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-  box.innerHTML = data.links.map(l => `
+    box.innerHTML = data.links.map(l => `
       <div style="margin-bottom:10px">
         <div style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px">${l.name}${l.isOrganizer ? ' (jij)' : ''} · ${l.email || 'geen e-mailadres'}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
           <input type="text" readonly value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
           <button onclick="navigator.clipboard.writeText('${window.location.origin}${l.accessLink}')" class="icon-btn" title="Kopieer">📋</button>
         </div>
-      ${!l.isOrganizer ? `
+        ${!l.isOrganizer ? `
         <div style="font-size:.72rem;color:var(--ink-soft);margin-bottom:4px">E-mailadres van ${l.name} wijzigen</div>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="email" id="emailEdit_${l.id}" placeholder="Nieuw e-mailadres" value="${l.email || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:.78rem">
@@ -80,6 +104,7 @@ async function loadSessionLinks(sessionToken, containerId) {
     box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
   }
 }
+
 async function updateParticipantEmail(sessionToken, participantId, inputId, btn) {
   const input = document.getElementById(inputId);
   const msg = document.getElementById(`emailEditMsg_${participantId}`);
@@ -97,7 +122,7 @@ async function updateParticipantEmail(sessionToken, participantId, inputId, btn)
   try {
     const res = await fetch('/.netlify/functions/update-participant-email', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ organizerToken: sessionToken, participantId, newEmail }),
+      body: JSON.stringify({ organizerToken: sessionToken, participantId, newEmail }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
@@ -112,7 +137,8 @@ async function updateParticipantEmail(sessionToken, participantId, inputId, btn)
   }
 }
 
-async function startFollowup(accessLinkWithReturn, btn) {  const t = new URLSearchParams(accessLinkWithReturn.split('?')[1]).get('token');
+async function startFollowup(accessLinkWithReturn, btn) {
+  const t = new URLSearchParams(accessLinkWithReturn.split('?')[1]).get('token');
   btn.disabled = true;
   btn.textContent = 'Even geduld...';
   try {
@@ -186,7 +212,7 @@ async function load() {
     app.innerHTML = `
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
-     <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong id="currentEmailDisplay">${data.email}</strong> · <button type="button" id="changeEmailToggle" class="btn outline" style="padding:4px 10px;font-size:.75rem;vertical-align:middle">Wijzig e-mailadres</button></p>
+      <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong id="currentEmailDisplay">${data.email}</strong> · <button type="button" id="changeEmailToggle" class="btn outline" style="padding:4px 10px;font-size:.75rem;vertical-align:middle">Wijzig e-mailadres</button></p>
       <div id="changeEmailBox" style="display:none;max-width:420px;margin-bottom:16px" class="card">
         <div class="field">
           <label for="newEmailInput">Nieuw e-mailadres</label>
@@ -210,7 +236,8 @@ async function load() {
       <div style="margin-top:32px">
         <a href="/new.html" class="btn outline">Start een nieuw gesprek</a>
       </div>`;
-document.getElementById('changeEmailToggle').addEventListener('click', () => {
+
+    document.getElementById('changeEmailToggle').addEventListener('click', () => {
       const box = document.getElementById('changeEmailBox');
       box.style.display = box.style.display === 'none' ? 'block' : 'none';
     });
@@ -248,7 +275,7 @@ document.getElementById('changeEmailToggle').addEventListener('click', () => {
 
     const list = document.getElementById('sessionsList');
     data.sessions.forEach((s, idx) => {
-     const card = document.createElement('div');
+      const card = document.createElement('div');
       card.className = 'session-card';
 
       const isKlaar = s.status === 'klaar';
@@ -257,17 +284,13 @@ document.getElementById('changeEmailToggle').addEventListener('click', () => {
       const linksBoxId = `linksBox_${idx}`;
       const accessLinkWithReturn = withReturnParam(s.accessLink);
       const documentLinkWithReturn = s.documentLink ? withReturnParam(s.documentLink) : null;
-
-      // s.followupUsed moet nog door get-my-sessions.js meegegeven worden. Tot dat er is,
-      // valt dit terug op "niet gebruikt", dus de knop kan tijdelijk nog verkeerd tonen
-      // na een al ingevulde opvolging.
       const followupUsed = !!s.followupUsed;
 
       let followupButton = '';
       if (isKlaar && s.plan && s.plan !== 'gratis' && !followupUsed) {
-        followupButton = `<button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" onclick="startFollowup('${window.location.origin}${accessLinkWithReturn}', this)">Vul opvolgdocument in</button>`;
+        followupButton = `<button type="button" class="btn outline" onclick="startFollowup('${window.location.origin}${accessLinkWithReturn}', this)">Vul opvolgdocument in</button>`;
       } else if (isFollowupBezig) {
-        followupButton = `<a href="${accessLinkWithReturn}" class="btn outline" style="padding:9px 16px;font-size:.85rem">Ga verder met opvolging</a>`;
+        followupButton = `<a href="${accessLinkWithReturn}" class="btn outline">Ga verder met opvolging</a>`;
       }
 
       card.innerHTML = `
@@ -284,6 +307,7 @@ document.getElementById('changeEmailToggle').addEventListener('click', () => {
         </div>
         <div class="session-card-actions">
           <a href="${accessLinkWithReturn}" class="btn outline">Mijn verhaal / status</a>
+          <a href="${accessLinkWithReturn}&view=antwoorden" class="btn outline">Bekijk mijn antwoorden</a>
           ${documentLinkWithReturn ? `<a href="${documentLinkWithReturn}" class="btn clay">Bekijk document</a>` : ''}
           ${followupButton}
           ${s.isOrganizer ? `<button class="btn outline" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
