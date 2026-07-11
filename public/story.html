@@ -1267,9 +1267,22 @@ if (data.otherEntriesCount === 0) {
     attachCategoryEditor(session, () => renderStoryForm(name, session, data));
   }
 
-  const draftRaw = loadDraft('story_answers');
+const draftRaw = loadDraft('story_answers');
   if (draftRaw) {
     try { restoreFormState(JSON.parse(draftRaw), surveyBody); } catch (e) {}
+  } else {
+    try {
+      const prefillKey = `mp_prefill_kern_${token}`;
+      const prefillText = localStorage.getItem(prefillKey);
+      if (prefillText) {
+        const kernTextarea = surveyBody.querySelector('textarea.q-textarea[data-qid="kern_open"]');
+        if (kernTextarea) {
+          kernTextarea.value = prefillText;
+          kernTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        localStorage.removeItem(prefillKey);
+      }
+    } catch (e) {}
   }
 
   document.getElementById('saveDraftBtn').addEventListener('click', () => {
