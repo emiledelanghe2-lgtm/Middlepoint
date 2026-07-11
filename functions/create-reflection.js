@@ -5,9 +5,9 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { email, name, relationType, content } = JSON.parse(event.body || '{}');
-    if (!email || !content || !content.trim()) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'E-mailadres en antwoorden zijn verplicht.' }) };
+    const { email, name, category, content } = JSON.parse(event.body || '{}');
+    if (!email || !category || !content || !content.trim()) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'E-mailadres, categorie en antwoorden zijn verplicht.' }) };
     }
     const normalizedEmail = email.toLowerCase().trim();
     if (!normalizedEmail.includes('@')) {
@@ -20,7 +20,7 @@ exports.handler = async (event) => {
       .insert({
         email: normalizedEmail,
         name: name || null,
-        relation_type: relationType || null,
+        category,
         raw_content: content,
         status: 'bezig',
       })
