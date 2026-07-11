@@ -252,8 +252,8 @@ function savePending(data) { try { localStorage.setItem(STORAGE_KEY, JSON.string
 function loadPending() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
 function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
 
-let selectedPlanId = 'gratis';
-let activeSubscription = null;
+let selectedPlanId = 'los';
+  let activeSubscription = null;
 let organizerEmailIsNew = true;
 let reflectionPrefillText = '';
 const planSelector = document.getElementById('planSelector');
@@ -287,13 +287,13 @@ function showPlanDetail(planId) {
   detail.style.display = 'block';
 }
 
-PRICING_CONFIG.plans.filter(p => p.id !== 'pro').forEach(plan => {
+PRICING_CONFIG.plans.filter(p => p.id !== 'pro' && p.id !== 'gratis').forEach(plan => {
   const pill = document.createElement('label');
-  pill.className = 'plan-pill' + (plan.id === 'gratis' ? ' selected' : '');
+  pill.className = 'plan-pill' + (plan.id === 'los' ? ' selected' : '');
   pill.dataset.planId = plan.id;
   const priceLabel = plan.price === 0 ? 'Gratis' : `€${plan.price.toFixed(2).replace('.',',')}${plan.period}`;
   pill.innerHTML = `
-    <input type="radio" name="plan" value="${plan.id}" ${plan.id === 'gratis' ? 'checked' : ''}>
+    <input type="radio" name="plan" value="${plan.id}" ${plan.id === 'los' ? 'checked' : ''}>
     <span class="plan-pill-name">${plan.name}</span>
     <span class="plan-pill-price">${priceLabel}</span>
     <span class="plan-pill-desc">${plan.sessionsPerMonth === 1 ? '1 gesprek' : `${plan.sessionsPerMonth}/maand`}</span>`;
@@ -308,13 +308,12 @@ PRICING_CONFIG.plans.filter(p => p.id !== 'pro').forEach(plan => {
   });
 });
 
-showPlanDetail('gratis');
-
+showPlanDetail('los');
 function updatePlanUI() {
   const isFree = selectedPlanId === 'gratis';
   const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
-  document.getElementById('freeNotice').style.display = (isFree && !hasActiveSub) ? 'block' : 'none';
+document.getElementById('freeNotice').style.display = 'none';
   document.getElementById('paidNotice').style.display = (!isFree && !hasActiveSub) ? 'block' : 'none';
   document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
 
