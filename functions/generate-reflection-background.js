@@ -1,5 +1,32 @@
 const { getSupabase } = require('./_supabase');
+const { emailButtonHtml } = require('./_email-button');
 
+async function sendReflectionReadyEmail(toEmail, toName, link) {
+  if (!process.env.RESEND_API_KEY || !toEmail) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
+        to: toEmail,
+        subject: 'Jouw reflectie staat klaar',
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
+            <p>Je persoonlijke reflectie staat klaar.</p>
+            ${emailButtonHtml(link, 'Bekijk mijn reflectie')}
+            <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang.</p>
+          </div>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Kon reflectie-klaar-mail niet versturen:', err);
+  }
+}
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -67,7 +94,7 @@ Je toon is menselijk en warm, geen kil rapport. Gebruik nooit het lange streepje
 
 Bouw je antwoord met exact deze onderdelen:
 1. situation_summary: een korte, neutrale samenvatting van de situatie in 2 tot 3 zinnen, zodat de persoon zich herkend voelt.
-2. deeper_layer: de eerlijke, onderliggende laag, wat er waarschijnlijk echt speelt onder het oppervlakkige onderwerp. Wees hier concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 tot 5 zinnen.
+2. deeper_layer: de eerlijke, onderliggende laag. BELANGRIJK: herhaal NOOIT gewoon in andere woorden wat de persoon zelf al schreef, dat heeft geen enkele waarde voor hen. Ga echt een laag dieper: verbind de concrete gebeurtenis, het gevoel dat ze aangaven, en of ze dit patroon herkenden van eerder, tot een inzicht dat de persoon zelf nog niet zo onder woorden had gebracht. Vraag jezelf af: waarom raakte dit hen precies zo hard, gegeven alles wat ze vertelden? Welke onderliggende behoefte, angst, of gevoelige plek wordt hier zichtbaar? Wees concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 tot 5 zinnen.
 3. reflection_questions: 3 tot 5 vragen die de persoon aan ZICHZELF kan stellen, geen vragen voor de andere partij, puur zelfreflectie.
 4. recommendation: exact een van deze drie waarden: "zelf" (dit is vooral iets om zelf mee aan de slag te gaan, geen gesprek nodig), "gesprek" (dit is best om samen te bespreken), of "twijfel" (kan beide kanten op).
 5. recommendation_text: een eerlijke, duidelijke uitleg waarom, 2 tot 4 zinnen. Wees oprecht: als het advies "zelf" is, zeg dat gerust en duidelijk, ook al betekent dat dat er geen gesprek gestart wordt. Verkoop niets, wees gewoon eerlijk.
@@ -86,7 +113,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
-   await supabase.from('reflections').update({
+ await supabase.from('reflections').update({
       situation_summary: parsed.situation_summary,
       deeper_layer: parsed.deeper_layer,
       reflection_questions: parsed.reflection_questions,
@@ -94,6 +121,9 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
       recommendation_text: parsed.recommendation_text,
       status: 'klaar',
     }).eq('id', reflectionId);
+
+    const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
+    await sendReflectionReadyEmail(reflection.email, reflection.name, `${siteUrl}/reflectie.html?token=${reflection.access_token}`);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {
