@@ -232,9 +232,17 @@ async function load() {
         <p style="margin:0;font-size:.85rem">Al je documenten blijven hier altijd terug te vinden, ook je opvolgdocumenten en je eigen ingevulde antwoorden. Zodra jullie document klaar is, kan je hieronder op elk moment een opvolging starten, je hoeft daar niet op te wachten.</p>
       </div>` : ''}
 
-      <div id="sessionsList"></div>
+    <div id="sessionsList"></div>
+
+      ${data.reflections && data.reflections.length ? `
+      <div style="margin-top:40px">
+        <span class="label" style="display:block;margin-bottom:16px">Mijn reflecties</span>
+        <div id="reflectionsList"></div>
+      </div>` : ''}
+
       <div style="margin-top:32px">
         <a href="/new.html" class="btn outline">Start een nieuw gesprek</a>
+        <a href="/reflectie.html" class="btn outline">Nieuwe reflectie maken</a>
       </div>`;
 
     document.getElementById('changeEmailToggle').addEventListener('click', () => {
@@ -317,8 +325,33 @@ async function load() {
           <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteSession('${s.sessionId}', this)">Verwijder gesprek</button>
         </div>`;
 
-      list.appendChild(card);
+    list.appendChild(card);
     });
+
+    if (data.reflections && data.reflections.length) {
+      const rList = document.getElementById('reflectionsList');
+      const recLabel = { zelf: 'Vooral iets voor jezelf', gesprek: 'Gesprek aangeraden', twijfel: 'Kan beide kanten op' };
+      const recColor = { zelf: 'var(--sage)', gesprek: 'var(--clay)', twijfel: 'var(--navy)' };
+      data.reflections.forEach(r => {
+        const rCard = document.createElement('div');
+        rCard.className = 'session-card';
+        const isKlaar = r.status === 'klaar';
+        rCard.innerHTML = `
+          <div class="session-card-header">
+            <div>
+              <div class="who">${r.category || 'Reflectie'}</div>
+              <div class="session-card-meta">${new Date(r.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            </div>
+            ${isKlaar && r.recommendation ? `<span class="session-status-badge" style="background:#EFF4ED;color:${recColor[r.recommendation] || 'var(--ink-soft)'}">${recLabel[r.recommendation] || r.recommendation}</span>` : ''}
+          </div>
+          ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${r.situationSummary}</p>` : ''}
+          <div class="session-card-actions">
+            <a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
+            <a href="/new.html?fromReflection=${r.token}" class="btn clay">Maak er een gesprek van</a>
+          </div>`;
+        rList.appendChild(rCard);
+      });
+    }
 
   } catch (err) {
     app.innerHTML = `<div class="error-box">Er ging iets mis: ${err.message}</div>`;
