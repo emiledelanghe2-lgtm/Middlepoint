@@ -81,14 +81,24 @@ const app = document.getElementById('app');
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-const RELATION_OPTIONS = [
-  { value: 'partner', label: 'Mijn partner' },
-  { value: 'familielid', label: 'Een familielid' },
-  { value: 'vriend', label: 'Een vriend of vriendin' },
-  { value: 'buur', label: 'Een buur' },
-  { value: 'collega', label: 'Een collega' },
-  { value: 'iemand op school', label: 'Iemand op school' },
+const CATEGORY_OPTIONS = [
+  { value: 'koppel', label: 'Koppel / relatie' },
+  { value: 'familie', label: 'Familie' },
+  { value: 'vrienden', label: 'Vrienden' },
+  { value: 'buren', label: 'Buren' },
+  { value: 'werk', label: "Werk / collega's" },
+  { value: 'school', label: 'School' },
 ];
+
+const CATEGORY_OTHER_LABEL = {
+  koppel: 'je partner',
+  familie: 'dit familielid',
+  vrienden: 'deze vriend of vriendin',
+  buren: 'deze buur',
+  werk: 'deze collega',
+  school: 'deze persoon',
+  andere: 'de ander',
+};
 
 const GEVOEL_OPTIONS = [
   { value: 'boos', label: 'Boos' },
@@ -121,19 +131,20 @@ function renderForm() {
       </div>
 
       <div class="q-block">
-        <label class="q-label">Met wie heeft dit te maken?</label>
-        <div class="mc-group" id="relationGroup">
-          ${RELATION_OPTIONS.map(o => `
-            <label class="mc-option">
-              <input type="radio" name="relation" value="${o.value}">
-              <span>${o.label}</span>
-            </label>`).join('')}
-          <label class="mc-option">
-            <input type="radio" name="relation" value="__andere__" id="relationOtherToggle">
-            <span>Iemand anders, ik leg het zelf uit</span>
-          </label>
-          <input type="text" id="relationOtherInput" class="other-input" style="display:none" placeholder="Vul hier aan">
+        <label class="q-label">Waar heeft dit betrekking op?</label>
+        <select id="categorySelect" required style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px;background:var(--white)">
+          <option value="">Kies een categorie...</option>
+          ${CATEGORY_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+          <option value="__andere__">Iets anders, namelijk...</option>
+        </select>
+        <div class="field" id="categoryOtherField" style="display:none;margin-top:10px">
+          <input type="text" id="categoryOther" placeholder="Omschrijf kort de situatie">
         </div>
+      </div>
+
+      <div class="q-block" id="schoolAgeBlock" style="display:none">
+        <label class="q-label">Wat is de leeftijd of het leerjaar van het betrokken kind?</label>
+        <input type="text" id="qSchoolAge" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px" placeholder="bv. 9 jaar, 4de leerjaar">
       </div>
 
       <div class="q-block">
@@ -154,7 +165,7 @@ function renderForm() {
       </div>
 
       <div class="q-block">
-        <label class="q-label">Wat denk je dat je eigenlijk nodig had op dat moment?</label>
+        <label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment?</label>
         <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
       </div>
 
@@ -190,9 +201,15 @@ function renderForm() {
     </form>
   `;
 
-  document.getElementById('relationOtherToggle').addEventListener('change', (e) => {
-    document.getElementById('relationOtherInput').style.display = e.target.checked ? 'block' : 'none';
+  const categorySelect = document.getElementById('categorySelect');
+  categorySelect.addEventListener('change', () => {
+    const val = categorySelect.value;
+    document.getElementById('categoryOtherField').style.display = val === '__andere__' ? 'block' : 'none';
+    document.getElementById('schoolAgeBlock').style.display = val === 'school' ? 'block' : 'none';
+    const label = CATEGORY_OTHER_LABEL[val] || 'de ander';
+    document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment?`;
   });
+
   document.getElementById('herkenningJa').addEventListener('change', () => {
     document.getElementById('herkenningBranch').style.display = 'block';
   });
@@ -209,25 +226,40 @@ function renderForm() {
 
     const name = document.getElementById('rName').value.trim();
     const email = document.getElementById('rEmail').value.trim();
-    let relation = (document.querySelector('input[name=relation]:checked') || {}).value;
-    if (relation === '__andere__') relation = document.getElementById('relationOtherInput').value.trim();
+    let category = categorySelect.value;
+    if (!category) {
+      errorBox.textContent = 'Kies eerst een categorie.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    if (category === '__andere__') {
+      category = document.getElementById('categoryOther').value.trim();
+      if (!category) {
+        errorBox.textContent = 'Omschrijf kort de situatie.';
+        errorBox.style.display = 'block';
+        return;
+      }
+    }
     const gevoelen = Array.from(document.querySelectorAll('input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
     const scaleChecked = document.querySelector('input[name=scale]:checked');
     const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
 
-    if (!name || !email || !relation) {
-      errorBox.textContent = 'Vul je naam, e-mailadres en met wie dit te maken heeft in.';
+    if (!name || !email) {
+      errorBox.textContent = 'Vul je naam en e-mailadres in.';
       errorBox.style.display = 'block';
       return;
     }
 
     const lines = [];
-    lines.push(`Vraag: Met wie heeft dit te maken?\nAntwoord: ${relation}`);
+    const schoolAge = document.getElementById('qSchoolAge') ? document.getElementById('qSchoolAge').value.trim() : '';
+    if (categorySelect.value === 'school' && schoolAge) {
+      lines.push(`Vraag: Leeftijd of leerjaar van het betrokken kind\nAntwoord: ${schoolAge}`);
+    }
     lines.push(`Vraag: Wat gebeurde er precies?\nAntwoord: ${document.getElementById('qWat').value.trim()}`);
     if (gevoelen.length) lines.push(`Vraag: Wat voelde je op dat moment?\nAntwoord: ${gevoelen.join(', ')}`);
     const gevoelTekst = document.getElementById('qGevoelTekst').value.trim();
     if (gevoelTekst) lines.push(`Vraag: Aanvulling bij het gevoel\nAntwoord: ${gevoelTekst}`);
-    lines.push(`Vraag: Wat denk je dat je eigenlijk nodig had op dat moment?\nAntwoord: ${document.getElementById('qNodig').value.trim()}`);
+    lines.push(`Vraag: ${document.getElementById('qNodigLabel').textContent}\nAntwoord: ${document.getElementById('qNodig').value.trim()}`);
     if (herkenning) {
       const herkenningTekst = document.getElementById('qHerkenningTekst').value.trim();
       lines.push(`Vraag: Herken je dit van eerder?\nAntwoord: ${herkenning}${herkenningTekst ? ', ' + herkenningTekst : ''}`);
@@ -247,7 +279,7 @@ function renderForm() {
     try {
       const res = await fetch('/.netlify/functions/create-reflection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, relationType: relation, content }),
+        body: JSON.stringify({ email, name, category, content }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
