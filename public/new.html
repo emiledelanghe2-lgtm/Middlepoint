@@ -672,8 +672,12 @@ window.addEventListener('DOMContentLoaded', async () => {
       const data = await res.json();
       if (res.ok && data.reflection) {
         const r = data.reflection;
-        document.getElementById('reflectionNotice').style.display = 'block';
+ document.getElementById('reflectionNotice').style.display = 'block';
         document.getElementById('organizerName').value = r.name || '';
+        if (r.email) {
+          document.getElementById('organizerEmail').value = r.email;
+          checkEmail(r.email);
+        }
         reflectionPrefillText = [r.situation_summary, r.deeper_layer].filter(Boolean).join('\n\n');
 
         const catSelect = document.getElementById('category');
