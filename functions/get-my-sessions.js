@@ -44,8 +44,14 @@ exports.handler = async (event) => {
       maxVersionBySession[d.session_id] = Math.max(maxVersionBySession[d.session_id] || 0, d.version);
     });
 
+const { data: reflections } = await supabase
+      .from('reflections')
+      .select('*')
+      .eq('email', customer.email)
+      .order('created_at', { ascending: false });
+
     const sessions = participants.map(p => {
-      const isDocAvailable = p.sessions.status === 'klaar' || (p.sessions.status || '').startsWith('nieuwe_ronde_');
+    const isDocAvailable = p.sessions.status === 'klaar' || (p.sessions.status || '').startsWith('nieuwe_ronde_');
       return {
         sessionId: p.session_id,
         category: p.sessions.category,
@@ -59,12 +65,22 @@ exports.handler = async (event) => {
         updatedAt: p.sessions.updated_at,
       };
     });
-    return {
+  return {
       statusCode: 200,
       body: JSON.stringify({
         email: customer.email,
         plan: customer.plan,
         sessions,
+        reflections: (reflections || []).map(r => ({
+          id: r.id,
+          token: r.access_token,
+          name: r.name,
+          category: r.category,
+          situationSummary: r.situation_summary,
+          recommendation: r.recommendation,
+          status: r.status,
+          createdAt: r.created_at,
+        })),
       }),
     };
   } catch (err) {
