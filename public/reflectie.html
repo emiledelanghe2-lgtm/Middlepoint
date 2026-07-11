@@ -115,9 +115,9 @@ function renderForm() {
   app.innerHTML = `
    <span class="label">Gratis reflectie</span>
     <h1>Vertel wat er speelt</h1>
-    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:20px">
-      <p style="margin:0 0 8px;font-weight:600">Waarvoor dient dit?</p>
-      <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Twijfel je of iets een gesprek met de ander nodig heeft, of eerder iets is om zelf even bij stil te staan? Beantwoord onderstaande vragen en krijg een eerlijke reflectie: wat er mogelijk onder de oppervlakte zit, en of een gesprek zinvol is. Vinden we van wel? Dan helpen we je meteen verder om dat op te starten, met jouw beschrijving al ingevuld.</p>
+ <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:20px">
+      <p style="margin:0 0 8px;font-weight:600">Zeg ons wat er op je lever ligt</p>
+      <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Wij helpen je om het helder te krijgen, en kijken samen of dit iets is om zelf mee aan de slag te gaan, of dat een gesprek met de ander zinvol zou zijn. Vinden we van wel? Dan helpen we je meteen verder om dat op te starten, met jouw beschrijving al ingevuld.</p>
     </div>
     <p style="color:var(--ink-soft);margin-bottom:24px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
 
@@ -156,7 +156,7 @@ function renderForm() {
         <textarea class="q-textarea" id="qWat" required placeholder="Beschrijf zo concreet mogelijk wat er gebeurde."></textarea>
       </div>
 
-     <div class="q-block">
+    <div class="q-block">
         <label class="q-label">Wat voelde je op dat moment?</label>
         <div class="q-note" style="margin-bottom:8px">Je mag meerdere gevoelens aanvinken.</div>
         <div class="mc-group" id="gevoelGroup">
@@ -170,24 +170,26 @@ function renderForm() {
           <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit gevoel nog even toelichten? (optioneel)"></textarea>
         </div>
       </div>
+      </div>
 
       <div class="q-block">
         <label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment?</label>
         <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
       </div>
 
-      <div class="q-block">
+ <div class="q-block">
         <label class="q-label">Herken je dit gevoel van eerder, met deze persoon of met anderen?</label>
         <div class="mc-group">
           <label class="mc-option"><input type="radio" name="herkenning" value="ja" id="herkenningJa"><span>Ja</span></label>
-          <label class="mc-option"><input type="radio" name="herkenning" value="nee"><span>Nee</span></label>
+          <label class="mc-option"><input type="radio" name="herkenning" value="nee" id="herkenningNee"><span>Nee</span></label>
+          <label class="mc-option"><input type="radio" name="herkenning" value="weet niet" id="herkenningWeetNiet"><span>Ik weet het niet</span></label>
         </div>
         <div class="branch-box" id="herkenningBranch" style="display:none">
-          <textarea class="q-textarea" id="qHerkenningTekst" style="min-height:70px" placeholder="Waar herken je dit nog van?"></textarea>
+          <textarea class="q-textarea" id="qHerkenningTekst" style="min-height:70px" placeholder="Waar herken je dit nog van, of wat maakt dat je het niet zeker weet?"></textarea>
         </div>
       </div>
 
-    <div class="q-block">
+ <div class="q-block">
         <label class="q-label">Denk je dat dit puur hierover ging, of zit er meer onder?</label>
         <div class="scale-row" id="scaleRow">
           ${[1,2,3,4,5].map(n => `
@@ -200,6 +202,9 @@ function renderForm() {
         <div class="q-note" style="margin-top:8px">Bv. 1: dit ging echt enkel over dit ene moment. 5: dit voelt als het topje van de ijsberg, er speelt duidelijk meer.</div>
         <textarea class="q-textarea" id="qScaleTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
       </div>
+        <div class="q-note" style="margin-top:8px">Bv. 1: dit ging echt enkel over dit ene moment. 5: dit voelt als het topje van de ijsberg, er speelt duidelijk meer.</div>
+        <textarea class="q-textarea" id="qScaleTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
+      </div>
 
       <div class="q-block">
         <label class="q-label">Nog iets dat je kwijt wil? (optioneel)</label>
@@ -209,6 +214,13 @@ function renderForm() {
       <button type="submit" class="btn clay" style="width:100%;padding:14px">Bekijk mijn reflectie</button>
     </form>
   `;
+
+document.querySelectorAll('#gevoelGroup input[name=gevoel]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const anyChecked = document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked').length > 0;
+      document.getElementById('qGevoelTekstWrap').style.display = anyChecked ? 'block' : 'none';
+    });
+  });
 
   const categorySelect = document.getElementById('categorySelect');
   categorySelect.addEventListener('change', () => {
@@ -226,12 +238,9 @@ function renderForm() {
     });
   });
 
-  document.getElementById('herkenningJa').addEventListener('change', () => {
-    document.getElementById('herkenningBranch').style.display = 'block';
-  });
-  document.querySelectorAll('input[name=herkenning]').forEach(r => {
+document.querySelectorAll('input[name=herkenning]').forEach(r => {
     r.addEventListener('change', (e) => {
-      document.getElementById('herkenningBranch').style.display = e.target.value === 'ja' ? 'block' : 'none';
+      document.getElementById('herkenningBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
     });
   });
 
