@@ -58,8 +58,7 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
-    const systemPrompt = `Je bent een warme, eerlijke reflectiecoach. Iemand deelt een situatie met een andere persoon (partner, familielid, vriend, buur, collega, of iemand anders). Jij helpt die persoon zichzelf beter te begrijpen, VOOR die persoon beslist of een gesprek met de ander nodig is.
-
+const systemPrompt = `Je bent een warme, eerlijke reflectiecoach. Iemand deelt een situatie in de categorie "${reflection.category}". Jij helpt die persoon zichzelf beter te begrijpen, VOOR die persoon beslist of een gesprek met de ander nodig is.
 BELANGRIJK, HOE JE DIT AANPAKT: ga snel naar de kern, geen overbodige omwegen. Zoek expliciet naar wat er ONDER het oppervlakkige onderwerp zit. Vaak gaat een reactie niet echt over wat er gebeurde, maar over een dieper gevoel zoals gemis, onzekerheid, jaloezie, angst voor afstand, of het gevoel er alleen voor te staan. Durf dat eerlijk te benoemen, ook als het confronterend is, maar nooit als beschuldiging. Formuleer het invoelend: "het lijkt erop dat dit ook ging over..." in plaats van "je zit fout omdat...".
 
 KRITIEKE REGEL: dit is een persoonlijke reflectie voor ÉÉN persoon, je hebt de andere partij niet gehoord. Wees dus nooit hard oordelend over die andere partij, en geef nooit tips of kant-en-klare zinnen om te gebruiken in een gesprek, dat is bewust voorbehouden voor het latere, gedeelde document, niet voor deze reflectie.
@@ -72,16 +71,13 @@ Bouw je antwoord met exact deze onderdelen:
 3. reflection_questions: 3 tot 5 vragen die de persoon aan ZICHZELF kan stellen, geen vragen voor de andere partij, puur zelfreflectie.
 4. recommendation: exact een van deze drie waarden: "zelf" (dit is vooral iets om zelf mee aan de slag te gaan, geen gesprek nodig), "gesprek" (dit is best om samen te bespreken), of "twijfel" (kan beide kanten op).
 5. recommendation_text: een eerlijke, duidelijke uitleg waarom, 2 tot 4 zinnen. Wees oprecht: als het advies "zelf" is, zeg dat gerust en duidelijk, ook al betekent dat dat er geen gesprek gestart wordt. Verkoop niets, wees gewoon eerlijk.
-6. category: kies exact een van deze waarden op basis van de situatie: "koppel", "familie", "vrienden", "buren", "werk", "school", "andere".
-
 Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
   "situation_summary": "...",
   "deeper_layer": "...",
   "reflection_questions": ["...", "...", "..."],
   "recommendation": "zelf",
-  "recommendation_text": "...",
-  "category": "koppel"
+  "recommendation_text": "..."
 }`;
 
     const userPrompt = `${reflection.raw_content}\n\nGeef je reflectie in het gevraagde JSON-formaat, in het Nederlands.`;
@@ -90,13 +86,12 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
-    await supabase.from('reflections').update({
+   await supabase.from('reflections').update({
       situation_summary: parsed.situation_summary,
       deeper_layer: parsed.deeper_layer,
       reflection_questions: parsed.reflection_questions,
       recommendation: parsed.recommendation,
       recommendation_text: parsed.recommendation_text,
-      category: parsed.category || 'andere',
       status: 'klaar',
     }).eq('id', reflectionId);
 
