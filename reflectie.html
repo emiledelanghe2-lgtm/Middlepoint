@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gratis reflectie | Middlepoint</title>
+<meta name="description" content="Vertel wat er speelt en krijg meteen een eerlijke reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander zinvol is.">
+<link rel="canonical" href="https://middlepoint.net/reflectie.html">
+<link rel="stylesheet" href="/style.css">
+<style>
+.q-block{ margin-bottom:26px; }
+.q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
+.mc-group{ display:flex; flex-direction:column; gap:8px; }
+.mc-option{ display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:8px; cursor:pointer; font-size:.92rem; background:var(--white); }
+.mc-option input{ margin-top:3px; }
+.other-input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-family:'Karla',sans-serif; margin-top:6px; }
+.scale-row{ display:flex; gap:8px; }
+.scale-option{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border:1px solid var(--line); border-radius:8px; cursor:pointer; background:var(--white); }
+.scale-labels{ display:flex; justify-content:space-between; font-size:.78rem; color:var(--ink-soft); margin-top:8px; font-weight:600; }
+.branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
+.q-textarea{ width:100%; min-height:120px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
+.recommendation-badge{ display:inline-block; padding:8px 18px; border-radius:999px; font-family:'IBM Plex Mono',monospace; font-size:.85rem; font-weight:700; margin-bottom:16px; }
+.recommendation-badge.zelf{ background:#EFF4ED; color:var(--sage); }
+.recommendation-badge.gesprek{ background:var(--clay-soft); color:var(--clay); }
+.recommendation-badge.twijfel{ background:#F1EADC; color:var(--navy); }
+</style>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Hoofdnavigatie">
+  <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/">Home</a>
+    <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html">Prijzen</a>
+    <a href="/testimonials.html">Getuigenissen</a>
+    <a href="/login.html">Mijn gesprekken</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+
+<div class="app-wrap" id="app">
+  <div class="skeleton skeleton-line short"></div>
+  <div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div>
+  <div class="skeleton skeleton-block"></div>
+</div>
+
+<script>
+const existingToken = new URLSearchParams(window.location.search).get('token');
+const app = document.getElementById('app');
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+const RELATION_OPTIONS = [
+  { value: 'partner', label: 'Mijn partner' },
+  { value: 'familielid', label: 'Een familielid' },
+  { value: 'vriend', label: 'Een vriend of vriendin' },
+  { value: 'buur', label: 'Een buur' },
+  { value: 'collega', label: 'Een collega' },
+  { value: 'iemand op school', label: 'Iemand op school' },
+];
+
+const GEVOEL_OPTIONS = [
+  { value: 'boos', label: 'Boos' },
+  { value: 'verdrietig', label: 'Verdrietig' },
+  { value: 'jaloers', label: 'Jaloers' },
+  { value: 'onzeker', label: 'Onzeker' },
+  { value: 'gemist', label: 'Gemist of eenzaam' },
+  { value: 'gefrustreerd', label: 'Gefrustreerd' },
+  { value: 'teleurgesteld', label: 'Teleurgesteld' },
+  { value: 'neutraal', label: 'Neutraal, geen uitgesproken gevoel' },
+];
+
+function renderForm() {
+  app.innerHTML = `
+    <span class="label">Gratis reflectie</span>
+    <h1>Vertel wat er speelt</h1>
+    <p style="color:var(--ink-soft);margin-bottom:24px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Je krijgt meteen een persoonlijke reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander zinvol is. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
+
+    <div id="error" class="error-box" style="display:none"></div>
+
+    <form id="reflectionForm">
+      <div class="field">
+        <label for="rName">Jouw naam</label>
+        <input type="text" id="rName" required placeholder="bv. Sarah">
+      </div>
+      <div class="field">
+        <label for="rEmail">Jouw e-mailadres</label>
+        <input type="email" id="rEmail" required placeholder="jij@email.be">
+        <div class="help">Zodat je je reflectie kan terugvinden, en om je verder te helpen als je later een gesprek wil starten.</div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Met wie heeft dit te maken?</label>
+        <div class="mc-group" id="relationGroup">
+          ${RELATION_OPTIONS.map(o => `
+            <label class="mc-option">
+              <input type="radio" name="relation" value="${o.value}">
+              <span>${o.label}</span>
+            </label>`).join('')}
+          <label class="mc-option">
+            <input type="radio" name="relation" value="__andere__" id="relationOtherToggle">
+            <span>Iemand anders, ik leg het zelf uit</span>
+          </label>
+          <input type="text" id="relationOtherInput" class="other-input" style="display:none" placeholder="Vul hier aan">
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Wat gebeurde er precies?</label>
+        <textarea class="q-textarea" id="qWat" required placeholder="Beschrijf zo concreet mogelijk wat er gebeurde."></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Wat voelde je op dat moment?</label>
+        <div class="mc-group" id="gevoelGroup">
+          ${GEVOEL_OPTIONS.map(o => `
+            <label class="mc-option">
+              <input type="checkbox" name="gevoel" value="${o.value}">
+              <span>${o.label}</span>
+            </label>`).join('')}
+        </div>
+        <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit nog aanvullen? (optioneel)"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Wat denk je dat je eigenlijk nodig had op dat moment?</label>
+        <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Herken je dit gevoel van eerder, met deze persoon of met anderen?</label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="herkenning" value="ja" id="herkenningJa"><span>Ja</span></label>
+          <label class="mc-option"><input type="radio" name="herkenning" value="nee"><span>Nee</span></label>
+        </div>
+        <div class="branch-box" id="herkenningBranch" style="display:none">
+          <textarea class="q-textarea" id="qHerkenningTekst" style="min-height:70px" placeholder="Waar herken je dit nog van?"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Denk je dat dit puur hierover ging, of zit er meer onder?</label>
+        <div class="scale-row" id="scaleRow">
+          ${[1,2,3,4,5].map(n => `
+            <label class="scale-option">
+              <input type="radio" name="scale" value="${n}">
+              <span>${n}</span>
+            </label>`).join('')}
+        </div>
+        <div class="scale-labels"><span>Puur hierover</span><span>Er zit veel meer onder</span></div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Nog iets dat je kwijt wil? (optioneel)</label>
+        <textarea class="q-textarea" id="qExtra" style="min-height:70px"></textarea>
+      </div>
+
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Bekijk mijn reflectie</button>
+    </form>
+  `;
+
+  document.getElementById('relationOtherToggle').addEventListener('change', (e) => {
+    document.getElementById('relationOtherInput').style.display = e.target.checked ? 'block' : 'none';
+  });
+  document.getElementById('herkenningJa').addEventListener('change', () => {
+    document.getElementById('herkenningBranch').style.display = 'block';
+  });
+  document.querySelectorAll('input[name=herkenning]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('herkenningBranch').style.display = e.target.value === 'ja' ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('reflectionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+
+    const name = document.getElementById('rName').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    let relation = (document.querySelector('input[name=relation]:checked') || {}).value;
+    if (relation === '__andere__') relation = document.getElementById('relationOtherInput').value.trim();
+    const gevoelen = Array.from(document.querySelectorAll('input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
+    const scaleChecked = document.querySelector('input[name=scale]:checked');
+    const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
+
+    if (!name || !email || !relation) {
+      errorBox.textContent = 'Vul je naam, e-mailadres en met wie dit te maken heeft in.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    const lines = [];
+    lines.push(`Vraag: Met wie heeft dit te maken?\nAntwoord: ${relation}`);
+    lines.push(`Vraag: Wat gebeurde er precies?\nAntwoord: ${document.getElementById('qWat').value.trim()}`);
+    if (gevoelen.length) lines.push(`Vraag: Wat voelde je op dat moment?\nAntwoord: ${gevoelen.join(', ')}`);
+    const gevoelTekst = document.getElementById('qGevoelTekst').value.trim();
+    if (gevoelTekst) lines.push(`Vraag: Aanvulling bij het gevoel\nAntwoord: ${gevoelTekst}`);
+    lines.push(`Vraag: Wat denk je dat je eigenlijk nodig had op dat moment?\nAntwoord: ${document.getElementById('qNodig').value.trim()}`);
+    if (herkenning) {
+      const herkenningTekst = document.getElementById('qHerkenningTekst').value.trim();
+      lines.push(`Vraag: Herken je dit van eerder?\nAntwoord: ${herkenning}${herkenningTekst ? ', ' + herkenningTekst : ''}`);
+    }
+    if (scaleChecked) {
+      const val = parseInt(scaleChecked.value, 10);
+      const answer = val <= 2 ? 'Dichter bij: puur hierover' : val >= 4 ? 'Dichter bij: er zit veel meer onder' : 'Ergens in het midden';
+      lines.push(`Vraag: Ging dit puur hierover, of zit er meer onder?\nAntwoord: ${answer}`);
+    }
+    const extra = document.getElementById('qExtra').value.trim();
+    if (extra) lines.push(`Vraag: Nog iets om toe te voegen?\nAntwoord: ${extra}`);
+
+    const content = lines.join('\n\n');
+
+    app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
+
+    try {
+      const res = await fetch('/.netlify/functions/create-reflection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, relationType: relation, content }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.history.replaceState({}, '', `/reflectie.html?token=${data.token}`);
+      pollResult(data.token);
+    } catch (err) {
+      renderForm();
+      document.getElementById('error').textContent = err.message;
+      document.getElementById('error').style.display = 'block';
+    }
+  });
+}
+
+async function pollResult(token) {
+  try {
+    const res = await fetch(`/.netlify/functions/get-reflection?token=${token}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    const r = data.reflection;
+
+    if (r.status === 'bezig') {
+      app.innerHTML = `<div class="status-box">Je reflectie wordt opgesteld, dit duurt meestal maar een halve minuut...</div>`;
+      setTimeout(() => pollResult(token), 3000);
+      return;
+    }
+    if (r.status === 'veiligheid_gestopt') {
+      app.innerHTML = `
+        <span class="label">Belangrijk</span>
+        <h1>Dit overstijgt wat wij kunnen helpen oplossen</h1>
+        <p style="color:var(--ink-soft)">Op basis van wat er geschreven is, denken we dat professionele of gespecialiseerde hulp nu belangrijker is dan een reflectie. Je staat er niet alleen voor.</p>
+        <div class="status-box" style="text-align:left">
+          <p><strong>Zelfmoordlijn (BE):</strong> 1813, <a href="https://www.zelfmoord1813.be" target="_blank">zelfmoord1813.be</a></p>
+          <p><strong>1712, Geweld, Misbruik, Kindermishandeling (BE):</strong> 1712, <a href="https://www.1712.be" target="_blank">1712.be</a></p>
+          <p><strong>Internationaal overzicht:</strong> <a href="https://findahelpline.com" target="_blank">findahelpline.com</a></p>
+        </div>`;
+      return;
+    }
+    if (r.status === 'mislukt') {
+      app.innerHTML = `<div class="error-box">Er ging iets mis bij het opstellen van je reflectie. Probeer het gerust opnieuw.</div>
+        <div style="margin-top:16px"><a href="/reflectie.html" class="btn outline">Opnieuw proberen</a></div>`;
+      return;
+    }
+
+    const badgeClass = r.recommendation === 'gesprek' ? 'gesprek' : r.recommendation === 'twijfel' ? 'twijfel' : 'zelf';
+    const badgeText = r.recommendation === 'gesprek' ? 'Waarschijnlijk best bespreken' : r.recommendation === 'twijfel' ? 'Kan beide kanten op' : 'Vooral iets voor jezelf';
+
+    app.innerHTML = `
+      <span class="label">Jouw reflectie</span>
+      <h1>Wat we zien</h1>
+
+      <div class="doc-section">
+        <span class="label">Situatie</span>
+        <h3>Wat er speelde</h3>
+        <p>${esc(r.situation_summary)}</p>
+      </div>
+
+      <div class="doc-section">
+        <span class="label">Onder de oppervlakte</span>
+        <h3>Wat er waarschijnlijk echt speelt</h3>
+        <p>${esc(r.deeper_layer)}</p>
+      </div>
+
+      <div class="doc-section">
+        <span class="label">Voor jezelf</span>
+        <h3>Vragen om over na te denken</h3>
+        <ul class="tip-list">${(r.reflection_questions || []).map(q => `<li>${esc(q)}</li>`).join('')}</ul>
+      </div>
+
+      <div class="doc-section" style="border-bottom:none;text-align:center">
+        <span class="recommendation-badge ${badgeClass}">${badgeText}</span>
+        <p style="color:var(--ink-soft);max-width:520px;margin:0 auto 24px">${esc(r.recommendation_text)}</p>
+        <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:14px 28px">Start een gesprek met ${esc(r.name || 'de ander')}</a>
+        <p style="margin-top:12px;font-size:.85rem"><a href="/reflectie.html">Nog een reflectie maken</a></p>
+      </div>
+    `;
+  } catch (err) {
+    app.innerHTML = `<div class="error-box">${err.message}</div>`;
+  }
+}
+
+if (existingToken) {
+  pollResult(existingToken);
+} else {
+  renderForm();
+}
+</script>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">De plek om elkaar terug te vinden.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Vragen? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/login.html">Mijn gesprekken</a>
+    &nbsp;·&nbsp; <a href="/privacy.html">Privacybeleid</a>
+  </p>
+  <a href="/faq.html" class="hint-chip" style="text-decoration:none">Veelgestelde vragen</a>
+</footer>
+</body>
+</html>
