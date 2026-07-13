@@ -32,6 +32,11 @@
 .recommendation-badge.gesprek{ background:var(--clay); color:#ffffff; }
 .recommendation-badge.twijfel{ background:var(--navy); color:#ffffff; }
 .doc-section{ margin-bottom:20px; padding-bottom:20px; }
+@media print {
+  .nav-bar, .no-print, .footer { display: none !important; }
+  body { background: white; }
+}
+</style>
 </style>
 </head>
 <body>
@@ -82,6 +87,18 @@ const app = document.getElementById('app');
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function downloadReflectionPDF() { window.print(); }
+function shareReflectionWhatsApp() {
+  const link = window.location.href;
+  const text = `Ik maakte een persoonlijke reflectie via Middlepoint, misschien nuttig voor jou ook: ${link}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+function shareReflectionEmail() {
+  const link = window.location.href;
+  const subject = encodeURIComponent('Mijn Middlepoint reflectie');
+  const body = encodeURIComponent(`Hoi,\n\nIk maakte een persoonlijke reflectie via Middlepoint.\n\nJe vindt ze hier: ${link}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
 const CATEGORY_OPTIONS = [
   { value: 'koppel', label: 'Koppel / relatie' },
   { value: 'familie', label: 'Familie' },
@@ -93,7 +110,7 @@ const CATEGORY_OPTIONS = [
 
 const CATEGORY_OTHER_LABEL = {
   koppel: 'je partner',
-  familie: 'dit familielid',
+familie: 'je familielid',
   vrienden: 'deze vriend of vriendin',
   buren: 'deze buur',
   werk: 'deze collega',
@@ -106,7 +123,7 @@ const GEVOEL_OPTIONS = [
   { value: 'verdrietig', label: 'Verdrietig' },
   { value: 'jaloers', label: 'Jaloers' },
   { value: 'onzeker', label: 'Onzeker' },
-  { value: 'gemist', label: 'Gemist of eenzaam' },
+{ value: 'gemis', label: 'Gemis of eenzaamheid' },
   { value: 'gefrustreerd', label: 'Gefrustreerd' },
   { value: 'teleurgesteld', label: 'Teleurgesteld' },
   { value: 'neutraal', label: 'Neutraal, geen uitgesproken gevoel' },
@@ -152,9 +169,10 @@ function renderForm() {
         <input type="text" id="qSchoolAge" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px" placeholder="bv. 9 jaar, 4de leerjaar">
       </div>
 
-      <div class="q-block">
+<div class="q-block">
         <label class="q-label">Wat gebeurde er precies?</label>
-        <textarea class="q-textarea" id="qWat" required placeholder="Beschrijf zo concreet mogelijk wat er gebeurde."></textarea>
+        <div class="q-note" style="margin-bottom:8px">Leg het gerust uitgebreid uit, hoe meer context, hoe beter we je kunnen helpen.</div>
+        <textarea class="q-textarea" id="qWat" required placeholder="Beschrijf zo concreet mogelijk wat er gebeurde: wat werd er gezegd of gedaan, en hoe verliep het?"></textarea>
       </div>
 
       <div class="q-block">
@@ -176,9 +194,8 @@ function renderForm() {
         <label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment?</label>
         <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
       </div>
-
-      <div class="q-block">
-        <label class="q-label">Herken je dit gevoel van eerder, met deze persoon of met anderen?</label>
+<div class="q-block">
+        <label class="q-label">Komt dit gevoel je bekend voor, ook in andere situaties of bij andere mensen?</label>
         <div class="mc-group">
           <label class="mc-option"><input type="radio" name="herkenning" value="ja" id="herkenningJa"><span>Ja</span></label>
           <label class="mc-option"><input type="radio" name="herkenning" value="nee" id="herkenningNee"><span>Nee</span></label>
@@ -343,9 +360,15 @@ async function pollResult(token) {
     const badgeClass = r.recommendation === 'gesprek' ? 'gesprek' : r.recommendation === 'twijfel' ? 'twijfel' : 'zelf';
     const badgeText = r.recommendation === 'gesprek' ? 'Waarschijnlijk best bespreken' : r.recommendation === 'twijfel' ? 'Kan beide kanten op' : 'Vooral iets voor jezelf';
 
-    app.innerHTML = `
+   app.innerHTML = `
       <span class="label">Jouw reflectie</span>
       <h1>Wat we zien</h1>
+
+      <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+        <button onclick="downloadReflectionPDF()" class="btn outline" style="padding:9px 16px;font-size:.85rem">⬇ Download als PDF</button>
+        <button onclick="shareReflectionEmail()" class="btn outline" style="padding:9px 16px;font-size:.85rem">✉ Verstuur via mail</button>
+        <button onclick="shareReflectionWhatsApp()" class="btn whatsapp" style="padding:9px 16px;font-size:.85rem">Verstuur via WhatsApp</button>
+      </div>
 
       <div class="doc-section">
         <span class="label">Situatie</span>
