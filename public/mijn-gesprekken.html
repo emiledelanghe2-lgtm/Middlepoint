@@ -198,14 +198,15 @@ async function load() {
       return;
     }
 
-    const isPaidPlan = data.plan && data.plan !== 'gratis';
+ const isPaidPlan = data.plan && data.plan !== 'gratis';
+    const hasReflections = data.reflections && data.reflections.length > 0;
 
-    if (data.sessions.length === 0) {
+    if (data.sessions.length === 0 && !hasReflections) {
       app.innerHTML = `
         <span class="label">Mijn gesprekken</span>
-        <h1>Geen gesprekken gevonden</h1>
-        <p style="color:var(--ink-soft)">We vonden geen gesprekken gekoppeld aan ${data.email}.</p>
-        <a href="/new.html" class="btn clay">Start een nieuw gesprek</a>`;
+        <h1>Nog niets gevonden</h1>
+        <p style="color:var(--ink-soft)">We vonden geen gesprekken of reflecties gekoppeld aan ${data.email}.</p>
+        <a href="/reflectie.html" class="btn clay">Start een gratis reflectie</a>`;
       return;
     }
 
@@ -232,9 +233,12 @@ async function load() {
         <p style="margin:0;font-size:.85rem">Al je documenten blijven hier altijd terug te vinden, ook je opvolgdocumenten en je eigen ingevulde antwoorden. Zodra jullie document klaar is, kan je hieronder op elk moment een opvolging starten, je hoeft daar niet op te wachten.</p>
       </div>` : ''}
 
-    <div id="sessionsList"></div>
+   ${data.sessions.length ? `<div id="sessionsList"></div>` : `
+      <div class="card" style="margin-bottom:24px">
+        <p style="margin:0;color:var(--ink-soft)">Nog geen betaald gesprek gestart. Je reflecties vind je hieronder.</p>
+      </div>`}
 
-      ${data.reflections && data.reflections.length ? `
+      ${hasReflections ? `
       <div style="margin-top:40px">
         <span class="label" style="display:block;margin-bottom:16px">Mijn reflecties</span>
         <div id="reflectionsList"></div>
@@ -280,9 +284,8 @@ async function load() {
         btn.textContent = 'Bevestigen';
       }
     });
-
-    const list = document.getElementById('sessionsList');
-    data.sessions.forEach((s, idx) => {
+const list = document.getElementById('sessionsList');
+    if (list) data.sessions.forEach((s, idx) => {
       const card = document.createElement('div');
       card.className = 'session-card';
 
