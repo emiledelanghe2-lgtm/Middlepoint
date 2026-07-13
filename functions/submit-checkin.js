@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+const { emailButtonHtml } = require('./_email-button');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -59,9 +60,7 @@ async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, acc
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p><strong>${fromName}</strong> heeft zojuist de opvolging ingevuld bij Middlepoint.</p>
             <p>Zodra jij ook je opvolging invult, stellen we een bijgewerkte versie van jullie document op.</p>
-            <p style="margin:28px 0">
-              <a href="${siteUrl}${accessLink}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Vul mijn opvolging in</a>
-            </p>
+            ${emailButtonHtml(`${siteUrl}${accessLink}`, 'Vul mijn opvolging in')}
           </div>`,
       }),
     });
@@ -91,8 +90,6 @@ exports.handler = async (event) => {
     }
     const round = parseInt(match[1], 10);
 
-    // NIEUW: zelfde veiligheidscheck als bij het originele verhaal, meteen bij
-    // deze individuele indiening.
     const safety = await checkSafety(content);
     if (safety.stop) {
       await supabase.from('entries').insert({
