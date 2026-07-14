@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+const { emailButtonHtml } = require('./_email-button');
 
 async function sendReminderEmail(toEmail, toName, link) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
@@ -18,9 +19,7 @@ async function sendReminderEmail(toEmail, toName, link) {
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Het is nu ongeveer een week geleden dat jullie document klaar was. Soms helpt het om even terug te blikken: is er al iets veranderd, en waar ligt nog werk?</p>
             <p>Je kan jullie opvolgdocument invullen wanneer het jou past, samen met de andere deelnemer.</p>
-            <p style="margin:28px 0">
-              <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Vul jullie opvolging in</a>
-            </p>
+            ${emailButtonHtml(link, 'Vul jullie opvolging in')}
             <p style="color:#888;font-size:.85rem">Dit is een eenmalige herinnering. Je kan de opvolging ook altijd zelf starten via Mijn gesprekken, op eender welk moment.</p>
           </div>`,
       }),
