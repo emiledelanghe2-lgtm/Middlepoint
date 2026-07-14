@@ -115,7 +115,10 @@
 <section class="section" style="max-width:680px;margin:0 auto">
   <span class="label" style="display:block;margin-bottom:10px">Waarom Middlepoint bestaat</span>
   <h2 style="margin-bottom:20px">We proberen elkaar te begrijpen</h2>
-  <p style="color:var(--ink-soft);font-size:1.02rem;margin-bottom:18px">We proberen elkaar te begrijpen, maar dat is niet altijd even makkelijk. Vooral wanneer het erop aankomt om de ander écht te snappen, wat er speelt, wat er voelt, glipt er vaak iets weg. Niet omdat het ons niet kan schelen, maar omdat we zelden de tijd nemen om er samen bij stil te staan.</p>
+<p style="color:var(--ink-soft);font-size:1.02rem;margin-bottom:18px">We proberen elkaar te begrijpen, maar dat is niet altijd even makkelijk. Vooral wanneer het erop aankomt om de ander écht te snappen, wat er speelt, wat er voelt, glipt er vaak iets weg. Niet omdat het ons niet kan schelen, maar omdat we zelden de tijd nemen om er samen bij stil te staan.</p>
+  <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-bottom:18px">
+    <p style="margin:0;font-size:.92rem"><strong>Onderzoek van de University of Chicago</strong> toonde aan dat koppels en goede vrienden elkaar in gesprekken niet beter begrepen dan volslagen vreemden, ook al waren ze er zelf van overtuigd dat ze wél begrepen werden.</p>
+  </div>
   <p style="color:var(--ink-soft);font-size:1.02rem;margin-bottom:18px">Middlepoint geeft die tijd terug. Begin met een gratis, persoonlijke reflectie, en ontdek eerst voor jezelf wat er speelt. Blijkt een gesprek zinvol? Dan vertelt elk apart, in alle rust, zijn kant van het verhaal, en leggen wij beide kanten naast elkaar in een helder, eerlijk document.</p>
   <p style="color:var(--ink-soft);font-size:1.02rem">Daarbij kiezen we altijd voor eerlijkheid boven een vals gelijk. We behandelen beide kanten met evenveel respect, maar doen niet alsof iedereen altijd evenveel gelijk heeft. Niet om gelijk te krijgen, maar om elkaar weer te begrijpen.</p>
 </section>
@@ -250,6 +253,14 @@
   </div>
 </section>
 
+<section class="section" id="testimonialsPreview" style="display:none">
+  <div class="section-head">
+    <span class="label">Getuigenissen</span>
+    <h2>Wat anderen schreven</h2>
+  </div>
+  <div class="grid-3" id="testimonialsPreviewGrid"></div>
+</section>
+
 <section class="section" style="text-align:center">
   <h2 style="font-size:1.6rem;margin-bottom:12px">Klaar om elkaar weer te begrijpen?</h2>
   <p style="color:var(--ink-soft);margin-bottom:8px">Start gratis, in enkele minuten, zonder verplichtingen. Jouw antwoorden blijven altijd privé.</p>
@@ -282,6 +293,22 @@
       if (panel) panel.classList.add('active');
     });
   });
+
+  (async function loadHomepageTestimonials() {
+    try {
+      const res = await fetch('/.netlify/functions/get-testimonials');
+      const data = await res.json();
+      if (data.testimonials && data.testimonials.length > 0) {
+        const top = data.testimonials.slice(0, 3);
+        document.getElementById('testimonialsPreviewGrid').innerHTML = top.map(t => `
+          <div class="card">
+            <p style="font-family:'Fraunces',serif;font-style:italic;margin:0 0 12px">"${t.content}"</p>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)">${t.is_anonymous || !t.display_name ? 'Anoniem' : t.display_name}</div>
+          </div>`).join('');
+        document.getElementById('testimonialsPreview').style.display = 'block';
+      }
+    } catch (e) { /* stil falen, sectie blijft gewoon verborgen */ }
+  })();
 </script>
 </body>
 </html>
