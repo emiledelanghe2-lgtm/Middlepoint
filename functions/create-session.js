@@ -156,8 +156,9 @@ exports.handler = async (event) => {
     const now = new Date();
     if (customer) {
       const samesPlan = customer.plan === sessionPlan;
-      const updates = {
+     const updates = {
         plan: sessionPlan,
+        plan_status: 'active',
         sessions_used_this_period: sessionPlan === 'los' ? 1 : (samesPlan ? (customer.sessions_used_this_period || 0) + 1 : 1),
         updated_at: now.toISOString(),
       };
@@ -175,6 +176,7 @@ exports.handler = async (event) => {
       await supabase.from('customers').insert({
         email: normalizedEmail,
         plan: sessionPlan,
+        plan_status: 'active',
         sessions_used_this_period: 1,
         period_start: now.toISOString(),
         period_end: periodEnd.toISOString(),
