@@ -1156,7 +1156,10 @@ function renderMyAnswersView(participant, myEntries) {
     app.innerHTML = `<span class="label">Mijn antwoorden</span>
       <h1>Nog niets ingevuld</h1>
       <p style="color:var(--ink-soft)">Je hebt voor dit gesprek nog geen antwoorden ingediend.</p>
-      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+        <a href="?token=${token}" class="btn clay">Vul mijn document in</a>
+        <a href="${backLink}" class="btn outline">${backLabel}</a>
+      </div>`;
     return;
   }
   const sectionsHTML = sorted.map(entry => {
