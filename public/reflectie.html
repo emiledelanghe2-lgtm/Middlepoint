@@ -137,23 +137,21 @@ function renderForm() {
       <p style="margin:0 0 8px;font-weight:600">Zeg ons wat er op je lever ligt</p>
       <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Wij helpen je om het helder te krijgen, en kijken samen of dit iets is om zelf mee aan de slag te gaan, of dat een gesprek met de ander zinvol zou zijn. Vinden we van wel? Dan helpen we je meteen verder om dat op te starten, met jouw beschrijving al ingevuld.</p>
     </div>
-    <p style="color:var(--ink-soft);margin-bottom:24px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
-
+<p style="color:var(--ink-soft);margin-bottom:8px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
+    <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:24px"><span style="color:var(--clay)">*</span> = verplichte vraag</p>
     <div id="error" class="error-box" style="display:none"></div>
-
-    <form id="reflectionForm">
-      <div class="field">
-        <label for="rName">Jouw naam</label>
+<div class="field">
+        <label for="rName">Jouw naam <span style="color:var(--clay)">*</span></label>
         <input type="text" id="rName" required placeholder="bv. Sarah">
       </div>
       <div class="field">
-        <label for="rEmail">Jouw e-mailadres</label>
+        <label for="rEmail">Jouw e-mailadres <span style="color:var(--clay)">*</span></label>
         <input type="email" id="rEmail" required placeholder="jij@email.be">
         <div class="help">Zodat je je reflectie kan terugvinden, en om je verder te helpen als je later een gesprek wil starten.</div>
       </div>
 
       <div class="q-block">
-        <label class="q-label">Waar heeft dit betrekking op?</label>
+        <label class="q-label">Waar heeft dit betrekking op? <span style="color:var(--clay)">*</span></label>
         <select id="categorySelect" required style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px;background:var(--white)">
           <option value="">Kies een categorie...</option>
           ${CATEGORY_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
@@ -170,7 +168,7 @@ function renderForm() {
       </div>
 
 <div class="q-block">
-        <label class="q-label">Wat gebeurde er precies?</label>
+        <label class="q-label">Wat gebeurde er precies? <span style="color:var(--clay)">*</span></label>
         <div class="q-note" style="margin-bottom:8px">Leg het gerust uitgebreid uit, hoe meer context, hoe beter we je kunnen helpen.</div>
         <textarea class="q-textarea" id="qWat" required placeholder="Beschrijf zo concreet mogelijk wat er gebeurde: wat werd er gezegd of gedaan, en hoe verliep het?"></textarea>
       </div>
@@ -191,7 +189,7 @@ function renderForm() {
       </div>
 
       <div class="q-block">
-        <label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment?</label>
+<label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment? *</label>
         <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
       </div>
 <div class="q-block">
@@ -242,7 +240,7 @@ function renderForm() {
     document.getElementById('categoryOtherField').style.display = val === '__andere__' ? 'block' : 'none';
     document.getElementById('schoolAgeBlock').style.display = val === 'school' ? 'block' : 'none';
     const label = CATEGORY_OTHER_LABEL[val] || 'de ander';
-    document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment?`;
+document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment? *`;
   });
 
   document.querySelectorAll('input[name=herkenning]').forEach(r => {
