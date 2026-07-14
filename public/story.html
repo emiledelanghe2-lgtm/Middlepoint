@@ -754,7 +754,7 @@ function renderInput(q) {
 
 function renderQuestion(q) {
   return `<div class="q-block" data-qid="${esc(q.id)}" data-required="${q.optional ? 'false' : 'true'}">
-    <label class="q-label">${esc(q.label)}</label>
+    <label class="q-label">${esc(q.label)}${q.optional ? '' : ' <span style="color:var(--clay)">*</span>'}</label>
     ${renderInput(q)}
   </div>`;
 }
@@ -1230,8 +1230,8 @@ ${data.otherEntriesCount === 0 ? categoryEditorHTML(session.category) : `
       <p style="margin:0;font-size:.9rem">Je gebruikt de gratis versie, met een beperktere vragenlijst. Voor de volledige, diepgaande vragenlijst en het complete document, bekijk onze <a href="/pricing.html" style="font-weight:600">prijzen</a>.</p>
     </div>` : ''}
 
-    <p style="color:var(--ink-soft)">Beantwoord onderstaande vragen zo eerlijk mogelijk. Je kan gerust tussendoor pauzeren en later verder gaan. Na het definitief indienen kan je je antwoorden niet meer aanpassen.</p>
-
+<p style="color:var(--ink-soft);margin-bottom:8px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Je kan gerust tussendoor pauzeren en later verder gaan. Na het definitief indienen kan je je antwoorden niet meer aanpassen.</p>
+    <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:16px"><span style="color:var(--clay)">*</span> = verplichte vraag</p>
     <div id="error" class="error-box" style="display:none"></div>
 
     <form id="storyForm">
@@ -1281,6 +1281,16 @@ const draftRaw = loadDraft('story_answers');
           kernTextarea.dispatchEvent(new Event('input', { bubbles: true }));
         }
         localStorage.removeItem(prefillKey);
+      }
+      const confidentialKey = `mp_prefill_confidential_${token}`;
+      const confidentialText = localStorage.getItem(confidentialKey);
+      if (confidentialText) {
+        const confTextarea = surveyBody.querySelector('textarea.q-textarea[data-qid="vertrouwelijke_context"]');
+        if (confTextarea) {
+          confTextarea.value = confidentialText;
+          confTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        localStorage.removeItem(confidentialKey);
       }
     } catch (e) {}
   }
