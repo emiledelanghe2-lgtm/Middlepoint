@@ -104,8 +104,13 @@
 <div class="app-wrap">
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
   <h1>Start een nieuw gesprek</h1>
-  <p style="color:var(--ink-soft);margin-bottom:24px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
-
+<p style="color:var(--ink-soft);margin-bottom:8px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
+  <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:16px"><span style="color:var(--clay)">*</span> = verplicht veld</p>
+  <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+    <a href="#stepPlan" class="hint-chip" style="text-decoration:none">1. Plan</a>
+    <a href="#stepGegevens" class="hint-chip" style="text-decoration:none">2. Gegevens</a>
+    <a href="#stepDeelnemers" class="hint-chip" style="text-decoration:none">3. Deelnemers</a>
+  </div>
   <div id="reflectionNotice" class="reflection-notice" style="display:none">
     <p style="margin:0">Je komt van je gratis reflectie. Jouw naam, situatie en categorie zijn al ingevuld, en straks vind je je eigen beschrijving alvast terug in de vragenlijst. Omdat je nu een echt, gedeeld gesprek start, gaat dit als een volledig, betalend gesprek verder.</p>
   </div>
@@ -132,7 +137,7 @@
 
   <form id="newSessionForm">
 
-    <div class="form-section">
+   <div class="form-section" id="stepPlan">
       <span class="form-section-title">1. Kies je plan</span>
       <div class="plan-grid" id="planSelector"></div>
       <div id="planDetail" style="display:none"></div>
@@ -145,10 +150,10 @@
       </div>
     </div>
 
-    <div class="form-section">
+<div class="form-section" id="stepGegevens">
       <span class="form-section-title">2. Jouw gegevens</span>
       <div class="field">
-        <label for="category">Soort situatie</label>
+        <label for="category">Soort situatie <span style="color:var(--clay)">*</span></label>
         <select id="category" required>
           <option value="koppel">Koppel / relatie</option>
           <option value="familie">Familie</option>
@@ -164,11 +169,11 @@
         <input type="text" id="categoryOther" placeholder="bv. een conflict met mijn huisbaas">
       </div>
       <div class="field">
-        <label for="organizerName">Jouw naam</label>
+        <label for="organizerName">Jouw naam <span style="color:var(--clay)">*</span></label>
         <input type="text" id="organizerName" required placeholder="bv. Sarah">
       </div>
       <div class="field">
-        <label for="organizerEmail">Jouw e-mailadres</label>
+        <label for="organizerEmail">Jouw e-mailadres <span style="color:var(--clay)">*</span></label>
         <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
         <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
       </div>
@@ -204,7 +209,7 @@
       </div>
     </div>
 
-    <div class="form-section">
+<div class="form-section" id="stepDeelnemers">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
       <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:10px">Vul naam en e-mailadres in voor elke deelnemer.</p>
       <ul style="font-size:.85rem;color:var(--ink-soft);margin:0 0 16px;padding-left:18px;line-height:1.7">
@@ -234,7 +239,11 @@
 
   <div id="result" style="display:none;margin-top:32px">
     <a href="/" class="btn ghost" style="margin-bottom:12px;display:inline-block">← Terug naar startpagina</a>
-    <h3>Klaar! Hieronder jullie links</h3>
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:18px">
+      <p style="margin:0 0 8px;font-weight:600">Wat gebeurt er nu?</p>
+      <p style="margin:0;color:var(--ink-soft);font-size:.9rem">Iedereen vult apart, op zijn eigen moment, de vragenlijst in via de link hieronder. Zodra iedereen klaar is, stellen we automatisch jullie document op, en krijgt iedereen daar een mail over. Je hoeft dus niet te wachten of terug te komen, je vindt dit gesprek ook altijd terug via <a href="/login.html" style="font-weight:600">Mijn gesprekken</a>.</p>
+    </div>
+    <h3>Hieronder jullie persoonlijke links</h3>
     <div id="linksList"></div>
     <div id="inviteStatus" style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)"></div>
     <div id="followupHint" style="margin-top:20px;padding:16px;background:#EFF4ED;border-radius:var(--radius);font-size:.88rem;display:none">
@@ -256,7 +265,8 @@ let selectedPlanId = 'los';
   let activeSubscription = null;
 let organizerEmailIsNew = true;
 let reflectionPrefillText = '';
-const planSelector = document.getElementById('planSelector');
+let reflectionConfidentialPrefillText = '';
+  const planSelector = document.getElementById('planSelector');
 
 const planFeatures = {
   gratis: {
@@ -369,10 +379,11 @@ async function checkEmail(email) {
       const periodEnd = data.periodEnd
         ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
         : null;
-      document.getElementById('customerInfoText').innerHTML = `
+document.getElementById('customerInfoText').innerHTML = `
         <strong>Actief plan: ${data.planLabel}</strong><br>
         Gesprekken resterend: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
-        ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}`;
+        ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}
+        <br><span style="color:var(--ink-soft);font-size:.85rem">Geen betaling nodig, dit gesprek wordt automatisch van je abonnement afgetrokken.</span>`;
 
       if (data.sessionsRemaining <= 0) {
         document.getElementById('limitMsg').textContent = `Je hebt je limiet bereikt voor het ${data.planLabel}-plan (${data.sessionsLimit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`;
@@ -538,10 +549,10 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
       errorBox.style.display = 'block';
       return;
     }
-    savePending({
+   savePending({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages,
-      plan: selectedPlanId, isThirdParty, reflectionPrefillText
+      plan: selectedPlanId, isThirdParty, reflectionPrefillText, reflectionConfidentialPrefillText
     });
     const separator = selectedPlan.ctaLink.includes('?') ? '&' : '?';
     window.location.href = `${selectedPlan.ctaLink}${separator}prefilled_email=${encodeURIComponent(organizerEmail)}`;
@@ -582,12 +593,13 @@ async function createSession({ category, organizerName, organizerEmail, organize
     list.innerHTML = '';
     const inviteMessages = [];
 
-    if (reflectionPrefillText) {
+  if (reflectionPrefillText || reflectionConfidentialPrefillText) {
       const organizer = data.participants.find(p => p.isOrganizer);
       if (organizer) {
         try {
           const orgToken = new URLSearchParams(organizer.accessLink.split('?')[1]).get('token');
-          localStorage.setItem(`mp_prefill_kern_${orgToken}`, reflectionPrefillText);
+          if (reflectionPrefillText) localStorage.setItem(`mp_prefill_kern_${orgToken}`, reflectionPrefillText);
+          if (reflectionConfidentialPrefillText) localStorage.setItem(`mp_prefill_confidential_${orgToken}`, reflectionConfidentialPrefillText);
         } catch (e) {}
       }
     }
@@ -678,7 +690,8 @@ window.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('organizerEmail').value = r.email;
           checkEmail(r.email);
         }
-        reflectionPrefillText = [r.situation_summary, r.deeper_layer].filter(Boolean).join('\n\n');
+        reflectionPrefillText = r.situation_summary || '';
+        reflectionConfidentialPrefillText = r.deeper_layer || '';
 
         const catSelect = document.getElementById('category');
         const knownCats = Array.from(catSelect.options).map(o => o.value);
@@ -701,7 +714,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (isPaid && pending) {
     document.getElementById('newSessionForm').style.display = 'none';
     document.getElementById('processingMsg').style.display = 'block';
-    if (pending.reflectionPrefillText) reflectionPrefillText = pending.reflectionPrefillText;
+if (pending.reflectionPrefillText) reflectionPrefillText = pending.reflectionPrefillText;
+    if (pending.reflectionConfidentialPrefillText) reflectionConfidentialPrefillText = pending.reflectionConfidentialPrefillText;
     clearPending();
     try {
       await createSession(pending);
