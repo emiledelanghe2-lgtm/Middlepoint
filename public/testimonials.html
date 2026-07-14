@@ -107,8 +107,11 @@ async function loadTestimonials() {
   try {
     const res = await fetch('/.netlify/functions/get-testimonials');
     const data = await res.json();
-    if (!data.testimonials || data.testimonials.length === 0) {
-      list.innerHTML = '<p style="color:var(--ink-soft)">Nog geen getuigenissen, wees de eerste!</p>';
+ if (!data.testimonials || data.testimonials.length === 0) {
+      list.innerHTML = `
+        <div class="card" style="text-align:center;padding:32px">
+          <p style="margin:0;color:var(--ink-soft)">Hier komen binnenkort de eerste verhalen te staan. Wees gerust de eerste die de zijne deelt.</p>
+        </div>`;
       return;
     }
     list.innerHTML = data.testimonials.map(t => `
