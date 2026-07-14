@@ -37,7 +37,6 @@
   body { background: white; }
 }
 </style>
-</style>
 </head>
 <body>
 <header class="nav-bar">
@@ -110,7 +109,7 @@ const CATEGORY_OPTIONS = [
 
 const CATEGORY_OTHER_LABEL = {
   koppel: 'je partner',
-familie: 'je familielid',
+  familie: 'je familielid',
   vrienden: 'deze vriend of vriendin',
   buren: 'deze buur',
   werk: 'deze collega',
@@ -123,7 +122,7 @@ const GEVOEL_OPTIONS = [
   { value: 'verdrietig', label: 'Verdrietig' },
   { value: 'jaloers', label: 'Jaloers' },
   { value: 'onzeker', label: 'Onzeker' },
-{ value: 'gemis', label: 'Gemis of eenzaamheid' },
+  { value: 'gemis', label: 'Gemis of eenzaamheid' },
   { value: 'gefrustreerd', label: 'Gefrustreerd' },
   { value: 'teleurgesteld', label: 'Teleurgesteld' },
   { value: 'neutraal', label: 'Neutraal, geen uitgesproken gevoel' },
@@ -137,10 +136,13 @@ function renderForm() {
       <p style="margin:0 0 8px;font-weight:600">Zeg ons wat er op je lever ligt</p>
       <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Wij helpen je om het helder te krijgen, en kijken samen of dit iets is om zelf mee aan de slag te gaan, of dat een gesprek met de ander zinvol zou zijn. Vinden we van wel? Dan helpen we je meteen verder om dat op te starten, met jouw beschrijving al ingevuld.</p>
     </div>
-<p style="color:var(--ink-soft);margin-bottom:8px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
+    <p style="color:var(--ink-soft);margin-bottom:8px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
     <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:24px"><span style="color:var(--clay)">*</span> = verplichte vraag</p>
+
     <div id="error" class="error-box" style="display:none"></div>
-<div class="field">
+
+    <form id="reflectionForm">
+      <div class="field">
         <label for="rName">Jouw naam <span style="color:var(--clay)">*</span></label>
         <input type="text" id="rName" required placeholder="bv. Sarah">
       </div>
@@ -167,7 +169,7 @@ function renderForm() {
         <input type="text" id="qSchoolAge" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px" placeholder="bv. 9 jaar, 4de leerjaar">
       </div>
 
-<div class="q-block">
+      <div class="q-block">
         <label class="q-label">Wat gebeurde er precies? <span style="color:var(--clay)">*</span></label>
         <div class="q-note" style="margin-bottom:8px">Leg het gerust uitgebreid uit, hoe meer context, hoe beter we je kunnen helpen.</div>
         <textarea class="q-textarea" id="qWat" required placeholder="Beschrijf zo concreet mogelijk wat er gebeurde: wat werd er gezegd of gedaan, en hoe verliep het?"></textarea>
@@ -189,10 +191,11 @@ function renderForm() {
       </div>
 
       <div class="q-block">
-<label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment? *</label>
+        <label class="q-label" id="qNodigLabel">Wat denk je dat je eigenlijk nodig had op dat moment? *</label>
         <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
       </div>
-<div class="q-block">
+
+      <div class="q-block">
         <label class="q-label">Komt dit gevoel je bekend voor, ook in andere situaties of bij andere mensen?</label>
         <div class="mc-group">
           <label class="mc-option"><input type="radio" name="herkenning" value="ja" id="herkenningJa"><span>Ja</span></label>
@@ -240,7 +243,7 @@ function renderForm() {
     document.getElementById('categoryOtherField').style.display = val === '__andere__' ? 'block' : 'none';
     document.getElementById('schoolAgeBlock').style.display = val === 'school' ? 'block' : 'none';
     const label = CATEGORY_OTHER_LABEL[val] || 'de ander';
-document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment? *`;
+    document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment? *`;
   });
 
   document.querySelectorAll('input[name=herkenning]').forEach(r => {
@@ -358,7 +361,7 @@ async function pollResult(token) {
     const badgeClass = r.recommendation === 'gesprek' ? 'gesprek' : r.recommendation === 'twijfel' ? 'twijfel' : 'zelf';
     const badgeText = r.recommendation === 'gesprek' ? 'Waarschijnlijk best bespreken' : r.recommendation === 'twijfel' ? 'Kan beide kanten op' : 'Vooral iets voor jezelf';
 
-   app.innerHTML = `
+    app.innerHTML = `
       <span class="label">Jouw reflectie</span>
       <h1>Wat we zien</h1>
 
