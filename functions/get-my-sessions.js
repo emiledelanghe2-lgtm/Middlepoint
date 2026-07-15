@@ -28,7 +28,7 @@ exports.handler = async (event) => {
       .eq('email', customer.email)
       .order('created_at', { ascending: false });
 
-    const reflectionsPayload = (reflections || []).map(r => ({
+ const reflectionsPayload = (reflections || []).map(r => ({
       id: r.id,
       token: r.access_token,
       name: r.name,
@@ -36,6 +36,7 @@ exports.handler = async (event) => {
       situationSummary: r.situation_summary,
       recommendation: r.recommendation,
       status: r.status,
+      selfHelpStatus: r.self_help_status,
       createdAt: r.created_at,
     }));
 
