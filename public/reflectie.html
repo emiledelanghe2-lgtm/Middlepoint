@@ -33,6 +33,7 @@
 .recommendation-badge.twijfel{ background:var(--navy); color:#ffffff; }
 .doc-section{ margin-bottom:20px; padding-bottom:20px; }
 .selfhelp-quote{ border-left:3px solid var(--clay); padding-left:18px; margin:24px 0; font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; color:var(--ink); }
+.premium-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--clay); background:var(--clay-soft); border-radius:999px; padding:3px 10px; margin-bottom:8px; }
 @media print {
   .nav-bar, .no-print, .footer { display: none !important; }
   body { background: white; }
@@ -83,6 +84,7 @@
 
 <script>
 const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
+
 const existingToken = new URLSearchParams(window.location.search).get('token');
 const selfhelpReturn = new URLSearchParams(window.location.search).get('selfhelp') === 'true';
 const app = document.getElementById('app');
@@ -142,7 +144,7 @@ function renderForm() {
   app.innerHTML = `
     <span class="label">Gratis reflectie</span>
     <h1>Vertel wat er speelt</h1>
- <div class="card" style="background:#EFF4ED;border:none;margin-bottom:12px;padding:20px">
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:12px;padding:20px">
       <p style="margin:0 0 8px;font-weight:600">Zeg ons wat er op je lever ligt</p>
       <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Beantwoord de vragen hieronder. We laten je daarna weten: kan je dit zelf oplossen, of is een gesprek met de ander zinvol? Kiezen jullie voor een gesprek, dan starten we dat meteen voor je, met je verhaal al ingevuld.</p>
     </div>
@@ -371,37 +373,43 @@ function renderForm() {
 }
 
 const SELFHELP_Q1_OPTIONS = [
-  'Dat ik me niet meer zo alleen voel hierin',
-  'Dat ik hier minder over pieker',
-  'Dat ik zelfverzekerder reageer, de volgende keer',
-  'Dat ik beter weet wat ik nodig heb',
-  'Dat ik dit kan loslaten',
+  'Meer rust in mezelf',
+  'Steviger in mijn schoenen staan',
+  'Dit los kunnen laten',
+  'Het beter kunnen uitleggen als het weer gebeurt',
+  'Weten hoe ik dit kan voorkomen',
+];
+const SELFHELP_Q2_OPTIONS = [
+  'Ik weet niet goed waar ik moet beginnen',
+  'Ik ben bang dat het toch niet zal helpen',
+  'Ik heb er nog geen tijd voor genomen',
+  'Ik dacht dat het vanzelf wel zou overgaan',
+  'Niets eigenlijk, ik wil gewoon concrete hulp',
 ];
 const SELFHELP_Q3_OPTIONS = [
-  'Dat ik te streng voor mezelf ben',
-  'Dat mijn gevoel volkomen terecht is',
-  'Dat ik dit ook mag loslaten',
-  'Dat ik trots mag zijn op hoe ik hiermee omga',
-  'Dat ik hier gerust hulp bij mag vragen',
+  'Ik reageer rustiger in gelijkaardige situaties',
+  'Ik durf het sneller bespreekbaar te maken',
+  'Ik voel me minder schuldig of onzeker hierover',
+  'Ik heb er gewoon vrede mee genomen',
 ];
 
 function renderSelfHelpForm(token) {
   app.innerHTML = `
-    <span class="label">Nog even dieper</span>
-    <h1>Een paar extra vragen</h1>
-    <p style="color:var(--ink-soft);margin-bottom:24px">Op basis hiervan stellen we concrete stappen en handvaten voor jou op.</p>
+    <span class="label">Reflectie+</span>
+    <h1>Nog even dieper</h1>
+    <p style="color:var(--ink-soft);margin-bottom:24px">Op basis hiervan stellen we een concreet actieplan voor jou op: stappen, handvaten en een korte oefening.</p>
 
     <div id="shError" class="error-box" style="display:none"></div>
 
     <form id="selfHelpForm">
       <div class="q-block">
-        <label class="q-label">Wat zou je willen dat er anders was, heel concreet?</label>
+        <label class="q-label">Wat zou jij het liefst willen bereiken?</label>
         <div class="q-note" style="margin-bottom:8px">Je mag meerdere opties aanvinken.</div>
         <div class="mc-group" id="shQ1Group">
           ${SELFHELP_Q1_OPTIONS.map(o => `
             <label class="mc-option"><input type="checkbox" name="shq1" value="${o}"><span>${o}</span></label>`).join('')}
           <label class="mc-option"><input type="checkbox" id="shQ1AndereToggle"><span>Iets anders, ik schrijf het zelf op</span></label>
-          <input type="text" id="shQ1AndereInput" class="other-input" style="display:none" placeholder="Wat zou jij willen dat anders was?">
+          <input type="text" id="shQ1AndereInput" class="other-input" style="display:none" placeholder="Wat zou jij willen bereiken?">
         </div>
         <div id="shQ1TekstWrap" style="display:none">
           <textarea class="q-textarea" id="shQ1Tekst" style="min-height:60px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
@@ -409,52 +417,44 @@ function renderSelfHelpForm(token) {
       </div>
 
       <div class="q-block">
-        <label class="q-label">Herken je dit soort situatie of patroon in andere situaties?</label>
-        <div class="mc-group">
-          <label class="mc-option"><input type="radio" name="shq2" value="ja" id="shQ2Ja"><span>Ja</span></label>
-          <label class="mc-option"><input type="radio" name="shq2" value="nee" id="shQ2Nee"><span>Nee</span></label>
-          <label class="mc-option"><input type="radio" name="shq2" value="weet niet" id="shQ2WeetNiet"><span>Ik weet het niet</span></label>
+        <label class="q-label">Wat houdt je nu tegen om hier zelf al mee aan de slag te gaan?</label>
+        <div class="q-note" style="margin-bottom:8px">Je mag meerdere opties aanvinken.</div>
+        <div class="mc-group" id="shQ2Group">
+          ${SELFHELP_Q2_OPTIONS.map(o => `
+            <label class="mc-option"><input type="checkbox" name="shq2" value="${o}"><span>${o}</span></label>`).join('')}
+          <label class="mc-option"><input type="checkbox" id="shQ2AndereToggle"><span>Iets anders, ik schrijf het zelf op</span></label>
+          <input type="text" id="shQ2AndereInput" class="other-input" style="display:none" placeholder="Wat houdt jou tegen?">
         </div>
-        <div class="branch-box" id="shQ2Branch" style="display:none">
-          <textarea class="q-textarea" id="shQ2Tekst" style="min-height:60px" placeholder="Waar herken je dit nog van?"></textarea>
+        <div id="shQ2TekstWrap" style="display:none">
+          <textarea class="q-textarea" id="shQ2Tekst" style="min-height:60px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
         </div>
       </div>
 
       <div class="q-block">
-        <label class="q-label">Wat zou jij tegen jezelf zeggen als een goede vriend(in) dit tegen jou vertelde?</label>
+        <label class="q-label">Als je over een maand terugkijkt, wat zou je dan graag anders zien?</label>
         <div class="q-note" style="margin-bottom:8px">Je mag meerdere opties aanvinken.</div>
         <div class="mc-group" id="shQ3Group">
           ${SELFHELP_Q3_OPTIONS.map(o => `
             <label class="mc-option"><input type="checkbox" name="shq3" value="${o}"><span>${o}</span></label>`).join('')}
           <label class="mc-option"><input type="checkbox" id="shQ3AndereToggle"><span>Iets anders, ik schrijf het zelf op</span></label>
-          <input type="text" id="shQ3AndereInput" class="other-input" style="display:none" placeholder="Wat zou je zeggen?">
+          <input type="text" id="shQ3AndereInput" class="other-input" style="display:none" placeholder="Wat zou jij anders willen zien?">
         </div>
         <div id="shQ3TekstWrap" style="display:none">
           <textarea class="q-textarea" id="shQ3Tekst" style="min-height:60px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
         </div>
       </div>
 
-      <button type="submit" class="btn clay" style="width:100%;padding:14px">Krijg mijn handvaten</button>
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Ontvang mijn actieplan</button>
     </form>
   `;
 
-  document.getElementById('shQ1AndereToggle').addEventListener('change', (e) => {
-    document.getElementById('shQ1AndereInput').style.display = e.target.checked ? 'block' : 'none';
-    document.getElementById('shQ1TekstWrap').style.display = 'block';
-  });
-  document.querySelectorAll('#shQ1Group input[type=checkbox][name=shq1]').forEach(cb => {
-    cb.addEventListener('change', () => { document.getElementById('shQ1TekstWrap').style.display = 'block'; });
-  });
-  document.getElementById('shQ3AndereToggle').addEventListener('change', (e) => {
-    document.getElementById('shQ3AndereInput').style.display = e.target.checked ? 'block' : 'none';
-    document.getElementById('shQ3TekstWrap').style.display = 'block';
-  });
-  document.querySelectorAll('#shQ3Group input[type=checkbox][name=shq3]').forEach(cb => {
-    cb.addEventListener('change', () => { document.getElementById('shQ3TekstWrap').style.display = 'block'; });
-  });
-  document.querySelectorAll('input[name=shq2]').forEach(r => {
-    r.addEventListener('change', (e) => {
-      document.getElementById('shQ2Branch').style.display = e.target.value === 'nee' ? 'none' : 'block';
+  ['1','2','3'].forEach(n => {
+    document.getElementById(`shQ${n}AndereToggle`).addEventListener('change', (e) => {
+      document.getElementById(`shQ${n}AndereInput`).style.display = e.target.checked ? 'block' : 'none';
+      document.getElementById(`shQ${n}TekstWrap`).style.display = 'block';
+    });
+    document.querySelectorAll(`#shQ${n}Group input[type=checkbox][name=shq${n}]`).forEach(cb => {
+      cb.addEventListener('change', () => { document.getElementById(`shQ${n}TekstWrap`).style.display = 'block'; });
     });
   });
 
@@ -463,29 +463,27 @@ function renderSelfHelpForm(token) {
     const errorBox = document.getElementById('shError');
     errorBox.style.display = 'none';
 
-    const q1 = Array.from(document.querySelectorAll('#shQ1Group input[name=shq1]:checked')).map(c => c.value);
-    const q1Andere = document.getElementById('shQ1AndereInput').value.trim();
-    if (document.getElementById('shQ1AndereToggle').checked && q1Andere) q1.push(q1Andere);
-    const q1Tekst = document.getElementById('shQ1Tekst').value.trim();
+    function collect(n) {
+      const vals = Array.from(document.querySelectorAll(`#shQ${n}Group input[name=shq${n}]:checked`)).map(c => c.value);
+      const andere = document.getElementById(`shQ${n}AndereInput`).value.trim();
+      if (document.getElementById(`shQ${n}AndereToggle`).checked && andere) vals.push(andere);
+      const tekst = document.getElementById(`shQ${n}Tekst`).value.trim();
+      return { vals, tekst };
+    }
+    const q1 = collect('1');
+    const q2 = collect('2');
+    const q3 = collect('3');
 
-    const q2 = (document.querySelector('input[name=shq2]:checked') || {}).value;
-    const q2Tekst = document.getElementById('shQ2Tekst').value.trim();
-
-    const q3 = Array.from(document.querySelectorAll('#shQ3Group input[name=shq3]:checked')).map(c => c.value);
-    const q3Andere = document.getElementById('shQ3AndereInput').value.trim();
-    if (document.getElementById('shQ3AndereToggle').checked && q3Andere) q3.push(q3Andere);
-    const q3Tekst = document.getElementById('shQ3Tekst').value.trim();
-
-    if (!q1.length && !q2 && !q3.length) {
+    if (!q1.vals.length && !q2.vals.length && !q3.vals.length) {
       errorBox.textContent = 'Vul minstens iets in bij één van de vragen.';
       errorBox.style.display = 'block';
       return;
     }
 
     const lines = [];
-    if (q1.length) lines.push(`Vraag: Wat zou je willen dat er anders was, heel concreet?\nAntwoord: ${q1.join(', ')}${q1Tekst ? '. Toelichting: ' + q1Tekst : ''}`);
-    if (q2) lines.push(`Vraag: Herken je dit soort situatie of patroon in andere situaties?\nAntwoord: ${q2}${q2Tekst ? '. ' + q2Tekst : ''}`);
-    if (q3.length) lines.push(`Vraag: Wat zou jij tegen jezelf zeggen als een goede vriend(in) dit tegen jou vertelde?\nAntwoord: ${q3.join(', ')}${q3Tekst ? '. Toelichting: ' + q3Tekst : ''}`);
+    if (q1.vals.length) lines.push(`Vraag: Wat zou jij het liefst willen bereiken?\nAntwoord: ${q1.vals.join(', ')}${q1.tekst ? '. Toelichting: ' + q1.tekst : ''}`);
+    if (q2.vals.length) lines.push(`Vraag: Wat houdt je nu tegen om hier zelf al mee aan de slag te gaan?\nAntwoord: ${q2.vals.join(', ')}${q2.tekst ? '. Toelichting: ' + q2.tekst : ''}`);
+    if (q3.vals.length) lines.push(`Vraag: Als je over een maand terugkijkt, wat zou je dan graag anders zien?\nAntwoord: ${q3.vals.join(', ')}${q3.tekst ? '. Toelichting: ' + q3.tekst : ''}`);
 
     app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
 
@@ -496,6 +494,7 @@ function renderSelfHelpForm(token) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
+      try { localStorage.setItem('mp_justpaid_selfhelp', token); } catch (e) {}
       window.history.replaceState({}, '', `/reflectie.html?token=${token}`);
       pollResult(token);
     } catch (err) {
@@ -542,41 +541,47 @@ async function pollResult(token) {
     let selfHelpSectionHTML = '';
     if (r.self_help_status === 'klaar') {
       selfHelpSectionHTML = `
-        <div class="doc-section" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none">
-          <span class="label">Jouw handvaten</span>
+        <div class="doc-section" id="actieplanSection">
+          <span class="premium-badge">Reflectie+</span>
+          <span class="label" style="display:block">Jouw actieplan</span>
           <h3>Concreet aan de slag</h3>
           <p>${esc(r.self_help_deeper_layer)}</p>
-          ${r.self_help_steps && r.self_help_steps.length ? `
-          <div style="margin-top:16px">
-            <div class="who">Concrete stappen</div>
-            <ul class="tip-list">${r.self_help_steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${r.self_help_tips && r.self_help_tips.length ? `
-          <div style="margin-top:16px">
-            <div class="who">Handvaten</div>
-            <ul class="tip-list">${r.self_help_tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${r.self_help_exercises && r.self_help_exercises.length ? `
-          <div style="margin-top:16px">
-            <div class="who">Oefeningen</div>
-            <ul class="tip-list">${r.self_help_exercises.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
-          </div>` : ''}
-          ${r.self_help_closing ? `<p style="margin-top:16px;font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
+        </div>
+        ${r.self_help_steps && r.self_help_steps.length ? `
+        <div class="doc-section">
+          <span class="label">Stappen</span>
+          <h3>Wat je concreet kan doen</h3>
+          <ul class="tip-list">${r.self_help_steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>` : ''}
+        ${r.self_help_tips && r.self_help_tips.length ? `
+        <div class="doc-section">
+          <span class="label">Handvaten</span>
+          <h3>Om bij de hand te houden</h3>
+          <ul class="tip-list">${r.self_help_tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>` : ''}
+        ${r.self_help_exercises && r.self_help_exercises.length ? `
+        <div class="doc-section">
+          <span class="label">Oefening</span>
+          <h3>Om nu of deze week te doen</h3>
+          <ul class="tip-list">${r.self_help_exercises.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>` : ''}
+        <div class="doc-section" style="border-bottom:none">
+          ${r.self_help_closing ? `<p style="font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
           ${r.self_help_quote ? `<div class="selfhelp-quote">"${esc(r.self_help_quote)}"</div>` : ''}
         </div>`;
     } else if (r.self_help_status === 'bezig') {
       selfHelpSectionHTML = `
         <div class="doc-section" style="border-bottom:none">
-          <div class="status-box">Je handvaten worden opgesteld, dit duurt ongeveer een minuut...</div>
+          <div class="status-box">Je actieplan wordt opgesteld, dit duurt ongeveer een minuut...</div>
         </div>`;
       setTimeout(() => pollResult(token), 3000);
     } else {
       selfHelpSectionHTML = `
         <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
-          <span class="label">Verder gaan</span>
+          <span class="label">Reflectie+</span>
           <h3>Wil je concreet aan de slag?</h3>
-          <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Krijg voor €2,99 concrete stappen, handvaten en een korte oefening, speciaal voor jouw situatie.</p>
-          <button type="button" class="btn clay" style="padding:12px 28px" onclick="goToSelfHelpPayment('${r.access_token}', '${esc(r.email || '')}')">Krijg mijn handvaten</button>
+          <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Voor €2,99 krijg je een concreet actieplan: stappen, handvaten en een korte oefening, speciaal voor jouw situatie.</p>
+          <button type="button" class="btn clay" style="padding:12px 28px" onclick="goToSelfHelpPayment('${r.access_token}', '${esc(r.email || '')}')">Ontvang mijn actieplan</button>
         </div>`;
     }
 
@@ -615,10 +620,25 @@ async function pollResult(token) {
 
       ${selfHelpSectionHTML}
 
-      <div class="doc-section" style="border-bottom:none;text-align:center">
-        <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:14px 28px">Start een gesprek met de ander</a>
+      <div class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+        <span class="label">Samen bespreken</span>
+        <h3>Wil je dit toch bespreken met de ander?</h3>
+        <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Jullie vullen elk apart een uitgebreide vragenlijst in, en krijgen samen een eerlijk, gedeeld document. Dit is een volledig, betalend gesprek, vanaf €3,99. Jouw beschrijving hierboven staat er al automatisch in ingevuld.</p>
+        <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:12px 28px">Start een gesprek met de ander</a>
       </div>
     `;
+
+    if (r.self_help_status === 'klaar') {
+      let justPaidToken = null;
+      try { justPaidToken = localStorage.getItem('mp_justpaid_selfhelp'); } catch (e) {}
+      if (justPaidToken === token) {
+        try { localStorage.removeItem('mp_justpaid_selfhelp'); } catch (e) {}
+        setTimeout(() => {
+          const el = document.getElementById('actieplanSection');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
+    }
   } catch (err) {
     app.innerHTML = `<div class="error-box">${err.message}</div>`;
   }
