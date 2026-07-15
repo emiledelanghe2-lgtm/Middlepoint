@@ -297,7 +297,7 @@ function showPlanDetail(planId) {
   detail.style.display = 'block';
 }
 
-PRICING_CONFIG.plans.filter(p => p.id !== 'pro' && p.id !== 'gratis').forEach(plan => {
+PRICING_CONFIG.plans.filter(p => p.id !== 'pro' && p.id !== 'gratis' && !p.hidden).forEach(plan => {
   const pill = document.createElement('label');
   pill.className = 'plan-pill' + (plan.id === 'los' ? ' selected' : '');
   pill.dataset.planId = plan.id;
