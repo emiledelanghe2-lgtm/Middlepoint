@@ -32,6 +32,7 @@
 .recommendation-badge.gesprek{ background:var(--clay); color:#ffffff; }
 .recommendation-badge.twijfel{ background:var(--navy); color:#ffffff; }
 .doc-section{ margin-bottom:20px; padding-bottom:20px; }
+.selfhelp-quote{ border-left:3px solid var(--clay); padding-left:18px; margin:24px 0; font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; color:var(--ink); }
 @media print {
   .nav-bar, .no-print, .footer { display: none !important; }
   body { background: white; }
@@ -81,7 +82,10 @@
 </div>
 
 <script>
+const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/VERVANG_MET_JOUW_LINK';
+
 const existingToken = new URLSearchParams(window.location.search).get('token');
+const selfhelpReturn = new URLSearchParams(window.location.search).get('selfhelp') === 'true';
 const app = document.getElementById('app');
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -98,6 +102,13 @@ function shareReflectionEmail() {
   const body = encodeURIComponent(`Hoi,\n\nIk maakte een persoonlijke reflectie via Middlepoint.\n\nJe vindt ze hier: ${link}`);
   window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
+
+function goToSelfHelpPayment(token, email) {
+  try { localStorage.setItem('mp_pending_selfhelp', token); } catch (e) {}
+  const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
+  window.location.href = email ? `${SELF_HELP_STRIPE_LINK}${sep}prefilled_email=${encodeURIComponent(email)}` : SELF_HELP_STRIPE_LINK;
+}
+
 const CATEGORY_OPTIONS = [
   { value: 'koppel', label: 'Koppel / relatie' },
   { value: 'familie', label: 'Familie' },
@@ -134,7 +145,7 @@ function renderForm() {
     <h1>Vertel wat er speelt</h1>
     <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:20px">
       <p style="margin:0 0 8px;font-weight:600">Zeg ons wat er op je lever ligt</p>
-      <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Wij helpen je om het helder te krijgen, en kijken samen of dit iets is om zelf mee aan de slag te gaan, of dat een gesprek met de ander zinvol zou zijn. Vinden we van wel? Dan helpen we je meteen verder om dat op te starten, met jouw beschrijving al ingevuld.</p>
+      <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Beantwoord de vragen hieronder. We laten je daarna weten: kan je dit zelf oplossen, of is een gesprek met de ander zinvol? Kiezen jullie voor een gesprek, dan starten we dat meteen voor je, met je verhaal al ingevuld.</p>
     </div>
     <p style="color:var(--ink-soft);margin-bottom:8px">Beantwoord onderstaande vragen zo eerlijk mogelijk. Dit is helemaal gratis, en je mag dit zo vaak gebruiken als je wil.</p>
     <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:24px"><span style="color:var(--clay)">*</span> = verplichte vraag</p>
@@ -184,9 +195,14 @@ function renderForm() {
               <input type="checkbox" name="gevoel" value="${o.value}">
               <span>${o.label}</span>
             </label>`).join('')}
+          <label class="mc-option">
+            <input type="checkbox" id="gevoelAndereToggle" value="__andere__">
+            <span>Een ander gevoel, ik schrijf het zelf op</span>
+          </label>
+          <input type="text" id="gevoelAndereInput" class="other-input" style="display:none" placeholder="Welk gevoel was dit?">
         </div>
         <div id="qGevoelTekstWrap" style="display:none">
-          <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit gevoel nog even toelichten? (optioneel)"></textarea>
+          <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit nog even toelichten? (optioneel)"></textarea>
         </div>
       </div>
 
@@ -196,7 +212,7 @@ function renderForm() {
       </div>
 
       <div class="q-block">
-        <label class="q-label">Komt dit gevoel je bekend voor, ook in andere situaties of bij andere mensen?</label>
+        <label class="q-label">Heb je dit gevoel al vaker ervaren, in andere situaties of met andere mensen?</label>
         <div class="mc-group">
           <label class="mc-option"><input type="radio" name="herkenning" value="ja" id="herkenningJa"><span>Ja</span></label>
           <label class="mc-option"><input type="radio" name="herkenning" value="nee" id="herkenningNee"><span>Nee</span></label>
@@ -208,17 +224,27 @@ function renderForm() {
       </div>
 
       <div class="q-block">
-        <label class="q-label">Denk je dat dit puur hierover ging, of zit er meer onder?</label>
+        <label class="q-label">Denk je dat er meer onder deze situatie zit dan wat er op het eerste zicht speelt?</label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="dieper" value="ja" id="dieperJa"><span>Ja</span></label>
+          <label class="mc-option"><input type="radio" name="dieper" value="nee" id="dieperNee"><span>Nee</span></label>
+          <label class="mc-option"><input type="radio" name="dieper" value="weet niet" id="dieperWeetNiet"><span>Ik weet het niet</span></label>
+        </div>
+        <div class="branch-box" id="dieperBranch" style="display:none">
+          <textarea class="q-textarea" id="qDieperTekst" style="min-height:70px" placeholder="Wat zou er volgens jou nog meer kunnen meespelen?"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Hoe diep raakt dit jou eigenlijk?</label>
         <div class="scale-row" id="scaleRow">
           ${[1,2,3,4,5].map(n => `
             <label class="scale-option">
-              <input type="radio" name="scale" value="${n}">
+              <input type="radio" name="diepgang" value="${n}">
               <span>${n}</span>
             </label>`).join('')}
         </div>
-        <div class="scale-labels"><span>Puur hierover</span><span>Er zit veel meer onder</span></div>
-        <div class="q-note" style="margin-top:8px">Bv. 1: dit ging echt enkel over dit ene moment. 5: dit voelt als het topje van de ijsberg, er speelt duidelijk meer.</div>
-        <textarea class="q-textarea" id="qScaleTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
+        <div class="scale-labels"><span>Oppervlakkig</span><span>Heel diep</span></div>
       </div>
 
       <div class="q-block">
@@ -236,6 +262,10 @@ function renderForm() {
       document.getElementById('qGevoelTekstWrap').style.display = anyChecked ? 'block' : 'none';
     });
   });
+  document.getElementById('gevoelAndereToggle').addEventListener('change', (e) => {
+    document.getElementById('gevoelAndereInput').style.display = e.target.checked ? 'block' : 'none';
+    document.getElementById('qGevoelTekstWrap').style.display = 'block';
+  });
 
   const categorySelect = document.getElementById('categorySelect');
   categorySelect.addEventListener('change', () => {
@@ -249,6 +279,11 @@ function renderForm() {
   document.querySelectorAll('input[name=herkenning]').forEach(r => {
     r.addEventListener('change', (e) => {
       document.getElementById('herkenningBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
+    });
+  });
+  document.querySelectorAll('input[name=dieper]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('dieperBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
     });
   });
 
@@ -273,8 +308,11 @@ function renderForm() {
         return;
       }
     }
-    const gevoelen = Array.from(document.querySelectorAll('input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
-    const scaleChecked = document.querySelector('input[name=scale]:checked');
+    const gevoelen = Array.from(document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
+    const gevoelAndere = document.getElementById('gevoelAndereInput').value.trim();
+    if (document.getElementById('gevoelAndereToggle').checked && gevoelAndere) gevoelen.push(gevoelAndere);
+    const dieperChecked = (document.querySelector('input[name=dieper]:checked') || {}).value;
+    const diepgangChecked = document.querySelector('input[name=diepgang]:checked');
     const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
 
     if (!name || !email) {
@@ -297,12 +335,16 @@ function renderForm() {
       const herkenningTekst = document.getElementById('qHerkenningTekst').value.trim();
       lines.push(`Vraag: Herken je dit van eerder?\nAntwoord: ${herkenning}${herkenningTekst ? ', ' + herkenningTekst : ''}`);
     }
-    if (scaleChecked) {
-      const val = parseInt(scaleChecked.value, 10);
-      let answer = val <= 2 ? 'Dichter bij: puur hierover' : val >= 4 ? 'Dichter bij: er zit veel meer onder' : 'Ergens in het midden';
-      const scaleTekst = document.getElementById('qScaleTekst').value.trim();
-      if (scaleTekst) answer += `. Toelichting: ${scaleTekst}`;
-      lines.push(`Vraag: Ging dit puur hierover, of zit er meer onder?\nAntwoord: ${answer}`);
+    if (dieperChecked) {
+      const dieperTekst = document.getElementById('qDieperTekst').value.trim();
+      let answer = dieperChecked;
+      if (dieperTekst) answer += `. Toelichting: ${dieperTekst}`;
+      lines.push(`Vraag: Denk je dat er meer onder deze situatie zit?\nAntwoord: ${answer}`);
+    }
+    if (diepgangChecked) {
+      const val = parseInt(diepgangChecked.value, 10);
+      const answer = val <= 2 ? 'Dichter bij: oppervlakkig' : val >= 4 ? 'Dichter bij: heel diep' : 'Ergens in het midden';
+      lines.push(`Vraag: Hoe diep raakt dit jou?\nAntwoord: ${answer}`);
     }
     const extra = document.getElementById('qExtra').value.trim();
     if (extra) lines.push(`Vraag: Nog iets om toe te voegen?\nAntwoord: ${extra}`);
@@ -328,6 +370,142 @@ function renderForm() {
   });
 }
 
+const SELFHELP_Q1_OPTIONS = [
+  'Dat ik me niet meer zo alleen voel hierin',
+  'Dat ik hier minder over pieker',
+  'Dat ik zelfverzekerder reageer, de volgende keer',
+  'Dat ik beter weet wat ik nodig heb',
+  'Dat ik dit kan loslaten',
+];
+const SELFHELP_Q3_OPTIONS = [
+  'Dat ik te streng voor mezelf ben',
+  'Dat mijn gevoel volkomen terecht is',
+  'Dat ik dit ook mag loslaten',
+  'Dat ik trots mag zijn op hoe ik hiermee omga',
+  'Dat ik hier gerust hulp bij mag vragen',
+];
+
+function renderSelfHelpForm(token) {
+  app.innerHTML = `
+    <span class="label">Nog even dieper</span>
+    <h1>Een paar extra vragen</h1>
+    <p style="color:var(--ink-soft);margin-bottom:24px">Op basis hiervan stellen we concrete stappen en handvaten voor jou op.</p>
+
+    <div id="shError" class="error-box" style="display:none"></div>
+
+    <form id="selfHelpForm">
+      <div class="q-block">
+        <label class="q-label">Wat zou je willen dat er anders was, heel concreet?</label>
+        <div class="q-note" style="margin-bottom:8px">Je mag meerdere opties aanvinken.</div>
+        <div class="mc-group" id="shQ1Group">
+          ${SELFHELP_Q1_OPTIONS.map(o => `
+            <label class="mc-option"><input type="checkbox" name="shq1" value="${o}"><span>${o}</span></label>`).join('')}
+          <label class="mc-option"><input type="checkbox" id="shQ1AndereToggle"><span>Iets anders, ik schrijf het zelf op</span></label>
+          <input type="text" id="shQ1AndereInput" class="other-input" style="display:none" placeholder="Wat zou jij willen dat anders was?">
+        </div>
+        <div id="shQ1TekstWrap" style="display:none">
+          <textarea class="q-textarea" id="shQ1Tekst" style="min-height:60px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Herken je dit soort situatie of patroon in andere situaties?</label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="shq2" value="ja" id="shQ2Ja"><span>Ja</span></label>
+          <label class="mc-option"><input type="radio" name="shq2" value="nee" id="shQ2Nee"><span>Nee</span></label>
+          <label class="mc-option"><input type="radio" name="shq2" value="weet niet" id="shQ2WeetNiet"><span>Ik weet het niet</span></label>
+        </div>
+        <div class="branch-box" id="shQ2Branch" style="display:none">
+          <textarea class="q-textarea" id="shQ2Tekst" style="min-height:60px" placeholder="Waar herken je dit nog van?"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Wat zou jij tegen jezelf zeggen als een goede vriend(in) dit tegen jou vertelde?</label>
+        <div class="q-note" style="margin-bottom:8px">Je mag meerdere opties aanvinken.</div>
+        <div class="mc-group" id="shQ3Group">
+          ${SELFHELP_Q3_OPTIONS.map(o => `
+            <label class="mc-option"><input type="checkbox" name="shq3" value="${o}"><span>${o}</span></label>`).join('')}
+          <label class="mc-option"><input type="checkbox" id="shQ3AndereToggle"><span>Iets anders, ik schrijf het zelf op</span></label>
+          <input type="text" id="shQ3AndereInput" class="other-input" style="display:none" placeholder="Wat zou je zeggen?">
+        </div>
+        <div id="shQ3TekstWrap" style="display:none">
+          <textarea class="q-textarea" id="shQ3Tekst" style="min-height:60px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Krijg mijn handvaten</button>
+    </form>
+  `;
+
+  document.getElementById('shQ1AndereToggle').addEventListener('change', (e) => {
+    document.getElementById('shQ1AndereInput').style.display = e.target.checked ? 'block' : 'none';
+    document.getElementById('shQ1TekstWrap').style.display = 'block';
+  });
+  document.querySelectorAll('#shQ1Group input[type=checkbox][name=shq1]').forEach(cb => {
+    cb.addEventListener('change', () => { document.getElementById('shQ1TekstWrap').style.display = 'block'; });
+  });
+  document.getElementById('shQ3AndereToggle').addEventListener('change', (e) => {
+    document.getElementById('shQ3AndereInput').style.display = e.target.checked ? 'block' : 'none';
+    document.getElementById('shQ3TekstWrap').style.display = 'block';
+  });
+  document.querySelectorAll('#shQ3Group input[type=checkbox][name=shq3]').forEach(cb => {
+    cb.addEventListener('change', () => { document.getElementById('shQ3TekstWrap').style.display = 'block'; });
+  });
+  document.querySelectorAll('input[name=shq2]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('shQ2Branch').style.display = e.target.value === 'nee' ? 'none' : 'block';
+    });
+  });
+
+  document.getElementById('selfHelpForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('shError');
+    errorBox.style.display = 'none';
+
+    const q1 = Array.from(document.querySelectorAll('#shQ1Group input[name=shq1]:checked')).map(c => c.value);
+    const q1Andere = document.getElementById('shQ1AndereInput').value.trim();
+    if (document.getElementById('shQ1AndereToggle').checked && q1Andere) q1.push(q1Andere);
+    const q1Tekst = document.getElementById('shQ1Tekst').value.trim();
+
+    const q2 = (document.querySelector('input[name=shq2]:checked') || {}).value;
+    const q2Tekst = document.getElementById('shQ2Tekst').value.trim();
+
+    const q3 = Array.from(document.querySelectorAll('#shQ3Group input[name=shq3]:checked')).map(c => c.value);
+    const q3Andere = document.getElementById('shQ3AndereInput').value.trim();
+    if (document.getElementById('shQ3AndereToggle').checked && q3Andere) q3.push(q3Andere);
+    const q3Tekst = document.getElementById('shQ3Tekst').value.trim();
+
+    if (!q1.length && !q2 && !q3.length) {
+      errorBox.textContent = 'Vul minstens iets in bij één van de vragen.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    const lines = [];
+    if (q1.length) lines.push(`Vraag: Wat zou je willen dat er anders was, heel concreet?\nAntwoord: ${q1.join(', ')}${q1Tekst ? '. Toelichting: ' + q1Tekst : ''}`);
+    if (q2) lines.push(`Vraag: Herken je dit soort situatie of patroon in andere situaties?\nAntwoord: ${q2}${q2Tekst ? '. ' + q2Tekst : ''}`);
+    if (q3.length) lines.push(`Vraag: Wat zou jij tegen jezelf zeggen als een goede vriend(in) dit tegen jou vertelde?\nAntwoord: ${q3.join(', ')}${q3Tekst ? '. Toelichting: ' + q3Tekst : ''}`);
+
+    app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
+
+    try {
+      const res = await fetch('/.netlify/functions/submit-selfhelp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content: lines.join('\n\n') }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.history.replaceState({}, '', `/reflectie.html?token=${token}`);
+      pollResult(token);
+    } catch (err) {
+      renderSelfHelpForm(token);
+      document.getElementById('shError').textContent = err.message;
+      document.getElementById('shError').style.display = 'block';
+    }
+  });
+}
+
 async function pollResult(token) {
   try {
     const res = await fetch(`/.netlify/functions/get-reflection?token=${token}`);
@@ -336,7 +514,7 @@ async function pollResult(token) {
     const r = data.reflection;
 
     if (r.status === 'bezig') {
-      app.innerHTML = `<div class="status-box">Je reflectie wordt opgesteld, dit duurt meestal maar een halve minuut...</div>`;
+      app.innerHTML = `<div class="status-box">Het opmaken van je reflectie duurt ongeveer een minuut...</div>`;
       setTimeout(() => pollResult(token), 3000);
       return;
     }
@@ -360,6 +538,47 @@ async function pollResult(token) {
 
     const badgeClass = r.recommendation === 'gesprek' ? 'gesprek' : r.recommendation === 'twijfel' ? 'twijfel' : 'zelf';
     const badgeText = r.recommendation === 'gesprek' ? 'Waarschijnlijk best bespreken' : r.recommendation === 'twijfel' ? 'Kan beide kanten op' : 'Vooral iets voor jezelf';
+
+    let selfHelpSectionHTML = '';
+    if (r.self_help_status === 'klaar') {
+      selfHelpSectionHTML = `
+        <div class="doc-section" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none">
+          <span class="label">Jouw handvaten</span>
+          <h3>Concreet aan de slag</h3>
+          <p>${esc(r.self_help_deeper_layer)}</p>
+          ${r.self_help_steps && r.self_help_steps.length ? `
+          <div style="margin-top:16px">
+            <div class="who">Concrete stappen</div>
+            <ul class="tip-list">${r.self_help_steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+          </div>` : ''}
+          ${r.self_help_tips && r.self_help_tips.length ? `
+          <div style="margin-top:16px">
+            <div class="who">Handvaten</div>
+            <ul class="tip-list">${r.self_help_tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+          </div>` : ''}
+          ${r.self_help_exercises && r.self_help_exercises.length ? `
+          <div style="margin-top:16px">
+            <div class="who">Oefeningen</div>
+            <ul class="tip-list">${r.self_help_exercises.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+          </div>` : ''}
+          ${r.self_help_closing ? `<p style="margin-top:16px;font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
+          ${r.self_help_quote ? `<div class="selfhelp-quote">"${esc(r.self_help_quote)}"</div>` : ''}
+        </div>`;
+    } else if (r.self_help_status === 'bezig') {
+      selfHelpSectionHTML = `
+        <div class="doc-section" style="border-bottom:none">
+          <div class="status-box">Je handvaten worden opgesteld, dit duurt ongeveer een minuut...</div>
+        </div>`;
+      setTimeout(() => pollResult(token), 3000);
+    } else {
+      selfHelpSectionHTML = `
+        <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+          <span class="label">Verder gaan</span>
+          <h3>Wil je concreet aan de slag?</h3>
+          <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Krijg voor €2,99 concrete stappen, handvaten en een korte oefening, speciaal voor jouw situatie.</p>
+          <button type="button" class="btn clay" style="padding:12px 28px" onclick="goToSelfHelpPayment('${r.access_token}', '${esc(r.email || '')}')">Krijg mijn handvaten</button>
+        </div>`;
+    }
 
     app.innerHTML = `
       <span class="label">Jouw reflectie</span>
@@ -389,10 +608,15 @@ async function pollResult(token) {
         <ul class="tip-list">${(r.reflection_questions || []).map(q => `<li>${esc(q)}</li>`).join('')}</ul>
       </div>
 
-      <div class="doc-section" style="border-bottom:none;text-align:center">
+      <div class="doc-section">
         <span class="recommendation-badge ${badgeClass}">${badgeText}</span>
-        <p style="color:var(--ink-soft);max-width:520px;margin:0 auto 24px">${esc(r.recommendation_text)}</p>
-        <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:14px 28px">Start een gesprek met ${esc(r.name || 'de ander')}</a>
+        <p style="color:var(--ink-soft);max-width:520px">${esc(r.recommendation_text)}</p>
+      </div>
+
+      ${selfHelpSectionHTML}
+
+      <div class="doc-section" style="border-bottom:none;text-align:center">
+        <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:14px 28px">Start een gesprek met de ander</a>
       </div>
     `;
   } catch (err) {
@@ -400,7 +624,17 @@ async function pollResult(token) {
   }
 }
 
-if (existingToken) {
+if (selfhelpReturn) {
+  let pendingToken = null;
+  try { pendingToken = localStorage.getItem('mp_pending_selfhelp'); } catch (e) {}
+  if (pendingToken) {
+    try { localStorage.removeItem('mp_pending_selfhelp'); } catch (e) {}
+    window.history.replaceState({}, '', `/reflectie.html?token=${pendingToken}`);
+    renderSelfHelpForm(pendingToken);
+  } else {
+    app.innerHTML = `<div class="error-box">We konden je reflectie niet automatisch terugvinden. Gebruik de link uit je bevestigingsmail, of neem contact op via middlepoint@zohomail.eu.</div>`;
+  }
+} else if (existingToken) {
   pollResult(existingToken);
 } else {
   renderForm();
