@@ -355,9 +355,9 @@ async function load() {
             ${isKlaar && r.recommendation ? `<span class="session-status-badge" style="background:#EFF4ED;color:${recColor[r.recommendation] || 'var(--ink-soft)'}">${recLabel[r.recommendation] || r.recommendation}</span>` : ''}
           </div>
           ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${r.situationSummary}</p>` : ''}
-        <div class="session-card-actions">
+     <div class="session-card-actions">
             <a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
-            ${r.selfHelpStatus === 'klaar' ? `<a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk mijn handvaten</a>` : ''}
+            ${r.selfHelpStatus === 'klaar' ? `<a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk mijn actieplan</a>` : `<a href="/reflectie.html?token=${r.token}" class="btn outline">Ontvang mijn actieplan</a>`}
             <a href="/new.html?fromReflection=${r.token}" class="btn clay">Maak er een gesprek van</a>
           </div>`;
         rList.appendChild(rCard);
