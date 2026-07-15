@@ -39,6 +39,7 @@ const PRICING_CONFIG = {
       description: '3 volledige gesprekken per maand, inclusief vervolgvragen, compleet document en check-ins.',
       cta: 'Start nu',
       ctaLink: 'https://buy.stripe.com/28E6oH3AE2zq7AdfrZaVa0c',
+      hidden: true,
     },
     {
       id: 'plus',
@@ -53,6 +54,7 @@ const PRICING_CONFIG = {
       cta: 'Start nu',
       ctaLink: 'https://buy.stripe.com/14AbJ1b365LC7Ad5RpaVa0d',
       highlight: true,
+      hidden: true,
     },
     {
       id: 'pro',
