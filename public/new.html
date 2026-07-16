@@ -64,29 +64,32 @@
 .participant-message{ width:100%; margin-top:6px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:15px; resize:vertical; min-height:60px; }
 .participant-message-label{ font-size:.78rem; color:var(--ink-soft); margin-top:6px; display:block; }
 
-.chooser-header{ text-align:center; max-width:520px; margin:0 auto 32px; }
-.chooser-grid{ display:grid; gap:18px; }
-@media(min-width:760px){ .chooser-grid{ grid-template-columns:repeat(3,1fr); align-items:stretch; } }
+.chooser-header{ text-align:center; max-width:600px; margin:0 auto 36px; }
+.chooser-intro{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:18px 22px; margin-bottom:32px; max-width:640px; margin-left:auto; margin-right:auto; text-align:center; }
+.chooser-grid{ display:grid; gap:24px; max-width:820px; margin:0 auto; }
+@media(min-width:700px){ .chooser-grid{ grid-template-columns:1fr 1fr; align-items:stretch; } }
 .chooser-card{
   position:relative;
   background:var(--white);
   border:2px solid var(--line);
-  border-radius:18px;
-  padding:28px 24px;
+  border-radius:20px;
+  padding:36px 30px;
   display:flex;
   flex-direction:column;
+  align-items:center;
+  text-align:center;
   cursor:pointer;
   transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
 }
-.chooser-card:hover{ transform:translateY(-2px); }
-.chooser-card.featured{ border-color:var(--clay); background:linear-gradient(180deg, var(--clay-soft) 0%, var(--white) 55%); box-shadow:0 10px 28px rgba(201,113,75,.14); }
-.chooser-icon{ font-size:1.8rem; margin-bottom:12px; display:block; }
-.chooser-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; padding:3px 10px; border-radius:999px; margin-bottom:12px; }
+.chooser-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(43,38,32,.08); }
+.chooser-card.featured{ border-color:var(--clay); background:linear-gradient(180deg, var(--clay-soft) 0%, var(--white) 60%); box-shadow:0 12px 32px rgba(201,113,75,.16); }
+.chooser-icon{ font-size:2.4rem; margin-bottom:16px; display:block; }
+.chooser-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; padding:4px 12px; border-radius:999px; margin-bottom:14px; }
 .chooser-badge.free{ background:#EFF4ED; color:var(--sage); }
 .chooser-badge.paid{ background:var(--clay-soft); color:var(--clay); }
-.chooser-card h3{ margin-bottom:8px; font-size:1.15rem; }
-.chooser-card p{ color:var(--ink-soft); font-size:.9rem; margin-bottom:20px; flex-grow:1; }
-.chooser-card .btn{ width:100%; text-align:center; }
+.chooser-card h3{ margin-bottom:12px; font-size:1.3rem; }
+.chooser-card p{ color:var(--ink-soft); font-size:.92rem; margin-bottom:24px; flex-grow:1; line-height:1.6; }
+.chooser-card .btn{ width:100%; text-align:center; padding:13px; }
 </style>
 </head>
 <body>
@@ -128,10 +131,14 @@
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
 
   <div id="chooserView">
-    <div class="chooser-header">
+ <div class="chooser-header">
       <span class="label" style="display:block;margin-bottom:8px">Aan de slag</span>
       <h1 style="margin-bottom:10px">Hoe wil je verdergaan?</h1>
       <p style="color:var(--ink-soft)">Kies wat het best bij jouw situatie past.</p>
+    </div>
+
+    <div class="chooser-intro">
+      <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Twijfel je nog? De meeste mensen beginnen bij een gratis reflectie, en beslissen pas nadien of een gesprek met de ander nodig is. Weet je het al zeker? Dan start je meteen rechts een gesprek.</p>
     </div>
 
     <div class="chooser-grid">
@@ -139,7 +146,7 @@
         <span class="chooser-badge free">Gratis</span>
         <span class="chooser-icon" aria-hidden="true">✎</span>
         <h3>Alleen, voor mezelf</h3>
-        <p>Vertel wat er speelt en krijg een eerlijke, gratis reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander eigenlijk wel nodig is. Wil je nog dieper, met een concreet actieplan? Dat kan nadien voor €2,99.</p>
+        <p>Vertel wat er speelt en krijg een eerlijke, gratis reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander eigenlijk wel nodig is. Wil je daarna nog dieper gaan, met een concreet actieplan vol stappen en handvaten? Dat kan meteen na je reflectie, voor €2,99.</p>
         <a href="/reflectie.html" class="btn outline">Start een gratis reflectie</a>
       </div>
 
@@ -147,16 +154,10 @@
         <span class="chooser-badge paid">Vanaf €4,99</span>
         <span class="chooser-icon" aria-hidden="true">⊙</span>
         <h3>Samen met de ander</h3>
-        <p>Jullie vullen elk apart een uitgebreide vragenlijst in. Wij leggen beide kanten naast elkaar in één eerlijk, gedeeld document, met tips en een opvolgdocument nadien.</p>
+        <p>Jullie vullen elk apart een uitgebreide vragenlijst in. Wij leggen beide kanten naast elkaar in één eerlijk, gedeeld document, met tips en een opvolgdocument nadien. Ook geschikt als je dit als derde partij (bv. HR, leerkracht) opstart zonder zelf deel te nemen.</p>
         <button type="button" class="btn clay">Start een gesprek</button>
       </div>
-
-      <div class="chooser-card" id="chooseThirdPartyBtn">
-        <span class="chooser-badge paid">Vanaf €4,99</span>
-        <span class="chooser-icon" aria-hidden="true">◇</span>
-        <h3>Ik stuur dit door naar anderen</h3>
-        <p>Ben je bijvoorbeeld HR, leerkracht of therapeut, en wil je een gesprek opstarten tussen twee andere personen zonder zelf deel te nemen?</p>
-        <button type="button" class="btn outline">Stuur door naar anderen</button>
+    </div>
       </div>
     </div>
   </div>
