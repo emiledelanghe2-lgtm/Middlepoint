@@ -27,7 +27,6 @@
 .form-section-title{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--clay); margin-bottom:16px; display:block; }
 .plan-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 @media(min-width:640px){ .plan-grid{ grid-template-columns:repeat(3,1fr); } }
-@media(min-width:900px){ .plan-grid{ grid-template-columns:repeat(5,1fr); } }
 .plan-pill{ border:1.5px solid var(--line); border-radius:10px; padding:12px; cursor:pointer; display:flex; flex-direction:column; gap:4px; transition:border-color .15s; }
 .plan-pill input{ display:none; }
 .plan-pill.selected{ border-color:var(--clay); background:var(--clay-soft); }
@@ -103,14 +102,41 @@
 
 <div class="app-wrap">
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
-  <h1>Start een nieuw gesprek</h1>
-<p style="color:var(--ink-soft);margin-bottom:8px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
+
+  <div id="chooserView">
+    <h1>Hoe wil je verdergaan?</h1>
+    <p style="color:var(--ink-soft);margin-bottom:28px">Kies wat het best bij jouw situatie past.</p>
+
+    <div class="card" style="margin-bottom:16px;padding:24px">
+      <h3 style="margin-bottom:8px">Alleen, voor mezelf</h3>
+      <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:16px">Vertel wat er speelt en krijg een eerlijke, gratis reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander eigenlijk wel nodig is. Je kan hierna altijd nog beslissen om toch een gesprek te starten.</p>
+      <a href="/reflectie.html" class="btn outline">Start een gratis reflectie</a>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;padding:24px;border-color:var(--clay)">
+      <h3 style="margin-bottom:8px">Samen met de ander</h3>
+      <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:16px">Jullie vullen elk apart een uitgebreide vragenlijst in. Wij leggen beide kanten naast elkaar in één eerlijk, gedeeld document, met tips en een opvolgdocument nadien. Dit is een betalend gesprek, vanaf €4,99.</p>
+      <button type="button" class="btn clay" id="chooseTogetherBtn">Start een gesprek</button>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;padding:24px">
+      <h3 style="margin-bottom:8px">Ik stuur dit door naar anderen</h3>
+      <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:16px">Ben je bijvoorbeeld HR, leerkracht of therapeut, en wil je een gesprek opstarten tussen twee andere personen zonder zelf deel te nemen? Ook dit is een betalend gesprek, vanaf €4,99.</p>
+      <button type="button" class="btn outline" id="chooseThirdPartyBtn">Stuur door naar anderen</button>
+    </div>
+  </div>
+
+  <div id="formView" style="display:none">
+  <button type="button" class="btn ghost" id="backToChooserBtn" style="margin-bottom:16px">← Andere optie kiezen</button>
+  <h1>Start een gesprek</h1>
+  <p style="color:var(--ink-soft);margin-bottom:8px">Vul dit in. Daarna krijg je persoonlijke links om door te sturen naar iedereen die deelneemt.</p>
   <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:16px"><span style="color:var(--clay)">*</span> = verplicht veld</p>
   <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
     <a href="#stepPlan" class="hint-chip" style="text-decoration:none">1. Plan</a>
     <a href="#stepGegevens" class="hint-chip" style="text-decoration:none">2. Gegevens</a>
     <a href="#stepDeelnemers" class="hint-chip" style="text-decoration:none">3. Deelnemers</a>
   </div>
+
   <div id="reflectionNotice" class="reflection-notice" style="display:none">
     <p style="margin:0">Je komt van je gratis reflectie. Jouw naam, situatie en categorie zijn al ingevuld, en straks vind je je eigen beschrijving alvast terug in de vragenlijst. Omdat je nu een echt, gedeeld gesprek start, gaat dit als een volledig, betalend gesprek verder.</p>
   </div>
@@ -137,12 +163,11 @@
 
   <form id="newSessionForm">
 
-   <div class="form-section" id="stepPlan">
+    <div class="form-section" id="stepPlan">
       <span class="form-section-title">1. Kies je plan</span>
       <div class="plan-grid" id="planSelector"></div>
       <div id="planDetail" style="display:none"></div>
-      <div id="freeNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Wil je eerst gratis en vrijblijvend voor jezelf nadenken over de situatie? Probeer eerst onze <a href="/reflectie.html">gratis reflectie</a>. Voor een volledig, gedeeld gesprek met de andere persoon, kies hieronder een plan.</div>
-      <div id="paidNotice" style="display:none;margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Na het invullen ga je naar de beveiligde betaalpagina.</div>
+      <div id="paidNotice" style="margin-top:14px;font-size:.85rem;color:var(--ink-soft)">Na het invullen ga je naar de beveiligde betaalpagina.</div>
       <div id="activeSubNotice" style="display:none;margin-top:14px">
         <div class="customer-info">
           <div id="customerInfoText"></div>
@@ -150,7 +175,7 @@
       </div>
     </div>
 
-<div class="form-section" id="stepGegevens">
+    <div class="form-section" id="stepGegevens">
       <span class="form-section-title">2. Jouw gegevens</span>
       <div class="field">
         <label for="category">Soort situatie <span style="color:var(--clay)">*</span></label>
@@ -209,7 +234,7 @@
       </div>
     </div>
 
-<div class="form-section" id="stepDeelnemers">
+    <div class="form-section" id="stepDeelnemers">
       <span class="form-section-title">3. De andere deelnemer(s)</span>
       <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:10px">Vul naam en e-mailadres in voor elke deelnemer.</p>
       <ul style="font-size:.85rem;color:var(--ink-soft);margin:0 0 16px;padding-left:18px;line-height:1.7">
@@ -234,8 +259,9 @@
     </div>
 
     <div id="error" class="error-box" style="display:none;margin-bottom:16px"></div>
-    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Sessie aanmaken</button>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Verder naar betaling</button>
   </form>
+  </div>
 
   <div id="result" style="display:none;margin-top:32px">
     <a href="/" class="btn ghost" style="margin-bottom:12px;display:inline-block">← Terug naar startpagina</a>
@@ -262,17 +288,13 @@ function loadPending() { try { const r = localStorage.getItem(STORAGE_KEY); retu
 function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
 
 let selectedPlanId = 'los';
-  let activeSubscription = null;
+let activeSubscription = null;
 let organizerEmailIsNew = true;
 let reflectionPrefillText = '';
 let reflectionConfidentialPrefillText = '';
-  const planSelector = document.getElementById('planSelector');
+const planSelector = document.getElementById('planSelector');
 
 const planFeatures = {
-  gratis: {
-    has: ['Eerste eerlijk overzicht', 'Beknopte vragenlijst', 'Gedeelde grond'],
-    hasNot: ['Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Opvolgdocument nadien'],
-  },
   los: {
     has: ['1 volledig gesprek', 'Volledige, diepgaande vragenlijst', 'Volledig document met inzichten en tips', 'Persoonlijke tips', 'Vragen en zinnen om het gesprek te openen', 'Opvolgdocument nadien'],
     hasNot: [],
@@ -319,15 +341,14 @@ PRICING_CONFIG.plans.filter(p => p.id !== 'pro' && p.id !== 'gratis' && !p.hidde
 });
 
 showPlanDetail('los');
+
 function updatePlanUI() {
-  const isFree = selectedPlanId === 'gratis';
   const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
-document.getElementById('freeNotice').style.display = 'none';
-  document.getElementById('paidNotice').style.display = (!isFree && !hasActiveSub) ? 'block' : 'none';
+  document.getElementById('paidNotice').style.display = hasActiveSub ? 'none' : 'block';
   document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
 
-  if (!isFree && !hasActiveSub) {
+  if (!hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (selectedPlan) {
       const priceLabel = `€${selectedPlan.price.toFixed(2).replace('.',',')} ${selectedPlan.period}`;
@@ -338,7 +359,7 @@ document.getElementById('freeNotice').style.display = 'none';
     document.getElementById('paymentConfirm').style.display = 'none';
   }
 
-  document.getElementById('submitBtn').textContent = (!isFree && !hasActiveSub) ? 'Verder naar betaling' : 'Sessie aanmaken';
+  document.getElementById('submitBtn').textContent = hasActiveSub ? 'Sessie aanmaken' : 'Verder naar betaling';
 }
 
 async function checkEmail(email) {
@@ -355,6 +376,7 @@ async function checkEmail(email) {
       document.getElementById('limitBox').style.display = 'none';
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('submitBtn').style.opacity = '1';
+      updatePlanUI();
       return;
     }
 
@@ -379,7 +401,7 @@ async function checkEmail(email) {
       const periodEnd = data.periodEnd
         ? new Date(data.periodEnd).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })
         : null;
-document.getElementById('customerInfoText').innerHTML = `
+      document.getElementById('customerInfoText').innerHTML = `
         <strong>Actief plan: ${data.planLabel}</strong><br>
         Gesprekken resterend: <strong>${data.sessionsRemaining} van ${data.sessionsLimit}</strong>
         ${periodEnd ? `<br>Periode vervalt op: <strong>${periodEnd}</strong>` : ''}
@@ -404,10 +426,6 @@ document.getElementById('customerInfoText').innerHTML = `
 document.getElementById('organizerEmail').addEventListener('blur', e => {
   checkEmail(e.target.value.trim());
 });
-
-function checkAutoSendInvites() {
-  document.getElementById('sendInvites').checked = true;
-}
 
 function addParticipantRow() {
   const wrap = document.getElementById('participantInputs');
@@ -542,14 +560,14 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
 
   const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
-  if (selectedPlanId !== 'gratis' && !hasActiveSub) {
+  if (!hasActiveSub) {
     const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
     if (!selectedPlan || !selectedPlan.ctaLink) {
       errorBox.textContent = 'Dit plan is nog niet beschikbaar.';
       errorBox.style.display = 'block';
       return;
     }
-   savePending({
+    savePending({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages,
       plan: selectedPlanId, isThirdParty, reflectionPrefillText, reflectionConfidentialPrefillText
@@ -587,18 +605,18 @@ async function createSession({ category, organizerName, organizerEmail, organize
 
     if (!res.ok) throw new Error(data.error || 'Er ging iets mis.');
 
-    document.getElementById('newSessionForm').style.display = 'none';
+    document.getElementById('formView').style.display = 'none';
     document.getElementById('postPurchaseInfo').style.display = 'none';
     const list = document.getElementById('linksList');
     list.innerHTML = '';
     const inviteMessages = [];
 
-  if (reflectionPrefillText || reflectionConfidentialPrefillText) {
+    if (reflectionPrefillText) {
       const organizer = data.participants.find(p => p.isOrganizer);
       if (organizer) {
         try {
           const orgToken = new URLSearchParams(organizer.accessLink.split('?')[1]).get('token');
-          if (reflectionPrefillText) localStorage.setItem(`mp_prefill_kern_${orgToken}`, reflectionPrefillText);
+          localStorage.setItem(`mp_prefill_kern_${orgToken}`, reflectionPrefillText);
           if (reflectionConfidentialPrefillText) localStorage.setItem(`mp_prefill_confidential_${orgToken}`, reflectionConfidentialPrefillText);
         } catch (e) {}
       }
@@ -649,9 +667,7 @@ async function createSession({ category, organizerName, organizerEmail, organize
     }
 
     document.getElementById('inviteStatus').innerHTML = inviteMessages.join('<br>');
-    if (plan !== 'gratis') {
-      document.getElementById('followupHint').style.display = 'block';
-    }
+    document.getElementById('followupHint').style.display = 'block';
     document.getElementById('result').style.display = 'block';
     document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
   } catch (err) {
@@ -660,10 +676,34 @@ async function createSession({ category, organizerName, organizerEmail, organize
   }
 }
 
+function showFormView() {
+  document.getElementById('chooserView').style.display = 'none';
+  document.getElementById('formView').style.display = 'block';
+}
+
+document.getElementById('chooseTogetherBtn').addEventListener('click', () => {
+  showFormView();
+});
+document.getElementById('chooseThirdPartyBtn').addEventListener('click', () => {
+  showFormView();
+  const checkbox = document.getElementById('isThirdParty');
+  checkbox.checked = true;
+  checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+});
+document.getElementById('backToChooserBtn').addEventListener('click', () => {
+  document.getElementById('chooserView').style.display = 'block';
+  document.getElementById('formView').style.display = 'none';
+});
+
 window.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const isPaid = urlParams.get('paid') === 'true';
+  const fromReflectionParam = urlParams.get('fromReflection');
   const pending = loadPending();
+
+  if (isPaid || fromReflectionParam || pending) {
+    showFormView();
+  }
 
   if (isPaid) {
     document.getElementById('postPurchaseInfo').style.display = 'block';
@@ -671,20 +711,19 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   if (!isPaid) {
     const preselectPlan = urlParams.get('plan');
-    if (preselectPlan && preselectPlan !== 'gratis') {
+    if (preselectPlan) {
       const pill = document.querySelector(`.plan-pill[data-plan-id="${preselectPlan}"]`);
       if (pill) pill.click();
     }
   }
 
-  const fromReflection = urlParams.get('fromReflection');
-  if (fromReflection && !isPaid) {
+  if (fromReflectionParam && !isPaid) {
     try {
-      const res = await fetch(`/.netlify/functions/get-reflection?token=${fromReflection}`);
+      const res = await fetch(`/.netlify/functions/get-reflection?token=${fromReflectionParam}`);
       const data = await res.json();
       if (res.ok && data.reflection) {
         const r = data.reflection;
- document.getElementById('reflectionNotice').style.display = 'block';
+        document.getElementById('reflectionNotice').style.display = 'block';
         document.getElementById('organizerName').value = r.name || '';
         if (r.email) {
           document.getElementById('organizerEmail').value = r.email;
@@ -702,19 +741,15 @@ window.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('categoryOtherField').style.display = 'block';
           document.getElementById('categoryOther').value = r.category;
         }
-
-        const gratisPill = document.querySelector('.plan-pill[data-plan-id="gratis"]');
-        if (gratisPill) gratisPill.style.display = 'none';
-        const losPill = document.querySelector('.plan-pill[data-plan-id="los"]');
-        if (losPill) losPill.click();
       }
     } catch (e) { /* stil falen, gewoon normaal verder laten gaan */ }
   }
 
   if (isPaid && pending) {
+    document.getElementById('formView').style.display = 'block';
     document.getElementById('newSessionForm').style.display = 'none';
     document.getElementById('processingMsg').style.display = 'block';
-if (pending.reflectionPrefillText) reflectionPrefillText = pending.reflectionPrefillText;
+    if (pending.reflectionPrefillText) reflectionPrefillText = pending.reflectionPrefillText;
     if (pending.reflectionConfidentialPrefillText) reflectionConfidentialPrefillText = pending.reflectionConfidentialPrefillText;
     clearPending();
     try {
