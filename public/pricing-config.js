@@ -14,10 +14,10 @@ const PRICING_CONFIG = {
       cta: 'Start gratis',
       ctaLink: '/new.html',
     },
-    {
+{
       id: 'los',
       name: 'Eén gesprek',
-      price: 3.99,
+      price: 4.99,
       period: 'eenmalig',
       maxCharsPerStory: 12000,
       sessionsPerMonth: 1,
@@ -25,7 +25,8 @@ const PRICING_CONFIG = {
       includesCheckins: true,
       description: '1 volledig gesprek met vervolgvragen, het complete document met inzichten en tips, en check-ins achteraf.',
       cta: 'Start nu',
-      ctaLink: 'https://buy.stripe.com/00w8wP1sw3Du6w9djRaVa0b',
+      ctaLink: 'https://buy.stripe.com/eVq4gzfjm5LCcUx4NlaVa0k',
+    },
     },
     {
       id: 'starter',
