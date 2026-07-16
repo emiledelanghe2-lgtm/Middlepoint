@@ -142,7 +142,7 @@ const GEVOEL_OPTIONS = [
 
 function renderForm() {
   app.innerHTML = `
- <span class="label">Gratis reflectie</span>
+    <span class="label">Gratis reflectie</span>
     <h1>Vertel wat er speelt</h1>
     <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:20px">
       <p style="margin:0 0 10px;font-weight:600">Zeg ons wat er op je lever ligt</p>
@@ -568,7 +568,7 @@ async function pollResult(token) {
           ${r.self_help_closing ? `<p style="font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
           ${r.self_help_quote ? `<div class="selfhelp-quote">"${esc(r.self_help_quote)}"</div>` : ''}
         </div>`;
- } else if (r.self_help_status === 'bezig') {
+    } else if (r.self_help_status === 'bezig') {
       selfHelpSectionHTML = `
         <div class="doc-section" id="actieplanSection" style="border-bottom:none">
           <span class="premium-badge">Reflectie+</span>
@@ -579,7 +579,7 @@ async function pollResult(token) {
           <p style="color:var(--ink-soft);font-size:.85rem;margin-top:12px">Dit duurt ongeveer een minuut. Deze pagina ververst zichzelf zodra het klaar is, je hoeft niets te doen.</p>
         </div>`;
       setTimeout(() => pollResult(token), 3000);
-    }
+    } else {
       selfHelpSectionHTML = `
         <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
           <span class="label">Reflectie+</span>
@@ -630,12 +630,12 @@ async function pollResult(token) {
       <div class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
         <span class="label">Samen bespreken</span>
         <h3>Wil je dit toch bespreken met de ander?</h3>
-<p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Jullie vullen elk apart een uitgebreide vragenlijst in, en krijgen samen een eerlijk, gedeeld document. Dit is een volledig, betalend gesprek, vanaf €4,99. Jouw beschrijving hierboven staat er al automatisch in ingevuld.</p>
+        <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Jullie vullen elk apart een uitgebreide vragenlijst in, en krijgen samen een eerlijk, gedeeld document. Dit is een volledig, betalend gesprek, vanaf €4,99. Jouw beschrijving hierboven staat er al automatisch in ingevuld.</p>
         <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:12px 28px">Start een gesprek met de ander</a>
       </div>
     `;
 
- let justPaidToken = null;
+    let justPaidToken = null;
     try { justPaidToken = localStorage.getItem('mp_justpaid_selfhelp'); } catch (e) {}
     if (justPaidToken === token) {
       if (r.self_help_status === 'klaar') {
