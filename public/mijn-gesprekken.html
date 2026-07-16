@@ -53,6 +53,13 @@
 const token = new URLSearchParams(window.location.search).get('token');
 const app = document.getElementById('app');
 const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
+const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
+
+function goToSelfHelpPayment(reflectionToken, email) {
+  try { localStorage.setItem('mp_pending_selfhelp', reflectionToken); } catch (e) {}
+  const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
+  window.location.href = email ? `${SELF_HELP_STRIPE_LINK}${sep}prefilled_email=${encodeURIComponent(email)}` : SELF_HELP_STRIPE_LINK;
+}
 
 function statusLabel(status) {
   const labels = {
@@ -236,17 +243,17 @@ async function load() {
       <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:16px">
         <p style="margin:0;font-size:.85rem">Al je documenten blijven hier altijd terug te vinden, ook je opvolgdocumenten en je eigen ingevulde antwoorden. Zodra jullie document klaar is, kan je hieronder op elk moment een opvolging starten, je hoeft daar niet op te wachten.</p>
       </div>` : ''}
-
-      ${hasSessions ? `<div id="sessionsList"></div>` : `
-      <div class="card" style="margin-bottom:24px">
-        <p style="margin:0;color:var(--ink-soft)">Nog geen betaald gesprek gestart. Je reflecties vind je hieronder.</p>
-      </div>`}
-
-      ${hasReflections ? `
-      <div style="margin-top:40px">
+${hasReflections ? `
+      <div style="margin-bottom:40px">
         <span class="label" style="display:block;margin-bottom:16px">Mijn reflecties</span>
         <div id="reflectionsList"></div>
       </div>` : ''}
+
+      <span class="label" style="display:block;margin-bottom:16px">Gesprekken met anderen</span>
+      ${hasSessions ? `<div id="sessionsList"></div>` : `
+      <div class="card" style="margin-bottom:24px">
+        <p style="margin:0;color:var(--ink-soft)">Nog geen betaald gesprek gestart.</p>
+      </div>`}
 
       <div style="margin-top:32px;display:flex;gap:10px;flex-wrap:wrap">
         <a href="/new.html" class="btn outline">Start een nieuw gesprek</a>
@@ -354,11 +361,11 @@ async function load() {
             </div>
             ${isKlaar && r.recommendation ? `<span class="session-status-badge" style="background:#EFF4ED;color:${recColor[r.recommendation] || 'var(--ink-soft)'}">${recLabel[r.recommendation] || r.recommendation}</span>` : ''}
           </div>
-          ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${r.situationSummary}</p>` : ''}
-     <div class="session-card-actions">
+      ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${r.situationSummary}</p>` : ''}
+          <div class="session-card-actions">
             <a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
-            ${r.selfHelpStatus === 'klaar' ? `<a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk mijn actieplan</a>` : `<a href="/reflectie.html?token=${r.token}" class="btn outline">Ontvang mijn actieplan</a>`}
-            <a href="/new.html?fromReflection=${r.token}" class="btn clay">Maak er een gesprek van</a>
+            ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${data.email}')">Ontvang mijn actieplan – €2,99</button>` : ''}
+            <a href="/new.html?fromReflection=${r.token}" class="btn outline">Maak er een gesprek van</a>
           </div>`;
         rList.appendChild(rCard);
       });
