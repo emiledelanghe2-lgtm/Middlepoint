@@ -139,8 +139,8 @@
         <a href="/reflectie.html" class="btn outline">Start een gratis reflectie</a>
       </div>
 
-      <div class="chooser-card featured" id="chooseTogetherBtn">
-        <span class="chooser-badge paid">€4,99</span>
+<div class="chooser-card" id="chooseTogetherBtn">
+      <span class="chooser-badge paid">€4,99</span>
         <span class="chooser-icon" aria-hidden="true">⊙</span>
         <h3>Samen met de ander</h3>
         <p>Jullie vullen elk apart een uitgebreide vragenlijst in. Wij leggen beide kanten naast elkaar in één eerlijk, gedeeld document, met tips en een opvolgdocument nadien. Ook geschikt als je dit als derde partij (bv. HR, leerkracht) opstart zonder zelf deel te nemen.</p>
@@ -270,8 +270,9 @@
       </div>
     </div>
 
-    <div id="error" class="error-box" style="display:none;margin-bottom:16px"></div>
+   <div id="error" class="error-box" style="display:none;margin-bottom:16px"></div>
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Verder naar betaling</button>
+    <p style="text-align:center;font-size:.78rem;color:var(--ink-soft);margin-top:10px">🔒 Veilig betalen via Stripe</p>
   </form>
   </div>
 
@@ -300,6 +301,19 @@ function showFormView() {
   document.getElementById('formView').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+const chooseSoloCard = document.getElementById('chooseSoloCard');
+const chooseTogetherCard = document.getElementById('chooseTogetherBtn');
+function setFeaturedCard(card) {
+  chooseSoloCard.classList.remove('featured');
+  chooseTogetherCard.classList.remove('featured');
+  card.classList.add('featured');
+}
+setFeaturedCard(chooseSoloCard);
+chooseSoloCard.addEventListener('mouseenter', () => setFeaturedCard(chooseSoloCard));
+chooseSoloCard.addEventListener('touchstart', () => setFeaturedCard(chooseSoloCard), { passive: true });
+chooseTogetherCard.addEventListener('mouseenter', () => setFeaturedCard(chooseTogetherCard));
+chooseTogetherCard.addEventListener('touchstart', () => setFeaturedCard(chooseTogetherCard), { passive: true });
 
 document.getElementById('chooseTogetherBtn').addEventListener('click', () => {
   showFormView();
