@@ -158,10 +158,15 @@ function renderForm() {
         <label for="rName">Jouw naam <span style="color:var(--clay)">*</span></label>
         <input type="text" id="rName" required placeholder="bv. Sarah">
       </div>
-      <div class="field">
+    <div class="field">
         <label for="rEmail">Jouw e-mailadres <span style="color:var(--clay)">*</span></label>
         <input type="email" id="rEmail" required placeholder="jij@email.be">
         <div class="help">Zodat je je reflectie kan terugvinden, en om je verder te helpen als je later een gesprek wil starten.</div>
+      </div>
+      <div class="field">
+        <label for="rEmailConfirm">Herhaal je e-mailadres <span style="color:var(--clay)">*</span></label>
+        <input type="email" id="rEmailConfirm" required placeholder="jij@email.be">
+        <div class="help">Even dubbel typen om tikfouten te vermijden.</div>
       </div>
 
       <div class="q-block">
@@ -293,8 +298,9 @@ function renderForm() {
     const errorBox = document.getElementById('error');
     errorBox.style.display = 'none';
 
-    const name = document.getElementById('rName').value.trim();
+  const name = document.getElementById('rName').value.trim();
     const email = document.getElementById('rEmail').value.trim();
+    const emailConfirm = document.getElementById('rEmailConfirm').value.trim();
     let category = categorySelect.value;
     if (!category) {
       errorBox.textContent = 'Kies eerst een categorie.';
@@ -316,9 +322,15 @@ function renderForm() {
     const diepgangChecked = document.querySelector('input[name=diepgang]:checked');
     const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
 
-    if (!name || !email) {
+   if (!name || !email || !emailConfirm) {
       errorBox.textContent = 'Vul je naam en e-mailadres in.';
       errorBox.style.display = 'block';
+      return;
+    }
+    if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
+      errorBox.textContent = 'De twee e-mailadressen komen niet overeen. Controleer even of je jouw adres correct herhaald hebt.';
+      errorBox.style.display = 'block';
+      document.getElementById('rEmailConfirm').scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
