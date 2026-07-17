@@ -16,3 +16,5 @@
   schedule = "@daily"
 [functions."send-story-reminder-scheduled"]
   schedule = "@daily"
+[functions."send-testimonial-request-scheduled"]
+  schedule = "@daily"
