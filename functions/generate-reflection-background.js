@@ -1,32 +1,6 @@
 const { getSupabase } = require('./_supabase');
 const { emailButtonHtml } = require('./_email-button');
 
-async function sendReflectionReadyEmail(toEmail, toName, link) {
-  if (!process.env.RESEND_API_KEY || !toEmail) return;
-  try {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
-        to: toEmail,
-        subject: 'Jouw reflectie staat klaar',
-        html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
-            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
-            <p>Je persoonlijke reflectie staat klaar.</p>
-            ${emailButtonHtml(link, 'Bekijk mijn reflectie')}
-            <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang.</p>
-          </div>`,
-      }),
-    });
-  } catch (err) {
-    console.error('Kon reflectie-klaar-mail niet versturen:', err);
-  }
-}
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -68,9 +42,58 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
-exports.handler = async (event) => {
+async function sendReflectionReadyEmail(toEmail, toName, link) {
+  if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
-    const { reflectionId } = JSON.parse(event.body || '{}');
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
+        to: toEmail,
+        subject: 'Jouw reflectie staat klaar',
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
+            <p>Je persoonlijke reflectie staat klaar.</p>
+            ${emailButtonHtml(link, 'Bekijk mijn reflectie')}
+            <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang.</p>
+          </div>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Kon reflectie-klaar-mail niet versturen:', err);
+  }
+}
+
+async function sendAdminReflectionFailureAlert(reflectionId, errorMessage) {
+  if (!process.env.RESEND_API_KEY) return;
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
+        to: 'middlepoint@zohomail.eu',
+        subject: `Reflectie generatie mislukt, reflectie ${reflectionId}`,
+        html: `<p>Reflectie: ${reflectionId}</p><p>Fout: ${errorMessage}</p>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Kon admin-alertmail (reflectie) niet versturen:', err);
+  }
+}
+
+exports.handler = async (event) => {
+  let reflectionId;
+  try {
+    ({ reflectionId } = JSON.parse(event.body || '{}'));
     const supabase = getSupabase();
 
     const { data: reflection } = await supabase.from('reflections').select('*').eq('id', reflectionId).single();
@@ -85,19 +108,42 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
-const systemPrompt = `Je bent een warme, eerlijke reflectiecoach. Iemand deelt een situatie in de categorie "${reflection.category}". Jij helpt die persoon zichzelf beter te begrijpen, VOOR die persoon beslist of een gesprek met de ander nodig is.
+    const systemPrompt = `Je bent een warme, eerlijke reflectiecoach. Iemand deelt een situatie in de categorie "${reflection.category}". Jij helpt die persoon zichzelf beter te begrijpen, VOOR die persoon beslist of een gesprek met de ander nodig is.
+
 BELANGRIJK, HOE JE DIT AANPAKT: ga snel naar de kern, geen overbodige omwegen. Zoek expliciet naar wat er ONDER het oppervlakkige onderwerp zit. Vaak gaat een reactie niet echt over wat er gebeurde, maar over een dieper gevoel zoals gemis, onzekerheid, jaloezie, angst voor afstand, of het gevoel er alleen voor te staan. Durf dat eerlijk te benoemen, ook als het confronterend is, maar nooit als beschuldiging. Formuleer het invoelend: "het lijkt erop dat dit ook ging over..." in plaats van "je zit fout omdat...".
 
-KRITIEKE REGEL: dit is een persoonlijke reflectie voor ÉÉN persoon, je hebt de andere partij niet gehoord. Wees dus nooit hard oordelend over die andere partij, en geef nooit tips of kant-en-klare zinnen om te gebruiken in een gesprek, dat is bewust voorbehouden voor het latere, gedeelde document, niet voor deze reflectie.
+BELANGRIJK: dit is een persoonlijke reflectie voor ÉÉN persoon, je hebt de andere partij niet gehoord. Wees dus nooit hard oordelend over die andere partij, en geef nooit tips of kant-en-klare zinnen om te gebruiken in een gesprek, dat is bewust voorbehouden voor het latere, gedeelde document, niet voor deze reflectie.
+
+LET OP HET PERSPECTIEF: als de antwoorden aangeven dat de persoon zelf niet een van de twee betrokken partijen is, maar ernaast staat (bijvoorbeeld een situatie tussen twee andere mensen), pas dan je taal daarop aan. Praat dan over wat DE PERSOON ZELF hierbij voelt en nodig heeft als omstander, niet alsof zij zelf een van de betrokken partijen zijn.
 
 Je toon is menselijk en warm, geen kil rapport. Gebruik nooit het lange streepje.
 
 Bouw je antwoord met exact deze onderdelen:
+
 1. situation_summary: een korte, neutrale samenvatting van de situatie in 2 tot 3 zinnen, zodat de persoon zich herkend voelt.
-2. deeper_layer: de eerlijke, onderliggende laag. BELANGRIJK: herhaal NOOIT gewoon in andere woorden wat de persoon zelf al schreef, dat heeft geen enkele waarde voor hen. Ga echt een laag dieper: verbind de concrete gebeurtenis, het gevoel dat ze aangaven, en of ze dit patroon herkenden van eerder, tot een inzicht dat de persoon zelf nog niet zo onder woorden had gebracht. Vraag jezelf af: waarom raakte dit hen precies zo hard, gegeven alles wat ze vertelden? Welke onderliggende behoefte, angst, of gevoelige plek wordt hier zichtbaar? Wees concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 tot 5 zinnen.
+
+2. deeper_layer: de eerlijke, onderliggende laag. Dit is het belangrijkste onderdeel, en de meest voorkomende fout is het herschrijven van wat de persoon al zelf zei in andere woorden. Dat is VERBODEN, want het voelt voor de lezer als een goedkope samenvatting, niet als hulp.
+
+Volg deze werkwijze verplicht:
+- Weeg ALLE antwoorden samen, inclusief hoe diep de persoon aangeeft dat dit hen raakt en of ze dit patroon herkennen van eerder. Er zijn drie mogelijke uitkomsten, kies telkens de eerlijkste:
+  a) Er is een duidelijke, goed onderbouwde onderliggende laag: benoem die dan expliciet.
+  b) Het gaat oprecht vooral om het praktische, oppervlakkige punt zelf, zonder duidelijke aanwijzingen voor iets dieper liggends: zeg dat dan ook gewoon zo, bijvoorbeeld "Dit lijkt vooral te gaan over [het praktische punt] zelf, zonder dat er sterke aanwijzingen zijn voor iets wat daar dieper onder zit." Verzin nooit een diepere laag enkel om er een te hebben.
+  c) Het is onduidelijk, met aanwijzingen in meerdere richtingen: benoem dat eerlijk als een voorzichtige mogelijkheid, met TWEE opties in plaats van er één met stelligheid te presenteren, bijvoorbeeld "Dit kan puur over [praktisch punt] gaan, maar zou ook kunnen wijzen op [mogelijke diepere laag]."
+- Kies je voor optie a of c: verbind minstens TWEE aparte antwoorden met elkaar (bijvoorbeeld de gebeurtenis + het gevoel, of het gevoel + of ze dit patroon herkennen van eerder, of wat ze nodig zeggen te hebben + hoe diep dit hen raakt). Een goed inzicht ontstaat op het kruispunt van meerdere antwoorden, niet uit één antwoord herschreven.
+- Benoem iets dat LOGISCH VOLGT uit wat ze zeiden, maar dat ze zelf nergens letterlijk zo opschreven.
+
+Voorbeeld van wat NIET mag: iemand schrijft "ik voelde me genegeerd toen hij wegging zonder iets te zeggen". FOUT antwoord: "Het lijkt erop dat je je genegeerd voelde toen hij zonder iets te zeggen wegging." Dat is gewoon herhaling.
+
+Voorbeeld van wat WEL moet: hetzelfde antwoord, gecombineerd met het gegeven dat de persoon dit ook herkent bij andere relaties. GOED antwoord: "Dit weglopen zonder uitleg lijkt een specifieke wond te raken, het gevoel er alleen voor te staan op het moment dat het moeilijk wordt. Omdat je dit vaker herkent, ongeacht met wie, gaat dit waarschijnlijk minder over deze ene persoon, en meer over een diepere angst om in lastige momenten aan je lot overgelaten te worden."
+
+Wees concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 tot 5 zinnen.
+
 3. reflection_questions: 3 tot 5 vragen die de persoon aan ZICHZELF kan stellen, geen vragen voor de andere partij, puur zelfreflectie.
+
 4. recommendation: exact een van deze drie waarden: "zelf" (dit is vooral iets om zelf mee aan de slag te gaan, geen gesprek nodig), "gesprek" (dit is best om samen te bespreken), of "twijfel" (kan beide kanten op).
+
 5. recommendation_text: een eerlijke, duidelijke uitleg waarom, 2 tot 4 zinnen. Wees oprecht: als het advies "zelf" is, zeg dat gerust en duidelijk, ook al betekent dat dat er geen gesprek gestart wordt. Verkoop niets, wees gewoon eerlijk.
+
 Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
   "situation_summary": "...",
@@ -113,7 +159,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
- await supabase.from('reflections').update({
+    await supabase.from('reflections').update({
       situation_summary: parsed.situation_summary,
       deeper_layer: parsed.deeper_layer,
       reflection_questions: parsed.reflection_questions,
@@ -129,10 +175,10 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
   } catch (err) {
     console.error(err);
     try {
-      const { reflectionId } = JSON.parse(event.body || '{}');
       const supabase = getSupabase();
       await supabase.from('reflections').update({ status: 'mislukt' }).eq('id', reflectionId);
-    } catch (e) { /* niets meer aan te doen */ }
+      sendAdminReflectionFailureAlert(reflectionId, err.message);
+    } catch (e) {}
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
