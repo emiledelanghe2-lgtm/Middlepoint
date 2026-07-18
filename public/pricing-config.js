@@ -14,7 +14,7 @@ const PRICING_CONFIG = {
       cta: 'Start gratis',
       ctaLink: '/new.html',
     },
-{
+    {
       id: 'los',
       name: 'Eén gesprek',
       price: 4.99,
@@ -26,7 +26,6 @@ const PRICING_CONFIG = {
       description: '1 volledig gesprek met vervolgvragen, het complete document met inzichten en tips, en check-ins achteraf.',
       cta: 'Start nu',
       ctaLink: 'https://buy.stripe.com/eVq4gzfjm5LCcUx4NlaVa0k',
-    },
     },
     {
       id: 'starter',
