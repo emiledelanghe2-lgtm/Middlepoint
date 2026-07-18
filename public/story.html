@@ -793,6 +793,13 @@ function handleSurveyInput(e) {
       counter.textContent = `${t.value.length} / ${Number(max).toLocaleString('nl-BE')} tekens`;
     }
   }
+  if (t.classList && t.classList.contains('other-input') && t.id) {
+    const toggle = document.querySelector(`[data-other-target="${t.id}"]`);
+    if (toggle && !toggle.checked && t.value.trim()) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 }
 
 function cssAttrEscape(v) {
