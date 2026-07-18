@@ -129,6 +129,16 @@ const CATEGORY_OTHER_LABEL = {
   andere: 'de ander',
 };
 
+const CATEGORY_THIRDPARTY_EXAMPLE = {
+  koppel: 'bv. tussen mijn zus en haar partner',
+  familie: 'bv. tussen mijn moeder en mijn oom',
+  vrienden: 'bv. tussen twee vrienden uit mijn vriendengroep',
+  buren: 'bv. tussen twee buren in mijn straat',
+  werk: "bv. tussen twee collega's van mijn team",
+  school: 'bv. tussen twee leerlingen in de klas',
+  andere: 'bv. tussen ... en ...',
+};
+
 const GEVOEL_OPTIONS = [
   { value: 'boos', label: 'Boos' },
   { value: 'verdrietig', label: 'Verdrietig' },
@@ -176,8 +186,20 @@ function renderForm() {
           ${CATEGORY_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
           <option value="__andere__">Iets anders, namelijk...</option>
         </select>
-        <div class="field" id="categoryOtherField" style="display:none;margin-top:10px">
+  <div class="field" id="categoryOtherField" style="display:none;margin-top:10px">
           <input type="text" id="categoryOther" placeholder="Omschrijf kort de situatie">
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Gaat dit rechtstreeks tussen jou en iemand anders, of ben je eerder betrokken bij, of getuige van, een situatie tussen anderen? <span style="color:var(--clay)">*</span></label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="perspectief" value="zelf" id="perspectiefZelf" checked><span>Dit gaat rechtstreeks tussen mij en de ander</span></label>
+          <label class="mc-option"><input type="radio" name="perspectief" value="derde" id="perspectiefDerde"><span>Ik sta er zelf naast, dit speelt tussen anderen</span></label>
+        </div>
+        <div class="branch-box" id="perspectiefDerdeBranch" style="display:none">
+          <label class="q-label" style="font-weight:500;font-size:.9rem" id="tussenWieLabel">Tussen wie speelt dit zich af?</label>
+          <input type="text" id="tussenWie" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px" placeholder="">
         </div>
       </div>
 
@@ -273,13 +295,31 @@ function renderForm() {
     document.getElementById('qGevoelTekstWrap').style.display = 'block';
   });
 
+function updateNodigLabel() {
+    const val = categorySelect.value;
+    const isThirdParty = document.getElementById('perspectiefDerde').checked;
+    const label = CATEGORY_OTHER_LABEL[val] || 'de ander';
+    if (isThirdParty) {
+      document.getElementById('qNodigLabel').textContent = 'Wat denk je dat er nodig zou zijn om dit tussen hen op te lossen? *';
+    } else {
+      document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment? *`;
+    }
+  }
+
   const categorySelect = document.getElementById('categorySelect');
   categorySelect.addEventListener('change', () => {
     const val = categorySelect.value;
     document.getElementById('categoryOtherField').style.display = val === '__andere__' ? 'block' : 'none';
     document.getElementById('schoolAgeBlock').style.display = val === 'school' ? 'block' : 'none';
-    const label = CATEGORY_OTHER_LABEL[val] || 'de ander';
-    document.getElementById('qNodigLabel').textContent = `Wat denk je dat je eigenlijk nodig had van ${label} op dat moment? *`;
+    document.getElementById('tussenWie').placeholder = CATEGORY_THIRDPARTY_EXAMPLE[val] || CATEGORY_THIRDPARTY_EXAMPLE.andere;
+    updateNodigLabel();
+  });
+
+  document.querySelectorAll('input[name=perspectief]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('perspectiefDerdeBranch').style.display = e.target.value === 'derde' ? 'block' : 'none';
+      updateNodigLabel();
+    });
   });
 
   document.querySelectorAll('input[name=herkenning]').forEach(r => {
@@ -287,10 +327,18 @@ function renderForm() {
       document.getElementById('herkenningBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
     });
   });
-  document.querySelectorAll('input[name=dieper]').forEach(r => {
+document.querySelectorAll('input[name=dieper]').forEach(r => {
     r.addEventListener('change', (e) => {
       document.getElementById('dieperBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
     });
+  });
+
+  document.getElementById('gevoelAndereInput').addEventListener('input', (e) => {
+    const toggle = document.getElementById('gevoelAndereToggle');
+    if (e.target.value.trim() && !toggle.checked) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   });
 
   document.getElementById('reflectionForm').addEventListener('submit', async (e) => {
@@ -315,6 +363,8 @@ function renderForm() {
         return;
       }
     }
+const perspectief = (document.querySelector('input[name=perspectief]:checked') || {}).value || 'zelf';
+    const tussenWie = document.getElementById('tussenWie').value.trim();
     const gevoelen = Array.from(document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
     const gevoelAndere = document.getElementById('gevoelAndereInput').value.trim();
     if (document.getElementById('gevoelAndereToggle').checked && gevoelAndere) gevoelen.push(gevoelAndere);
@@ -334,7 +384,10 @@ function renderForm() {
       return;
     }
 
-    const lines = [];
+ const lines = [];
+    if (perspectief === 'derde') {
+      lines.push(`Vraag: Gaat dit rechtstreeks tussen jou en iemand anders, of sta je ernaast?\nAntwoord: Ik sta er zelf naast, dit speelt tussen anderen${tussenWie ? ': ' + tussenWie : ''}.`);
+    }
     const schoolAge = document.getElementById('qSchoolAge') ? document.getElementById('qSchoolAge').value.trim() : '';
     if (categorySelect.value === 'school' && schoolAge) {
       lines.push(`Vraag: Leeftijd of leerjaar van het betrokken kind\nAntwoord: ${schoolAge}`);
@@ -459,13 +512,20 @@ function renderSelfHelpForm(token) {
     </form>
   `;
 
-  ['1','2','3'].forEach(n => {
+['1','2','3'].forEach(n => {
     document.getElementById(`shQ${n}AndereToggle`).addEventListener('change', (e) => {
       document.getElementById(`shQ${n}AndereInput`).style.display = e.target.checked ? 'block' : 'none';
       document.getElementById(`shQ${n}TekstWrap`).style.display = 'block';
     });
     document.querySelectorAll(`#shQ${n}Group input[type=checkbox][name=shq${n}]`).forEach(cb => {
       cb.addEventListener('change', () => { document.getElementById(`shQ${n}TekstWrap`).style.display = 'block'; });
+    });
+    document.getElementById(`shQ${n}AndereInput`).addEventListener('input', (e) => {
+      const toggle = document.getElementById(`shQ${n}AndereToggle`);
+      if (e.target.value.trim() && !toggle.checked) {
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     });
   });
 
