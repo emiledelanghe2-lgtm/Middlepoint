@@ -471,6 +471,9 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   const limitBox = document.getElementById('limitBox');
   errorBox.style.display = 'none';
   limitBox.style.display = 'none';
+  const submitBtnEl = document.getElementById('submitBtn');
+
+  try {
 
   let category = document.getElementById('category').value;
   if (category === 'andere') {
@@ -552,7 +555,14 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
+await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
+
+  } catch (unexpectedErr) {
+    console.error('Onverwachte fout bij indienen:', unexpectedErr);
+    errorBox.textContent = 'Er ging onverwacht iets mis. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
+    errorBox.style.display = 'block';
+    if (submitBtnEl) { submitBtnEl.disabled = false; }
+  }
 });
 
 async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan }) {
