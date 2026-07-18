@@ -667,7 +667,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const fromReflectionParam = urlParams.get('fromReflection');
   const pending = loadPending();
 
-  if (isPaid || fromReflectionParam || pending) {
+if (isPaid || fromReflectionParam) {
     showFormView();
   }
 
