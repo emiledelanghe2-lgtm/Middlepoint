@@ -201,18 +201,21 @@ GEVOELIGE OF ASYMMETRISCHE INFORMATIE: als een persoon iets zwaars deelt waarvan
 
 Je toon is menselijk, geen kil rapport, maar ook niet zweverig. Gebruik in de volledige tekst nooit het lange streepje. Schrijf in volledige zinnen met punten, komma's of "en" of "maar" in plaats van een streepje.
 
+BEKNOPTHEID, DIT IS BELANGRIJK: mensen ervaren de documenten nu als te lang en te dicht beschreven. Schrijf daarom compacter: elke paragraaf (shared_summary, common_ground, elk onderdeel van perspectives) maximaal 3 tot 4 zinnen, geen overbodige inleidende zinnen, ga direct naar de kern van wat er speelt.
 EMPATHIE BIJ ZWARE SITUATIES: als uit de antwoorden blijkt dat er sprake is van ziekte, overlijden, verlies, of een ander zwaar persoonlijk verlies (bijvoorbeeld een stervende ouder of grootouder), open shared_summary dan met een korte, oprechte blijk van medeleven, voor je verder gaat met de analyse. Bijvoorbeeld: "Het spijt ons te horen dat jullie dit op dit moment ook nog moeten doormaken." Gebruik dit enkel bij situaties die dat oprecht rechtvaardigen, niet bij gewone, lichtere conflicten, waar het overdreven zou aanvoelen.
 Bouw het rapport met exact deze onderdelen:
+0. key_points: 3 tot 4 heel korte bullet-punten (elk maximaal 12 woorden), die de kern van het HELE document samenvatten voor wie snel wil scannen. Dit is een snelle samenvatting bovenaan, geen vervanging van de rest.
 1. shared_summary: bij het originele document, een objectieve samenvatting van het conflict. Bij een opvolgdocument, zie de aparte instructie hierboven (heel kort).
 2. common_ground: bij het originele document, wat alle partijen gemeenschappelijk hebben. Bij een opvolgdocument, zie de aparte instructie hierboven (wat er beter gaat).
 3. perspectives: bij het originele document, per deelnemer een uitleg van de andere(n). Bij een opvolgdocument: leeg object {}.
-4. tips: per persoon (voor IEDERE deelnemer), 3 tot 5 concrete, niet-beschuldigende tips wat zijzelf beter kunnen doen. PRIVE.
+4. tips: per persoon (voor IEDERE deelnemer), 3 tot 5 concrete, niet-beschuldigende tips wat zijzelf beter kunnen doen. Kort en puntig per tip, geen volzinnen van meer dan 15 woorden. PRIVE.
 5. questions_to_ask: bij het originele document, per persoon 3 tot 5 vragen. Bij een opvolgdocument: leeg object {}.
 6. suggested_phrases: per persoon, 3 tot 5 concrete zinnen. PRIVE.
-7. shared_actions: een array van 3 tot 5 concrete, praktische afspraken, SPECIFIEK voor deze situatie, nooit generiek.
+7. shared_actions: een array van 3 tot 5 concrete, praktische afspraken, SPECIFIEK voor deze situatie, nooit generiek, kort en puntig geformuleerd.
 
 Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
+  "key_points": ["...", "...", "..."],
   "shared_summary": "...",
   "common_ground": "...",
   "perspectives": { "Naam1": { "explanation": "...", "strengths": "...", "growth_areas": "..." }, "Naam2": {...} },
@@ -245,9 +248,10 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 
     const nextVersion = existingDocs && existingDocs.length ? existingDocs[0].version + 1 : 1;
 
-    await supabase.from('documents').insert({
+await supabase.from('documents').insert({
       session_id: sessionId,
       version: nextVersion,
+      key_points: parsed.key_points || [],
       shared_summary: parsed.shared_summary,
       common_ground: parsed.common_ground,
       perspectives: parsed.perspectives,
