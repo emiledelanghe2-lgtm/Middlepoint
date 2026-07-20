@@ -83,7 +83,10 @@ exports.handler = async (event) => {
 
 BELANGRIJK: dit gaat NIET over een gesprek met de andere persoon, dat blijft apart. Dit gaat puur over wat de persoon zelf, alleen, kan doen.
 
+BEKNOPTHEID: schrijf compact, korte zinnen per punt.
+
 Bouw je antwoord met exact deze onderdelen:
+0. key_points: 2 tot 3 heel korte bullet-punten (elk maximaal 12 woorden) die het actieplan samenvatten.
 1. deeper_layer: een scherpere, verdiepte versie van de eerdere analyse. VERBODEN: herhaal nooit gewoon wat de persoon al zei of wat in de eerdere reflectie al stond, in andere woorden. Verbind in plaats daarvan de eerdere analyse expliciet met de NIEUWE antwoorden die de persoon net gaf (wat ze willen bereiken, wat hen tegenhoudt, hoe ze willen dat het er over een maand uitziet), tot een inzicht dat nog nergens zo werd benoemd. Wees concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 tot 5 zinnen.
 2. steps: 3 tot 5 concrete, uitvoerbare stappen, in logische volgorde, die de persoon effectief kan zetten. Elke stap specifiek en toepasbaar, geen vage adviezen zoals "denk hier eens over na".
 3. tips: 2 tot 4 losse, praktische handvaten, dingen die de persoon in het dagelijks leven kan toepassen wanneer een gelijkaardige situatie zich weer voordoet.
@@ -96,6 +99,7 @@ Je toon is warm en menselijk, geen kil rapport. Gebruik nooit het lange streepje
 EMPATHIE BIJ ZWARE SITUATIES: als de situatie ziekte, overlijden of een zwaar verlies betreft, toon dan oprechte betrokkenheid in je toon, zonder dat het overdreven of geforceerd aanvoelt.
 Antwoord alleen met geldige JSON, geen andere tekst:
 {
+  "key_points": ["...", "..."],
   "deeper_layer": "...",
   "steps": ["...", "...", "..."],
   "tips": ["...", "..."],
@@ -110,7 +114,8 @@ Antwoord alleen met geldige JSON, geen andere tekst:
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
-    await supabase.from('reflections').update({
+  await supabase.from('reflections').update({
+      self_help_key_points: parsed.key_points || [],
       self_help_deeper_layer: parsed.deeper_layer,
       self_help_steps: parsed.steps,
       self_help_tips: parsed.tips,
