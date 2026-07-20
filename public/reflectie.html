@@ -457,7 +457,18 @@ const SELFHELP_Q3_OPTIONS = [
   'Ik heb er gewoon vrede mee genomen',
 ];
 
-function renderSelfHelpForm(token) {
+async function renderSelfHelpForm(token) {
+  app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
+
+  let earlierQuestions = [];
+  try {
+    const res = await fetch(`/.netlify/functions/get-reflection?token=${token}`);
+    const data = await res.json();
+    if (res.ok && data.reflection && data.reflection.reflection_questions) {
+      earlierQuestions = data.reflection.reflection_questions.slice(0, 2);
+    }
+  } catch (e) { /* geen probleem, gewoon zonder verdergaan */ }
+
   app.innerHTML = `
     <span class="label">Reflectie+</span>
     <h1>Nog even dieper</h1>
@@ -508,11 +519,22 @@ function renderSelfHelpForm(token) {
         </div>
       </div>
 
+   ${earlierQuestions.length ? `
+      <div class="q-block">
+        <label class="q-label">Nog even terugblikken (optioneel)</label>
+        <div class="q-note" style="margin-bottom:8px">Je stelde jezelf deze vraag al bij je reflectie. Wil je er nu op antwoorden? Dat helpt ons een scherper actieplan te maken.</div>
+        ${earlierQuestions.map(q => `
+          <div style="margin-bottom:14px">
+            <label style="display:block;font-weight:500;font-size:.9rem;margin-bottom:6px">${esc(q)}</label>
+            <textarea class="q-textarea shEarlierAnswer" data-question="${esc(q)}" style="min-height:60px" placeholder="Optioneel"></textarea>
+          </div>`).join('')}
+      </div>` : ''}
+
       <button type="submit" class="btn clay" style="width:100%;padding:14px">Ontvang mijn actieplan</button>
     </form>
   `;
 
-['1','2','3'].forEach(n => {
+  ['1','2','3'].forEach(n => {
     document.getElementById(`shQ${n}AndereToggle`).addEventListener('change', (e) => {
       document.getElementById(`shQ${n}AndereInput`).style.display = e.target.checked ? 'block' : 'none';
       document.getElementById(`shQ${n}TekstWrap`).style.display = 'block';
@@ -551,10 +573,14 @@ function renderSelfHelpForm(token) {
       return;
     }
 
-    const lines = [];
+   const lines = [];
     if (q1.vals.length) lines.push(`Vraag: Wat zou jij het liefst willen bereiken?\nAntwoord: ${q1.vals.join(', ')}${q1.tekst ? '. Toelichting: ' + q1.tekst : ''}`);
     if (q2.vals.length) lines.push(`Vraag: Wat houdt je nu tegen om hier zelf al mee aan de slag te gaan?\nAntwoord: ${q2.vals.join(', ')}${q2.tekst ? '. Toelichting: ' + q2.tekst : ''}`);
     if (q3.vals.length) lines.push(`Vraag: Als je over een maand terugkijkt, wat zou je dan graag anders zien?\nAntwoord: ${q3.vals.join(', ')}${q3.tekst ? '. Toelichting: ' + q3.tekst : ''}`);
+    Array.from(document.querySelectorAll('.shEarlierAnswer')).forEach(t => {
+      const answer = t.value.trim();
+      if (answer) lines.push(`Vraag: ${t.dataset.question}\nAntwoord: ${answer}`);
+    });
 
     app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
 
