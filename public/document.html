@@ -137,6 +137,7 @@ function renderDoc(data, displayVersion) {
   const isFollowupDoc = doc.version >= 2;
   const followupAlreadyUsed = allVersions.some(d => d.version >= 2);
   const missingEmailNames = data.missingEmailNames || [];
+  const keyPoints = doc.key_points || [];
 
   const perspectiveEntries = Object.entries(doc.perspectives || {});
   const questionEntries = Object.entries(doc.questions_to_ask || {});
@@ -162,26 +163,34 @@ function renderDoc(data, displayVersion) {
       Je vindt dit document altijd terug via <a href="/login.html" style="font-weight:600">Mijn gesprekken</a>, ook later nog.
     </div>`;
 
+  const keyPointsHTML = keyPoints.length ? `
+    <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:20px">
+      <span class="label" style="display:block;margin-bottom:10px">In het kort</span>
+      <ul style="margin:0;padding-left:20px;color:var(--ink);font-weight:500">
+        ${keyPoints.map(k => `<li style="margin-bottom:4px">${k}</li>`).join('')}
+      </ul>
+    </div>` : '';
+
   const mainSectionsHTML = isFollowupDoc ? `
-    <div class="doc-section">
-      <span class="label">Terugblik</span>
+    <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+      <span class="label">⊙ Terugblik</span>
       <h3>Korte samenvatting</h3>
       <p>${doc.shared_summary}</p>
     </div>
 
-    <div class="doc-section">
-      <span class="label">Voortgang</span>
+    <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+      <span class="label">⟳ Voortgang</span>
       <h3>Wat er beter gaat</h3>
       <p>${doc.common_ground}</p>
     </div>` : `
-    <div class="doc-section">
-      <span class="label">Objectief overzicht</span>
+    <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+      <span class="label">⊙ Objectief overzicht</span>
       <h3>Wat er speelt</h3>
       <p>${doc.shared_summary}</p>
     </div>
 
-    <div class="doc-section">
-      <span class="label">Gedeelde grond</span>
+    <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+      <span class="label">♡ Gedeelde grond</span>
       <h3>Waar jullie het al over eens zijn</h3>
       <p>${doc.common_ground}</p>
     </div>`;
@@ -201,12 +210,14 @@ function renderDoc(data, displayVersion) {
 
     ${versionPicker}
 
+    ${keyPointsHTML}
+
     ${mainSectionsHTML}
 
     ${isPaid ? `
     ${!isFollowupDoc ? `
-    <div class="doc-section">
-      <span class="label">Perspectief</span>
+    <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+      <span class="label">◐ Perspectief</span>
       <h3>Hoe de ander het ziet</h3>
       ${perspectiveEntries.map(([name, p]) => `
         <div class="person-block">
@@ -218,15 +229,15 @@ function renderDoc(data, displayVersion) {
     </div>` : ''}
 
     ${sharedActions.length ? `
-    <div class="doc-section">
-      <span class="label">Samen aan de slag</span>
+    <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+      <span class="label">⊙ Samen aan de slag</span>
       <h3>${isFollowupDoc ? 'Vernieuwde afspraken' : 'Concrete afspraken om samen te proberen'}</h3>
       <ul class="tip-list">${sharedActions.map(a => `<li>${a}</li>`).join('')}</ul>
     </div>` : ''}
 
     ${!isFollowupDoc ? `
-    <div class="doc-section">
-      <span class="label">Gesprek openen</span>
+    <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+      <span class="label">✎ Gesprek openen</span>
       <h3>Vragen om aan elkaar te stellen</h3>
       ${questionEntries.map(([name, qs]) => `
         <div class="person-block">
@@ -235,8 +246,8 @@ function renderDoc(data, displayVersion) {
         </div>`).join('')}
     </div>` : ''}
 
-    <div class="doc-section">
-      <span class="label">${isThirdPartyViewer ? 'Persoonlijke onderdelen' : 'Alleen voor jou'}</span>
+    <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+      <span class="label">✎ ${isThirdPartyViewer ? 'Persoonlijke onderdelen' : 'Alleen voor jou'}</span>
       <h3>${isThirdPartyViewer ? 'Persoonlijke tips en zinnen van beide deelnemers' : (isFollowupDoc ? 'Vernieuwde tips voor jezelf' : 'Jouw persoonlijke onderdeel')}</h3>
       <p style="color:var(--ink-soft);font-size:.85rem;margin-bottom:16px">${isThirdPartyViewer ? 'Als organisator zie jij dit volledige overzicht. De deelnemers zelf zien elk enkel hun eigen onderdeel.' : 'Dit hele onderdeel is enkel zichtbaar voor jou, niet voor de andere deelnemer.'}</p>
       ${myTipEntries.map(([name, tips]) => `
@@ -286,7 +297,7 @@ function renderDoc(data, displayVersion) {
       <button id="startRoundBtn" class="btn clay">Start een opvolging</button>
       <div id="roundMsg" style="margin-top:12px;font-size:.9rem"></div>
       `) : ''}
-   <div class="card no-print" style="background:#EFF4ED;border:none;margin-top:24px;padding:18px;text-align:center">
+      <div class="card no-print" style="background:#EFF4ED;border:none;margin-top:24px;padding:18px;text-align:center">
         <p style="margin:0 0 12px;font-size:.9rem">Vond je dit waardevol? Ken je iemand anders die hier iets aan zou kunnen hebben?</p>
         <button type="button" class="btn whatsapp" style="padding:9px 16px;font-size:.85rem" onclick="shareMiddlepointReferral()">Deel Middlepoint via WhatsApp</button>
       </div>
