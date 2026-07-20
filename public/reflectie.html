@@ -154,7 +154,7 @@ function renderForm() {
   app.innerHTML = `
     <span class="label">Gratis reflectie</span>
     <h1>Vertel wat er speelt</h1>
-   <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:20px">
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:20px">
       <p style="margin:0 0 10px;font-weight:600">Zeg ons wat er op je lever ligt</p>
       <p style="margin:0 0 14px;color:var(--ink-soft);font-size:.92rem">Beantwoord de vragen hieronder. We laten je daarna weten: kan je dit zelf oplossen, of is een gesprek met de ander zinvol? Wil je nog dieper, met een concreet actieplan (Reflectie+, €2,99)? Dat kan meteen na je reflectie. Kiezen jullie voor een gesprek, dan starten we dat meteen voor je, met je verhaal al ingevuld.</p>
       <p style="margin:0;font-size:.85rem;border-top:1px solid var(--line);padding-top:12px">Weet je het al zeker? <a href="/new.html" style="font-weight:600">Start meteen een gesprek</a></p>
@@ -168,7 +168,7 @@ function renderForm() {
         <label for="rName">Jouw naam <span style="color:var(--clay)">*</span></label>
         <input type="text" id="rName" required placeholder="bv. Sarah">
       </div>
-    <div class="field">
+      <div class="field">
         <label for="rEmail">Jouw e-mailadres <span style="color:var(--clay)">*</span></label>
         <input type="email" id="rEmail" required placeholder="jij@email.be">
         <div class="help">Zodat je je reflectie kan terugvinden, en om je verder te helpen als je later een gesprek wil starten.</div>
@@ -186,7 +186,7 @@ function renderForm() {
           ${CATEGORY_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
           <option value="__andere__">Iets anders, namelijk...</option>
         </select>
-  <div class="field" id="categoryOtherField" style="display:none;margin-top:10px">
+        <div class="field" id="categoryOtherField" style="display:none;margin-top:10px">
           <input type="text" id="categoryOther" placeholder="Omschrijf kort de situatie">
         </div>
       </div>
@@ -230,7 +230,7 @@ function renderForm() {
           <input type="text" id="gevoelAndereInput" class="other-input" style="display:none" placeholder="Welk gevoel was dit?">
         </div>
         <div id="qGevoelTekstWrap" style="display:none">
-          <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit nog even toelichten? (optioneel)"></textarea>
+          <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Wil je dit gevoel nog even toelichten? (optioneel)"></textarea>
         </div>
       </div>
 
@@ -294,8 +294,15 @@ function renderForm() {
     document.getElementById('gevoelAndereInput').style.display = e.target.checked ? 'block' : 'none';
     document.getElementById('qGevoelTekstWrap').style.display = 'block';
   });
+  document.getElementById('gevoelAndereInput').addEventListener('input', (e) => {
+    const toggle = document.getElementById('gevoelAndereToggle');
+    if (e.target.value.trim() && !toggle.checked) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
 
-function updateNodigLabel() {
+  function updateNodigLabel() {
     const val = categorySelect.value;
     const isThirdParty = document.getElementById('perspectiefDerde').checked;
     const label = CATEGORY_OTHER_LABEL[val] || 'de ander';
@@ -327,18 +334,10 @@ function updateNodigLabel() {
       document.getElementById('herkenningBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
     });
   });
-document.querySelectorAll('input[name=dieper]').forEach(r => {
+  document.querySelectorAll('input[name=dieper]').forEach(r => {
     r.addEventListener('change', (e) => {
       document.getElementById('dieperBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
     });
-  });
-
-  document.getElementById('gevoelAndereInput').addEventListener('input', (e) => {
-    const toggle = document.getElementById('gevoelAndereToggle');
-    if (e.target.value.trim() && !toggle.checked) {
-      toggle.checked = true;
-      toggle.dispatchEvent(new Event('change', { bubbles: true }));
-    }
   });
 
   document.getElementById('reflectionForm').addEventListener('submit', async (e) => {
@@ -346,7 +345,7 @@ document.querySelectorAll('input[name=dieper]').forEach(r => {
     const errorBox = document.getElementById('error');
     errorBox.style.display = 'none';
 
-  const name = document.getElementById('rName').value.trim();
+    const name = document.getElementById('rName').value.trim();
     const email = document.getElementById('rEmail').value.trim();
     const emailConfirm = document.getElementById('rEmailConfirm').value.trim();
     let category = categorySelect.value;
@@ -363,7 +362,8 @@ document.querySelectorAll('input[name=dieper]').forEach(r => {
         return;
       }
     }
-const perspectief = (document.querySelector('input[name=perspectief]:checked') || {}).value || 'zelf';
+
+    const perspectief = (document.querySelector('input[name=perspectief]:checked') || {}).value || 'zelf';
     const tussenWie = document.getElementById('tussenWie').value.trim();
     const gevoelen = Array.from(document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
     const gevoelAndere = document.getElementById('gevoelAndereInput').value.trim();
@@ -372,7 +372,7 @@ const perspectief = (document.querySelector('input[name=perspectief]:checked') |
     const diepgangChecked = document.querySelector('input[name=diepgang]:checked');
     const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
 
-   if (!name || !email || !emailConfirm) {
+    if (!name || !email || !emailConfirm) {
       errorBox.textContent = 'Vul je naam en e-mailadres in.';
       errorBox.style.display = 'block';
       return;
@@ -384,7 +384,7 @@ const perspectief = (document.querySelector('input[name=perspectief]:checked') |
       return;
     }
 
- const lines = [];
+    const lines = [];
     if (perspectief === 'derde') {
       lines.push(`Vraag: Gaat dit rechtstreeks tussen jou en iemand anders, of sta je ernaast?\nAntwoord: Ik sta er zelf naast, dit speelt tussen anderen${tussenWie ? ': ' + tussenWie : ''}.`);
     }
@@ -405,7 +405,7 @@ const perspectief = (document.querySelector('input[name=perspectief]:checked') |
       const dieperTekst = document.getElementById('qDieperTekst').value.trim();
       let answer = dieperChecked;
       if (dieperTekst) answer += `. Toelichting: ${dieperTekst}`;
-      lines.push(`Vraag: Denk je dat er meer onder deze situatie zit?\nAntwoord: ${answer}`);
+      lines.push(`Vraag: Ging dit puur hierover, of zit er meer onder?\nAntwoord: ${answer}`);
     }
     if (diepgangChecked) {
       const val = parseInt(diepgangChecked.value, 10);
@@ -420,9 +420,9 @@ const perspectief = (document.querySelector('input[name=perspectief]:checked') |
     app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
 
     try {
-    const res = await fetch('/.netlify/functions/create-reflection', {
+      const res = await fetch('/.netlify/functions/create-reflection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, category, content, perspective, thirdPartyContext: tussenWie }),
+        body: JSON.stringify({ email, name, category, content, perspective: perspectief, thirdPartyContext: tussenWie }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -467,7 +467,9 @@ async function renderSelfHelpForm(token) {
     if (res.ok && data.reflection && data.reflection.reflection_questions) {
       earlierQuestions = data.reflection.reflection_questions.slice(0, 2);
     }
-  } catch (e) { /* geen probleem, gewoon zonder verdergaan */ }
+  } catch (e) {
+    /* geen probleem, gewoon zonder verdergaan */
+  }
 
   app.innerHTML = `
     <span class="label">Reflectie+</span>
@@ -519,7 +521,7 @@ async function renderSelfHelpForm(token) {
         </div>
       </div>
 
-   ${earlierQuestions.length ? `
+      ${earlierQuestions.length ? `
       <div class="q-block">
         <label class="q-label">Nog even terugblikken (optioneel)</label>
         <div class="q-note" style="margin-bottom:8px">Je stelde jezelf deze vraag al bij je reflectie. Wil je er nu op antwoorden? Dat helpt ons een scherper actieplan te maken.</div>
@@ -573,7 +575,7 @@ async function renderSelfHelpForm(token) {
       return;
     }
 
-   const lines = [];
+    const lines = [];
     if (q1.vals.length) lines.push(`Vraag: Wat zou jij het liefst willen bereiken?\nAntwoord: ${q1.vals.join(', ')}${q1.tekst ? '. Toelichting: ' + q1.tekst : ''}`);
     if (q2.vals.length) lines.push(`Vraag: Wat houdt je nu tegen om hier zelf al mee aan de slag te gaan?\nAntwoord: ${q2.vals.join(', ')}${q2.tekst ? '. Toelichting: ' + q2.tekst : ''}`);
     if (q3.vals.length) lines.push(`Vraag: Als je over een maand terugkijkt, wat zou je dan graag anders zien?\nAntwoord: ${q3.vals.join(', ')}${q3.tekst ? '. Toelichting: ' + q3.tekst : ''}`);
@@ -674,7 +676,6 @@ async function pollResult(token) {
           ${r.self_help_closing ? `<p style="font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
           ${r.self_help_quote ? `<div class="selfhelp-quote">"${esc(r.self_help_quote)}"</div>` : ''}
         </div>`;
-    }
     } else if (r.self_help_status === 'bezig') {
       selfHelpSectionHTML = `
         <div class="doc-section" id="actieplanSection" style="border-bottom:none">
@@ -696,7 +697,7 @@ async function pollResult(token) {
         </div>`;
     }
 
-   app.innerHTML = `
+    app.innerHTML = `
       <span class="label">Jouw reflectie</span>
       <h1>Wat we zien</h1>
 
@@ -742,7 +743,7 @@ async function pollResult(token) {
       ${selfHelpSectionHTML}
       </div>
 
-    <div class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+      <div class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
         ${r.perspective === 'derde' ? `
         <span class="label">Samen bespreken</span>
         <h3>Wil je hen helpen dit uit te klaren?</h3>
