@@ -681,8 +681,23 @@ if (isPaid || fromReflectionParam) {
       const data = await res.json();
       if (res.ok && data.reflection) {
         const r = data.reflection;
-        document.getElementById('reflectionNotice').style.display = 'block';
+  document.getElementById('reflectionNotice').style.display = 'block';
         document.getElementById('organizerName').value = r.name || '';
+
+        const thirdPartyParam = urlParams.get('thirdParty') === '1';
+        if (thirdPartyParam) {
+          const checkbox = document.getElementById('isThirdParty');
+          checkbox.checked = true;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          const context = urlParams.get('thirdPartyContext');
+          if (context) {
+            const hint = document.createElement('div');
+            hint.className = 'reflection-notice';
+            hint.style.marginBottom = '16px';
+            hint.innerHTML = `<p style="margin:0">Je gaf eerder aan dat dit gaat over: <strong>${context}</strong>. Vul hieronder hun namen en e-mailadressen in als deelnemers.</p>`;
+            document.getElementById('stepDeelnemers').insertAdjacentElement('afterbegin', hint);
+          }
+        }
         if (r.email) {
           document.getElementById('organizerEmail').value = r.email;
           checkEmail(r.email);
