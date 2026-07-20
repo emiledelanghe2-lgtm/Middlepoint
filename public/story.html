@@ -1063,13 +1063,13 @@ function render(data) {
       <h1>Bedankt, ${participant.name}</h1>
       ${whoStartedBanner(data)}
       <div class="status-box">Jouw antwoorden zijn ingediend. We wachten nu op <strong>${wie}</strong>. Zodra iedereen klaar is, gaat het document automatisch aan de slag. Je krijgt een mail zodra het klaar is. Je mag deze pagina gerust sluiten.</div>
-     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-        <a href="?token=${token}&view=antwoorden" class="btn outline" style="padding:9px 16px;font-size:.85rem">Bekijk mijn ingevulde antwoorden</a>
-        ${participant.isOrganizer ? `<button id="showLinksBtn" class="btn outline" style="padding:9px 16px;font-size:.85rem">Bekijk alle links opnieuw</button>` : ''}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+        <a href="?token=${token}&view=antwoorden" class="btn outline" style="padding:9px 16px;font-size:.85rem;text-align:center">Bekijk mijn ingevulde antwoorden</a>
+        ${participant.isOrganizer ? `<button id="showLinksBtn" class="btn outline" style="padding:9px 16px;font-size:.85rem">Bekijk alle links opnieuw</button>` : `<a href="/" class="btn outline" style="padding:9px 16px;font-size:.85rem;text-align:center">Terug naar startpagina</a>`}
         <button type="button" class="btn clay" style="padding:9px 16px;font-size:.85rem" onclick="goToMijnGesprekken()">Naar Mijn gesprekken</button>
+        ${participant.isOrganizer ? `<a href="/" class="btn outline" style="padding:9px 16px;font-size:.85rem;text-align:center">Terug naar startpagina</a>` : ''}
       </div>
-      ${participant.isOrganizer ? `<div id="linksBox" style="margin-top:14px"></div>` : ''}
-      <div style="margin-top:12px"><a href="/" class="btn outline" style="padding:9px 16px;font-size:.85rem">Terug naar startpagina</a></div>`;
+      ${participant.isOrganizer ? `<div id="linksBox" style="margin-top:14px"></div>` : ''}`;
     setTimeout(load, 10000);
     if (participant.isOrganizer) attachLinksButton(token);
   } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
