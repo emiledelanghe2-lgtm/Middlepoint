@@ -638,27 +638,35 @@ async function pollResult(token) {
     let selfHelpSectionHTML = '';
     if (r.self_help_status === 'klaar') {
       selfHelpSectionHTML = `
-        <div class="doc-section" id="actieplanSection">
+        ${r.self_help_key_points && r.self_help_key_points.length ? `
+        <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:20px;padding:20px">
           <span class="premium-badge">Reflectie+</span>
-          <span class="label" style="display:block">Jouw actieplan</span>
+          <span class="label" style="display:block;margin-bottom:10px">Je actieplan in het kort</span>
+          <ul style="margin:0;padding-left:20px;color:var(--ink);font-weight:500">
+            ${r.self_help_key_points.map(k => `<li style="margin-bottom:4px">${esc(k)}</li>`).join('')}
+          </ul>
+        </div>` : ''}
+        <div class="doc-section" id="actieplanSection" style="border-left:4px solid var(--clay);padding-left:16px">
+          <span class="premium-badge">Reflectie+</span>
+          <span class="label" style="display:block">◐ Jouw actieplan</span>
           <h3>Concreet aan de slag</h3>
           <p>${esc(r.self_help_deeper_layer)}</p>
         </div>
         ${r.self_help_steps && r.self_help_steps.length ? `
-        <div class="doc-section">
-          <span class="label">Stappen</span>
+        <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+          <span class="label">⊙ Stappen</span>
           <h3>Wat je concreet kan doen</h3>
           <ul class="tip-list">${r.self_help_steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
         </div>` : ''}
         ${r.self_help_tips && r.self_help_tips.length ? `
-        <div class="doc-section">
-          <span class="label">Handvaten</span>
+        <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+          <span class="label">✎ Handvaten</span>
           <h3>Om bij de hand te houden</h3>
           <ul class="tip-list">${r.self_help_tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
         </div>` : ''}
         ${r.self_help_exercises && r.self_help_exercises.length ? `
-        <div class="doc-section">
-          <span class="label">Oefening</span>
+        <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+          <span class="label">⟳ Oefening</span>
           <h3>Om nu of deze week te doen</h3>
           <ul class="tip-list">${r.self_help_exercises.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
         </div>` : ''}
@@ -666,6 +674,7 @@ async function pollResult(token) {
           ${r.self_help_closing ? `<p style="font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
           ${r.self_help_quote ? `<div class="selfhelp-quote">"${esc(r.self_help_quote)}"</div>` : ''}
         </div>`;
+    }
     } else if (r.self_help_status === 'bezig') {
       selfHelpSectionHTML = `
         <div class="doc-section" id="actieplanSection" style="border-bottom:none">
@@ -687,7 +696,7 @@ async function pollResult(token) {
         </div>`;
     }
 
-    app.innerHTML = `
+   app.innerHTML = `
       <span class="label">Jouw reflectie</span>
       <h1>Wat we zien</h1>
 
@@ -697,20 +706,28 @@ async function pollResult(token) {
         <button onclick="shareReflectionWhatsApp()" class="btn whatsapp" style="padding:9px 16px;font-size:.85rem">Verstuur via WhatsApp</button>
       </div>
 
-      <div class="doc-section">
-        <span class="label">Situatie</span>
+      ${r.key_points && r.key_points.length ? `
+      <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:20px">
+        <span class="label" style="display:block;margin-bottom:10px">In het kort</span>
+        <ul style="margin:0;padding-left:20px;color:var(--ink);font-weight:500">
+          ${r.key_points.map(k => `<li style="margin-bottom:4px">${esc(k)}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+        <span class="label">⊙ Situatie</span>
         <h3>Wat er speelde</h3>
         <p>${esc(r.situation_summary)}</p>
       </div>
 
-      <div class="doc-section">
-        <span class="label">Onder de oppervlakte</span>
+      <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+        <span class="label">◐ Onder de oppervlakte</span>
         <h3>Wat er waarschijnlijk echt speelt</h3>
         <p>${esc(r.deeper_layer)}</p>
       </div>
 
-      <div class="doc-section">
-        <span class="label">Voor jezelf</span>
+      <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+        <span class="label">✎ Voor jezelf</span>
         <h3>Vragen om over na te denken</h3>
         <ul class="tip-list">${(r.reflection_questions || []).map(q => `<li>${esc(q)}</li>`).join('')}</ul>
       </div>
