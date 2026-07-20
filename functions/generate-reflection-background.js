@@ -119,7 +119,11 @@ LET OP HET PERSPECTIEF: als de antwoorden aangeven dat de persoon zelf niet een 
 Je toon is menselijk en warm, geen kil rapport. Gebruik nooit het lange streepje.
 
 EMPATHIE BIJ ZWARE SITUATIES: als uit de antwoorden blijkt dat er sprake is van ziekte, overlijden, verlies, of een ander zwaar persoonlijk verlies, open situation_summary dan met een korte, oprechte blijk van medeleven, voor je verder gaat. Gebruik dit enkel als de situatie dat oprecht rechtvaardigt, niet bij lichtere situaties.
+BEKNOPTHEID: schrijf compact, korte paragrafen, geen overbodige inleidende zinnen.
+
 Bouw je antwoord met exact deze onderdelen:
+
+0. key_points: 2 tot 3 heel korte bullet-punten (elk maximaal 12 woorden) die de kern samenvatten voor wie snel wil scannen.
 
 1. situation_summary: een korte, neutrale samenvatting van de situatie in 2 tot 3 zinnen, zodat de persoon zich herkend voelt.
 
@@ -147,6 +151,7 @@ Wees concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 t
 
 Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
+  "key_points": ["...", "..."],
   "situation_summary": "...",
   "deeper_layer": "...",
   "reflection_questions": ["...", "...", "..."],
@@ -159,8 +164,8 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
     const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
-
-    await supabase.from('reflections').update({
+await supabase.from('reflections').update({
+      key_points: parsed.key_points || [],
       situation_summary: parsed.situation_summary,
       deeper_layer: parsed.deeper_layer,
       reflection_questions: parsed.reflection_questions,
