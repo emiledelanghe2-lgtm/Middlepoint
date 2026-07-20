@@ -420,9 +420,9 @@ const perspectief = (document.querySelector('input[name=perspectief]:checked') |
     app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
 
     try {
-      const res = await fetch('/.netlify/functions/create-reflection', {
+    const res = await fetch('/.netlify/functions/create-reflection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, category, content }),
+        body: JSON.stringify({ email, name, category, content, perspective, thirdPartyContext: tussenWie }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -699,11 +699,18 @@ async function pollResult(token) {
       ${selfHelpSectionHTML}
       </div>
 
-      <div class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+    <div class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+        ${r.perspective === 'derde' ? `
+        <span class="label">Samen bespreken</span>
+        <h3>Wil je hen helpen dit uit te klaren?</h3>
+        <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Je kan voor hen een gesprek opstarten: zij vullen elk apart een uitgebreide vragenlijst in, en krijgen samen een eerlijk, gedeeld document. Dit is een volledig, betalend gesprek, vanaf €4,99.</p>
+        <a href="/new.html?fromReflection=${r.access_token}&thirdParty=1&thirdPartyContext=${encodeURIComponent(r.third_party_context || '')}" class="btn clay" style="padding:12px 28px">Start een gesprek voor hen</a>
+        ` : `
         <span class="label">Samen bespreken</span>
         <h3>Wil je dit toch bespreken met de ander?</h3>
         <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">Jullie vullen elk apart een uitgebreide vragenlijst in, en krijgen samen een eerlijk, gedeeld document. Dit is een volledig, betalend gesprek, vanaf €4,99. Jouw beschrijving hierboven staat er al automatisch in ingevuld.</p>
         <a href="/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:12px 28px">Start een gesprek met de ander</a>
+        `}
       </div>
     `;
 
