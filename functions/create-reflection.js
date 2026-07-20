@@ -5,7 +5,7 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { email, name, category, content } = JSON.parse(event.body || '{}');
+const { email, name, category, content, perspective, thirdPartyContext } = JSON.parse(event.body || '{}');
     if (!email || !category || !content || !content.trim()) {
       return { statusCode: 400, body: JSON.stringify({ error: 'E-mailadres, categorie en antwoorden zijn verplicht.' }) };
     }
@@ -17,11 +17,13 @@ exports.handler = async (event) => {
     const supabase = getSupabase();
     const { data: reflection, error } = await supabase
       .from('reflections')
-      .insert({
+.insert({
         email: normalizedEmail,
         name: name || null,
         category,
         raw_content: content,
+        perspective: perspective || 'zelf',
+        third_party_context: thirdPartyContext || null,
         status: 'bezig',
       })
       .select()
