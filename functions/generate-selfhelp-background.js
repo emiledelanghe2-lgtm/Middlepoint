@@ -93,6 +93,7 @@ Bouw je antwoord met exact deze onderdelen:
 
 Je toon is warm en menselijk, geen kil rapport. Gebruik nooit het lange streepje.
 
+EMPATHIE BIJ ZWARE SITUATIES: als de situatie ziekte, overlijden of een zwaar verlies betreft, toon dan oprechte betrokkenheid in je toon, zonder dat het overdreven of geforceerd aanvoelt.
 Antwoord alleen met geldige JSON, geen andere tekst:
 {
   "deeper_layer": "...",
