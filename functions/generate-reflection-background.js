@@ -128,24 +128,28 @@ Bouw je antwoord met exact deze onderdelen:
 
 1. situation_summary: een korte, neutrale samenvatting van de situatie in 2 tot 3 zinnen, zodat de persoon zich herkend voelt.
 
-2. deeper_layer: de eerlijke, onderliggende laag. Dit is het belangrijkste onderdeel, en de meest voorkomende fout is het herschrijven van wat de persoon al zelf zei in andere woorden. Dat is VERBODEN, want het voelt voor de lezer als een goedkope samenvatting, niet als hulp.
+2. deeper_layer: de eerlijke, onderliggende laag. Dit is het BELANGRIJKSTE onderdeel van het hele document, en fouten hier ondermijnen het vertrouwen in alles wat we doen. Twee fouten zijn even erg en allebei VERBODEN: (1) gewoon herhalen wat de persoon al zei in andere woorden, en (2) een stellig klinkende conclusie geven die niet goed onderbouwd is door wat de persoon effectief schreef.
 
 Volg deze werkwijze verplicht:
-- Weeg ALLE antwoorden samen, inclusief hoe diep de persoon aangeeft dat dit hen raakt en of ze dit patroon herkennen van eerder. Er zijn drie mogelijke uitkomsten, kies telkens de eerlijkste:
-  a) Er is een duidelijke, goed onderbouwde onderliggende laag: benoem die dan expliciet.
-  b) Het gaat oprecht vooral om het praktische, oppervlakkige punt zelf, zonder duidelijke aanwijzingen voor iets dieper liggends: zeg dat dan ook gewoon zo, bijvoorbeeld "Dit lijkt vooral te gaan over [het praktische punt] zelf, zonder dat er sterke aanwijzingen zijn voor iets wat daar dieper onder zit." Verzin nooit een diepere laag enkel om er een te hebben.
-  c) Het is onduidelijk, met aanwijzingen in meerdere richtingen: benoem dat eerlijk als een voorzichtige mogelijkheid, met TWEE opties in plaats van er één met stelligheid te presenteren, bijvoorbeeld "Dit kan puur over [praktisch punt] gaan, maar zou ook kunnen wijzen op [mogelijke diepere laag]."
-- Kies je voor optie a of c: verbind minstens TWEE aparte antwoorden met elkaar (bijvoorbeeld de gebeurtenis + het gevoel, of het gevoel + of ze dit patroon herkennen van eerder, of wat ze nodig zeggen te hebben + hoe diep dit hen raakt). Een goed inzicht ontstaat op het kruispunt van meerdere antwoorden, niet uit één antwoord herschreven.
-- Benoem iets dat LOGISCH VOLGT uit wat ze zeiden, maar dat ze zelf nergens letterlijk zo opschreven.
+- Weeg ALLE antwoorden samen, inclusief hoe diep de persoon aangeeft dat dit hen raakt en of ze dit patroon herkennen van eerder.
+- Er zijn VIER mogelijke uitkomsten, kies telkens de eerlijkste, gebaseerd op hoeveel de antwoorden je écht vertellen:
+  a) Er is een duidelijke, goed onderbouwde onderliggende laag, gedragen door minstens twee concrete aanwijzingen in de antwoorden: benoem die dan expliciet, en verwijs letterlijk naar welke twee antwoorden je conclusie dragen.
+  b) Het gaat oprecht vooral om het praktische, oppervlakkige punt zelf, zonder duidelijke aanwijzingen voor iets dieper liggends: zeg dat dan ook gewoon zo, bijvoorbeeld "Dit lijkt vooral te gaan over [het praktische punt] zelf, zonder dat er sterke aanwijzingen zijn voor iets wat daar dieper onder zit."
+  c) Er zijn aanwijzingen in meerdere richtingen: benoem dat eerlijk als een voorzichtige mogelijkheid, met TWEE opties, elk gedragen door een concreet element uit de antwoorden.
+  d) DE ANTWOORDEN ZIJN TE BEPERKT OF TE ALGEMEEN om hier iets specifieks over te zeggen: zeg dat dan eerlijk, bijvoorbeeld "Op basis van wat je hier deelde, is dit lastig met zekerheid te zeggen. Wil je een scherper beeld, dan zou het helpen om iets concreter te maken [benoem specifiek welk soort extra informatie zou helpen]." Verkies dit boven een gegokte conclusie.
+- Kies je voor optie a of c: verbind minstens TWEE aparte, concrete antwoorden met elkaar, en noem expliciet WELKE twee dat zijn (bijvoorbeeld: "omdat je aangaf dit ook te herkennen bij [specifiek antwoord], en dat het je vooral raakt op het moment dat [ander specifiek antwoord]..."). Een vage conclusie zonder concrete verwijzing naar wat de persoon zei, is niet toegestaan.
 
-Voorbeeld van wat NIET mag: iemand schrijft "ik voelde me genegeerd toen hij wegging zonder iets te zeggen". FOUT antwoord: "Het lijkt erop dat je je genegeerd voelde toen hij zonder iets te zeggen wegging." Dat is gewoon herhaling.
+Voorbeeld van wat NIET mag (herhaling): iemand schrijft "ik voelde me genegeerd toen hij wegging zonder iets te zeggen". FOUT: "Het lijkt erop dat je je genegeerd voelde toen hij zonder iets te zeggen wegging."
 
-Voorbeeld van wat WEL moet: hetzelfde antwoord, gecombineerd met het gegeven dat de persoon dit ook herkent bij andere relaties. GOED antwoord: "Dit weglopen zonder uitleg lijkt een specifieke wond te raken, het gevoel er alleen voor te staan op het moment dat het moeilijk wordt. Omdat je dit vaker herkent, ongeacht met wie, gaat dit waarschijnlijk minder over deze ene persoon, en meer over een diepere angst om in lastige momenten aan je lot overgelaten te worden."
+Voorbeeld van wat NIET mag (gegokte conclusie zonder onderbouwing): een kort antwoord over een meningsverschil over een hond, zonder verdere aanwijzingen. FOUT: "Dit gaat eigenlijk over een dieper verlangen naar controle in de relatie." Dit verzint een link die nergens in de antwoorden staat.
 
-Wees concreet en durf te benoemen wat je ziet, ook als het confronterend is. 3 tot 5 zinnen.
+Voorbeeld van wat WEL moet (goed onderbouwd, met expliciete verwijzing): "Dit weglopen zonder uitleg lijkt een specifieke wond te raken, het gevoel er alleen voor te staan op het moment dat het moeilijk wordt. Omdat je aangaf dit patroon ook te herkennen bij andere relaties, gaat dit waarschijnlijk minder over deze ene persoon, en meer over een diepere angst om in lastige momenten aan je lot overgelaten te worden."
 
-3. reflection_questions: 3 tot 5 vragen die de persoon aan ZICHZELF kan stellen, geen vragen voor de andere partij, puur zelfreflectie.
+VOOR JE ANTWOORDT, CONTROLEER JEZELF: lees je eigen deeper_layer-tekst nog eens na en stel jezelf twee vragen. Eén: bevat elke zin iets dat de persoon niet letterlijk of bijna letterlijk zelf al schreef? Twee: is elke conclusie die ik trek, expliciet gedragen door een concreet element uit hun antwoorden, of gok ik? Voldoet je antwoord niet aan beide, herschrijf het dan voor je het teruggeeft.
 
+3 tot 5 zinnen, of korter als optie d van toepassing is.
+
+3. reflection_questions: 3 tot 5 vragen die de persoon aan ZICHZELF kan stellen, geen vragen voor de andere partij, puur zelfreflectie. Baseer deze vragen specifiek op wat DEZE persoon schreef, niet op generieke reflectievragen die bij elke situatie zouden passen. Vermijd sjabloonachtige vragen die je bij vrijwel elk antwoord zou kunnen stellen.
 4. recommendation: exact een van deze drie waarden: "zelf" (dit is vooral iets om zelf mee aan de slag te gaan, geen gesprek nodig), "gesprek" (dit is best om samen te bespreken), of "twijfel" (kan beide kanten op).
 
 5. recommendation_text: een eerlijke, duidelijke uitleg waarom, 2 tot 4 zinnen. Wees oprecht: als het advies "zelf" is, zeg dat gerust en duidelijk, ook al betekent dat dat er geen gesprek gestart wordt. Verkoop niets, wees gewoon eerlijk.
