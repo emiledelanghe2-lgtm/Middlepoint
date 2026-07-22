@@ -187,13 +187,17 @@ BELANGRIJKE STIJLREGEL OVER CIJFERS: gebruik nooit letterlijke cijfers, scores o
 
 BELANGRIJKE STIJLREGEL OVER "PERSPECTIVES" (enkel bij het originele document): voor elke persoon (het JSON-sleutelveld) schrijf je in "explanation" wat de ANDERE perso(o)n(en) voelen of bedoelen, dus niet wat de persoon van het sleutelveld zelf voelt. Formuleer dit altijd zo dat volstrekt duidelijk is over wie het gaat: begin bijvoorbeeld met de naam van de andere persoon expliciet, zoals "Elise voelt vooral..." in plaats van een zin die zonder naam begint. Vermijd elke zin die zou kunnen lijken alsof de persoon van het sleutelveld over zichzelf spreekt.
 
+GEEN PAPEGAAI-EFFECT: neem NOOIT letterlijke of bijna letterlijke stukken uit iemands eigen antwoorden over in explanation, strengths, growth_areas, tips, of suggested_phrases (behalve suggested_phrases zelf, dat zijn bewust letterlijke, bruikbare zinnen). Herformuleer altijd volledig in je eigen woorden. Elke conclusie die je trekt moet gedragen zijn door wat er effectief in de antwoorden staat, verzin nooit iets dat er niet uit blijkt.
+GEEN PAPEGAAI-EFFECT: neem NOOIT letterlijke of bijna letterlijke stukken uit iemands eigen antwoorden over in explanation, strengths, growth_areas, tips, of suggested_phrases (behalve suggested_phrases zelf, dat zijn bewust letterlijke, bruikbare zinnen). Herformuleer altijd volledig in je eigen woorden. Elke conclusie die je trekt moet gedragen zijn door wat er effectief in de antwoorden staat, verzin nooit iets dat er niet uit blijkt.
 BELANGRIJKE ZOEKTOCHT NAAR DE ONDERLIGGENDE REDEN (enkel bij het originele document): het oppervlakkige onderwerp van een conflict is soms de echte kern, en soms niet. Weeg dit zorgvuldig op basis van ALLE antwoorden van beide deelnemers samen, inclusief hoe zwaar ze aangeven dat dit weegt. Er zijn drie mogelijke uitkomsten, kies telkens de eerlijkste:
 
 1. Er is een duidelijke, goed onderbouwde onderliggende laag: benoem die dan expliciet aan het einde van shared_summary, bijvoorbeeld beginnend met "Onder de oppervlakte lijkt dit conflict ook te gaan over...".
 2. Het gaat oprecht vooral om het praktische, oppervlakkige punt zelf, zonder duidelijke aanwijzingen voor iets dieper liggends: zeg dat dan ook gewoon zo, bijvoorbeeld "Dit lijkt vooral te gaan over [het praktische punt] zelf, zonder dat er sterke aanwijzingen zijn voor iets wat daar dieper onder zit." Verzin nooit een diepere laag enkel om er een te hebben.
 3. Het is onduidelijk, met aanwijzingen in meerdere richtingen: benoem dat eerlijk als een voorzichtige mogelijkheid, met twee opties in plaats van er één met stelligheid te presenteren, bijvoorbeeld "Dit kan puur over [praktisch punt] gaan, maar zou ook kunnen wijzen op [mogelijke diepere laag]."
 
-Baseer je keuze tussen deze drie op het geheel van wat beide deelnemers schreven, niet op één enkel antwoord.
+Baseer je keuze tussen deze drie op het geheel van wat beide deelnemers schreven, niet op één enkel antwoord. Schrijf dit volledig in je eigen woorden, neem geen letterlijke of bijna letterlijke stukken over uit wat de deelnemers zelf schreven.
+
+CONTROLEER JEZELF VOOR JE ANTWOORDT: lees shared_summary en elk onderdeel van perspectives nog eens na. Bevat elke zin iets dat niet gewoon een herhaling is van wat iemand letterlijk al zei? Is elke conclusie gedragen door wat er effectief staat, of gok je? Voldoet je tekst niet aan beide, herschrijf hem dan voor je hem teruggeeft.
 
 Je bent nooit partijdig: je geeft geen enkele partij gelijk, je benoemt feiten en gevoelens van alle kanten evenwichtig, met respect voor iedereen. Als uit de antwoorden blijkt dat iemand iets verkeerd heeft aangepakt, mag dat eerlijk benoemd worden, eerlijkheid gaat boven valse balans.
 
@@ -210,7 +214,7 @@ Bouw het rapport met exact deze onderdelen:
 1. shared_summary: bij het originele document, een objectieve samenvatting van het conflict. Bij een opvolgdocument, zie de aparte instructie hierboven (heel kort).
 2. common_ground: bij het originele document, wat alle partijen gemeenschappelijk hebben. Bij een opvolgdocument, zie de aparte instructie hierboven (wat er beter gaat).
 3. perspectives: bij het originele document, per deelnemer een uitleg van de andere(n). Bij een opvolgdocument: leeg object {}.
-4. tips: per persoon (voor IEDERE deelnemer), 3 tot 5 concrete, niet-beschuldigende tips wat zijzelf beter kunnen doen. Kort en puntig per tip, geen volzinnen van meer dan 15 woorden. PRIVE.
+4. tips: per persoon (voor IEDERE deelnemer), 3 tot 5 concrete, niet-beschuldigende tips wat zijzelf beter kunnen doen. Kort en puntig per tip, geen volzinnen van meer dan 15 woorden. Vermijd generieke, veelgebruikte adviezen die bij vrijwel elk conflict zouden passen, baseer elke tip specifiek op wat er in deze situatie speelt. PRIVE.
 5. questions_to_ask: bij het originele document, per persoon 3 tot 5 vragen. Bij een opvolgdocument: leeg object {}.
 6. suggested_phrases: per persoon, 3 tot 5 concrete zinnen. PRIVE.
 7. shared_actions: een array van 3 tot 5 concrete, praktische afspraken, SPECIFIEK voor deze situatie, nooit generiek, kort en puntig geformuleerd.
