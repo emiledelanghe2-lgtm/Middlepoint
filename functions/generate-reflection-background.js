@@ -171,12 +171,21 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 
     const userPrompt = `${reflection.raw_content}\n\nGeef je reflectie in het gevraagde JSON-formaat, in het Nederlands.`;
 
-    const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
+   const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
+    const keyPoints = parsed.key_points || [];
+    if (parsed.recommendation === 'gesprek') {
+      keyPoints.push('Tip: een gesprek met de ander lijkt aangeraden, zie onderaan deze pagina.');
+    } else if (parsed.recommendation === 'twijfel') {
+      keyPoints.push('Tip: overweeg Reflectie+ of een gesprek met de ander, zie onderaan deze pagina.');
+    } else {
+      keyPoints.push('Tip: overweeg Reflectie+ voor een concreet actieplan, zie onderaan deze pagina.');
+    }
+
     await supabase.from('reflections').update({
-      key_points: parsed.key_points || [],
+      key_points: keyPoints,
       situation_summary: parsed.situation_summary,
       deeper_layer: parsed.deeper_layer,
       reflection_questions: parsed.reflection_questions,
