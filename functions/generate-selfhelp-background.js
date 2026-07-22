@@ -126,7 +126,6 @@ const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
       self_help_tips: selfHelpTips,
       self_help_deeper_layer: parsed.deeper_layer,
       self_help_steps: parsed.steps,
-      self_help_tips: parsed.tips,
       self_help_exercises: parsed.exercises,
       self_help_closing: parsed.closing,
       self_help_quote: parsed.quote,
