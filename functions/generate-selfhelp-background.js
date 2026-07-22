@@ -112,12 +112,18 @@ Antwoord alleen met geldige JSON, geen andere tekst:
 
     const userPrompt = `Oorspronkelijke antwoorden:\n${reflection.raw_content}\n\nEerdere reflectie, situatie: ${reflection.situation_summary}\n\nEerdere reflectie, onderliggende laag: ${reflection.deeper_layer}\n\nExtra antwoorden na betaling:\n${reflection.self_help_answers}\n\nGeef je antwoord in het gevraagde JSON-formaat, in het Nederlands.`;
 
-    const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
+const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
-  await supabase.from('reflections').update({
+    const selfHelpTips = parsed.tips || [];
+    if (reflection.recommendation === 'gesprek' || reflection.recommendation === 'twijfel') {
+      selfHelpTips.push('Tip: overweeg ook een gesprek met de ander, zie onderaan deze pagina.');
+    }
+
+    await supabase.from('reflections').update({
       self_help_key_points: parsed.key_points || [],
+      self_help_tips: selfHelpTips,
       self_help_deeper_layer: parsed.deeper_layer,
       self_help_steps: parsed.steps,
       self_help_tips: parsed.tips,
