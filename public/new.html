@@ -78,7 +78,7 @@
 .chooser-badge.paid{ background:var(--clay-soft); color:var(--clay); }
 .chooser-card h3{ margin-bottom:12px; font-size:1.3rem; }
 .chooser-card p{ color:var(--ink-soft); font-size:.92rem; margin-bottom:24px; flex-grow:1; line-height:1.6; }
-.chooser-card .btn{ width:100%; text-align:center; padding:13px; }
+.chooser-card .btn{ width:100%; text-align:center; padding:13px; box-sizing:border-box; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -131,20 +131,20 @@
     </div>
 
     <div class="chooser-grid">
-  <a href="/reflectie.html" class="chooser-card" id="chooseSoloCard" style="text-decoration:none;color:inherit">
+      <div class="chooser-card" id="chooseSoloCard">
         <span class="chooser-badge free">Gratis</span>
         <span class="chooser-icon" aria-hidden="true">✎</span>
         <h3>Alleen, voor mezelf</h3>
         <p>Vertel wat er speelt en krijg een eerlijke, gratis reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander eigenlijk wel nodig is. Wil je daarna nog dieper gaan, met een concreet actieplan vol stappen en handvaten? Dat kan meteen na je reflectie, voor €2,99.</p>
-        <span class="btn outline" style="pointer-events:none">Start een gratis reflectie</span>
-      </a>
+        <span class="btn outline">Start een gratis reflectie</span>
+      </div>
 
-<div class="chooser-card" id="chooseTogetherBtn">
-      <span class="chooser-badge paid">€4,99</span>
+      <div class="chooser-card" id="chooseTogetherBtn">
+        <span class="chooser-badge paid">€4,99</span>
         <span class="chooser-icon" aria-hidden="true">⊙</span>
         <h3>Samen met de ander</h3>
         <p>Jullie vullen elk apart een uitgebreide vragenlijst in. Wij leggen beide kanten naast elkaar in één eerlijk, gedeeld document, met tips en een opvolgdocument nadien. Ook geschikt als je dit als derde partij (bv. HR, leerkracht) opstart zonder zelf deel te nemen.</p>
-        <button type="button" class="btn clay">Start een gesprek</button>
+        <span class="btn clay">Start een gesprek</span>
       </div>
     </div>
   </div>
@@ -270,7 +270,7 @@
       </div>
     </div>
 
-   <div id="error" class="error-box" style="display:none;margin-bottom:16px"></div>
+    <div id="error" class="error-box" style="display:none;margin-bottom:16px"></div>
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Verder naar betaling</button>
     <p style="text-align:center;font-size:.78rem;color:var(--ink-soft);margin-top:10px">🔒 Veilig betalen via Stripe</p>
   </form>
@@ -295,33 +295,43 @@
 </div>
 
 <script>
-/* ===== Chooser-knoppen: bewust helemaal bovenaan, zodat ze altijd werken ===== */
-function showFormView() {
+/* ===== Chooser-logica: identieke kaarten, met correcte terug-navigatie via browsergeschiedenis ===== */
+function showFormView(pushHistory) {
   document.getElementById('chooserView').style.display = 'none';
   document.getElementById('formView').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pushHistory !== false) {
+    history.pushState({ mpView: 'form' }, '', '#gesprek');
+  }
+}
+function showChooserView(pushHistory) {
+  document.getElementById('chooserView').style.display = 'block';
+  document.getElementById('formView').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pushHistory !== false) {
+    history.pushState({ mpView: 'chooser' }, '', window.location.pathname);
+  }
 }
 
-const chooseSoloCard = document.getElementById('chooseSoloCard');
-const chooseTogetherCard = document.getElementById('chooseTogetherBtn');
-function setFeaturedCard(card) {
-  chooseSoloCard.classList.remove('featured');
-  chooseTogetherCard.classList.remove('featured');
-  card.classList.add('featured');
-}
-setFeaturedCard(chooseSoloCard);
-chooseSoloCard.addEventListener('mouseenter', () => setFeaturedCard(chooseSoloCard));
-chooseSoloCard.addEventListener('touchstart', () => setFeaturedCard(chooseSoloCard), { passive: true });
-chooseTogetherCard.addEventListener('mouseenter', () => setFeaturedCard(chooseTogetherCard));
-chooseTogetherCard.addEventListener('touchstart', () => setFeaturedCard(chooseTogetherCard), { passive: true });
+// Basislijn zetten zodat de allereerste "terug" altijd correct naar de vorige, echte pagina gaat
+history.replaceState({ mpView: 'chooser' }, '', window.location.pathname + window.location.search);
 
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.mpView === 'form') {
+    showFormView(false);
+  } else {
+    showChooserView(false);
+  }
+});
+
+document.getElementById('chooseSoloCard').addEventListener('click', () => {
+  window.location.href = '/reflectie.html';
+});
 document.getElementById('chooseTogetherBtn').addEventListener('click', () => {
   showFormView();
 });
 document.getElementById('backToChooserBtn').addEventListener('click', () => {
-  document.getElementById('chooserView').style.display = 'block';
-  document.getElementById('formView').style.display = 'none';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  history.back();
 });
 
 /* ===== Rest van de logica ===== */
@@ -471,9 +481,6 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   const limitBox = document.getElementById('limitBox');
   errorBox.style.display = 'none';
   limitBox.style.display = 'none';
-  const submitBtnEl = document.getElementById('submitBtn');
-
-  try {
 
   let category = document.getElementById('category').value;
   if (category === 'andere') {
@@ -492,6 +499,8 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   const sendInvites = document.getElementById('sendInvites').checked;
 
   if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
+
+  try {
 
   await checkEmail(organizerEmail);
   if (organizerEmailIsNew) {
@@ -555,13 +564,12 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     return;
   }
 
-await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
 
   } catch (unexpectedErr) {
     console.error('Onverwachte fout bij indienen:', unexpectedErr);
     errorBox.textContent = 'Er ging onverwacht iets mis. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
     errorBox.style.display = 'block';
-    if (submitBtnEl) { submitBtnEl.disabled = false; }
   }
 });
 
@@ -667,8 +675,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   const fromReflectionParam = urlParams.get('fromReflection');
   const pending = loadPending();
 
-if (isPaid || fromReflectionParam) {
-    showFormView();
+  if (isPaid || fromReflectionParam || pending) {
+    showFormView(false);
   }
 
   if (isPaid) {
@@ -681,23 +689,8 @@ if (isPaid || fromReflectionParam) {
       const data = await res.json();
       if (res.ok && data.reflection) {
         const r = data.reflection;
-  document.getElementById('reflectionNotice').style.display = 'block';
+        document.getElementById('reflectionNotice').style.display = 'block';
         document.getElementById('organizerName').value = r.name || '';
-
-        const thirdPartyParam = urlParams.get('thirdParty') === '1';
-        if (thirdPartyParam) {
-          const checkbox = document.getElementById('isThirdParty');
-          checkbox.checked = true;
-          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-          const context = urlParams.get('thirdPartyContext');
-          if (context) {
-            const hint = document.createElement('div');
-            hint.className = 'reflection-notice';
-            hint.style.marginBottom = '16px';
-            hint.innerHTML = `<p style="margin:0">Je gaf eerder aan dat dit gaat over: <strong>${context}</strong>. Vul hieronder hun namen en e-mailadressen in als deelnemers.</p>`;
-            document.getElementById('stepDeelnemers').insertAdjacentElement('afterbegin', hint);
-          }
-        }
         if (r.email) {
           document.getElementById('organizerEmail').value = r.email;
           checkEmail(r.email);
