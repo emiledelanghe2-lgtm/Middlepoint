@@ -1,4 +1,3 @@
-
 const { getSupabase } = require('./_supabase');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
@@ -42,8 +41,6 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
-const { emailButtonHtml } = require('./_email-button');
-
 async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
@@ -61,7 +58,9 @@ async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Het document is klaar. Je kan het nu rustig samen bekijken.</p>
-           ${emailButtonHtml(link, 'Bekijk het document')}
+            <p style="margin:28px 0">
+              <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk het document</a>
+            </p>
             ${isPaid ? '<p style="color:#666;font-size:.9rem">Wanneer het jou past, kan je via Mijn gesprekken één opvolgdocument invullen om te zien hoe het gaat en wat er veranderd is. Daar hoef je niet mee te wachten, dat kan al vanaf nu, maar dit kan slechts één keer per gesprek.</p>' : ''}
             <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang tot het gesprek.</p>
           </div>`,
@@ -190,6 +189,7 @@ BELANGRIJKE STIJLREGEL OVER "PERSPECTIVES" (enkel bij het originele document): v
 GEEN PAPEGAAI-EFFECT: neem NOOIT letterlijke of bijna letterlijke stukken uit iemands eigen antwoorden over in explanation, strengths, growth_areas, tips, of suggested_phrases (behalve suggested_phrases zelf, dat zijn bewust letterlijke, bruikbare zinnen). Herformuleer altijd volledig in je eigen woorden. Elke conclusie die je trekt moet gedragen zijn door wat er effectief in de antwoorden staat, verzin nooit iets dat er niet uit blijkt.
 
 NIET ALTIJD EEN DIEPERE VERKLARING NODIG BIJ "explanation": forceer niet altijd een psychologische diepgang in het "explanation"-veld. Als iemands gedrag of gevoel in deze situatie voldoende verklaard wordt door iets praktisch of voor de hand liggends, zeg dat dan gewoon zo, in plaats van er een zwaardere, onderliggende reden bij te verzinnen die niet steunt op de antwoorden. Enkel als er echt aanwijzingen zijn voor iets dieper liggends (bijvoorbeeld een herkenbaar patroon, of een sterk emotioneel signaal in hun antwoorden), mag je dat benoemen.
+
 BELANGRIJKE ZOEKTOCHT NAAR DE ONDERLIGGENDE REDEN (enkel bij het originele document): het oppervlakkige onderwerp van een conflict is soms de echte kern, en soms niet. Weeg dit zorgvuldig op basis van ALLE antwoorden van beide deelnemers samen, inclusief hoe zwaar ze aangeven dat dit weegt. Er zijn drie mogelijke uitkomsten, kies telkens de eerlijkste:
 
 1. Er is een duidelijke, goed onderbouwde onderliggende laag: benoem die dan expliciet aan het einde van shared_summary, bijvoorbeeld beginnend met "Onder de oppervlakte lijkt dit conflict ook te gaan over...".
@@ -204,16 +204,18 @@ Je bent nooit partijdig: je geeft geen enkele partij gelijk, je benoemt feiten e
 
 GEVOELIGE OF ASYMMETRISCHE INFORMATIE: als een persoon iets zwaars deelt waarvan uit de antwoorden van de ander(en) blijkt dat die zich daar duidelijk niet van bewust zijn, verwerk dat dan met zorg. Vermeld nooit een letterlijk citaat of een expliciete gedachte die als een schok zou aankomen bij de ander. Verwerk het wel in de toon en het gewicht van de samenvatting.
 
+NOOIT AANNAMES OVER GESLACHT OF GEAARDHEID: veronderstel nooit het geslacht, de genderidentiteit, of de geaardheid van een partner, familielid of wie dan ook, enkel op basis van een naam of categorie. Gebruik neutrale bewoordingen zoals "je partner" of "diegene" in plaats van "hij" of "zij", tenzij iemand zelf expliciet een geslacht of voornaamwoord vermeldde in de antwoorden.
+
+EMPATHIE BIJ ZWARE SITUATIES: als uit de antwoorden blijkt dat er sprake is van ziekte, overlijden, verlies, of een ander zwaar persoonlijk verlies (bijvoorbeeld een stervende ouder of grootouder), open shared_summary dan met een korte, oprechte blijk van medeleven, voor je verder gaat met de analyse. Bijvoorbeeld: "Het spijt ons te horen dat jullie dit op dit moment ook nog moeten doormaken." Gebruik dit enkel bij situaties die dat oprecht rechtvaardigen, niet bij gewone, lichtere conflicten, waar het overdreven zou aanvoelen.
+
 Je toon is menselijk, geen kil rapport, maar ook niet zweverig. Gebruik in de volledige tekst nooit het lange streepje. Schrijf in volledige zinnen met punten, komma's of "en" of "maar" in plaats van een streepje.
 
 BEKNOPTHEID, DIT IS BELANGRIJK: mensen ervaren de documenten nu als te lang en te dicht beschreven. Schrijf daarom compacter: elke paragraaf (shared_summary, common_ground, elk onderdeel van perspectives) maximaal 3 tot 4 zinnen, geen overbodige inleidende zinnen, ga direct naar de kern van wat er speelt.
 
 TAAL EN LEESBAARHEID, DIT IS CRUCIAAL: schrijf in heldere, grammaticaal correcte, vlot leesbare zinnen. Vermijd omslachtige of onduidelijke formuleringen (zoals een zin die probeert te veel tegelijk te zeggen, of een woord dat niet grammaticaal klopt met de rest van de zin). Lees elke zin die je schrijft in gedachten nog eens hardop: klinkt die natuurlijk, of moet een lezer 'm twee keer lezen om te snappen wat er staat? Is dat laatste het geval, herschrijf de zin dan korter en directer.
-EMPATHIE BIJ ZWARE SITUATIES: als uit de antwoorden blijkt dat er sprake is van ziekte, overlijden, verlies, of een ander zwaar persoonlijk verlies (bijvoorbeeld een stervende ouder of grootouder), open shared_summary dan met een korte, oprechte blijk van medeleven, voor je verder gaat met de analyse. Bijvoorbeeld: "Het spijt ons te horen dat jullie dit op dit moment ook nog moeten doormaken." Gebruik dit enkel bij situaties die dat oprecht rechtvaardigen, niet bij gewone, lichtere conflicten, waar het overdreven zou aanvoelen.
-NOOIT AANNAMES OVER GESLACHT OF GEAARDHEID: veronderstel nooit het geslacht, de genderidentiteit, of de geaardheid van een partner, familielid of wie dan ook, enkel op basis van een naam of categorie. Gebruik neutrale bewoordingen zoals "je partner" of "diegene" in plaats van "hij" of "zij", tenzij iemand zelf expliciet een geslacht of voornaamwoord vermeldde in de antwoorden.
 
 Bouw het rapport met exact deze onderdelen:
-0. key_points: EXACT 3 bullet-punten (elk maximaal 14 woorden), elk met een eigen functie, geen herhaling van elkaar:
+0. key_points: EXACT 3 bullet-punten (elk maximaal 14 woorden), die SAMEN meer waarde geven dan een verkorte herhaling. Elk bullet heeft een eigen, andere functie, herhaal nooit dezelfde boodschap in een ander jasje:
    - bullet 1: de kern van het conflict in één scherpe zin
    - bullet 2: het belangrijkste gedeelde inzicht of raakvlak
    - bullet 3: de belangrijkste gedeelde afspraak of vervolgstap
@@ -260,7 +262,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 
     const nextVersion = existingDocs && existingDocs.length ? existingDocs[0].version + 1 : 1;
 
-await supabase.from('documents').insert({
+    await supabase.from('documents').insert({
       session_id: sessionId,
       version: nextVersion,
       key_points: parsed.key_points || [],
