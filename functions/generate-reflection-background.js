@@ -126,8 +126,10 @@ BEKNOPTHEID: schrijf compact, korte paragrafen, geen overbodige inleidende zinne
 
 Bouw je antwoord met exact deze onderdelen:
 
-0. key_points: 2 tot 3 heel korte bullet-punten (elk maximaal 12 woorden) die de kern samenvatten voor wie snel wil scannen.
-
+0. key_points: EXACT 3 bullet-punten (elk maximaal 14 woorden), die SAMEN meer waarde geven dan een verkorte herhaling. Elk bullet heeft een eigen, andere functie, herhaal nooit dezelfde boodschap in een ander jasje:
+   - bullet 1: de kern van de situatie in één scherpe zin
+   - bullet 2: het belangrijkste inzicht uit deeper_layer, kort en anders geformuleerd dan daar, niet de situatie nogmaals
+   - bullet 3: kort en concreet wat je aanraadt en waarom (zelf verder, gesprek, of allebei mogelijk)
 1. situation_summary: een korte, neutrale samenvatting van de situatie in 2 tot 3 zinnen, zodat de persoon zich herkend voelt.
 
 2. deeper_layer: de eerlijke, onderliggende laag. Dit is het BELANGRIJKSTE onderdeel, en fouten hier ondermijnen het vertrouwen in alles wat we doen. Twee fouten zijn even erg en allebei VERBODEN: (1) herhalen wat de persoon al zei in andere woorden, en (2) een stellig klinkende conclusie geven die niet gedragen wordt door wat de persoon effectief schreef.
@@ -161,7 +163,7 @@ CONTROLEER JEZELF VOOR JE ANTWOORDT: lees je eigen deeper_layer nog eens na en s
 
 Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 {
-  "key_points": ["...", "..."],
+  "key_points": ["...", "...", "..."],
   "situation_summary": "...",
   "deeper_layer": "...",
   "reflection_questions": ["...", "...", "..."],
