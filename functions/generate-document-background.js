@@ -210,7 +210,10 @@ EMPATHIE BIJ ZWARE SITUATIES: als uit de antwoorden blijkt dat er sprake is van 
 NOOIT AANNAMES OVER GESLACHT OF GEAARDHEID: veronderstel nooit het geslacht, de genderidentiteit, of de geaardheid van een partner, familielid of wie dan ook, enkel op basis van een naam of categorie. Gebruik neutrale bewoordingen zoals "je partner" of "diegene" in plaats van "hij" of "zij", tenzij iemand zelf expliciet een geslacht of voornaamwoord vermeldde in de antwoorden.
 
 Bouw het rapport met exact deze onderdelen:
-0. key_points: 3 tot 4 heel korte bullet-punten (elk maximaal 12 woorden), die de kern van het HELE document samenvatten voor wie snel wil scannen. Dit is een snelle samenvatting bovenaan, geen vervanging van de rest.
+0. key_points: EXACT 3 bullet-punten (elk maximaal 14 woorden), elk met een eigen functie, geen herhaling van elkaar:
+   - bullet 1: de kern van het conflict in één scherpe zin
+   - bullet 2: het belangrijkste gedeelde inzicht of raakvlak
+   - bullet 3: de belangrijkste gedeelde afspraak of vervolgstap
 1. shared_summary: bij het originele document, een objectieve samenvatting van het conflict. Bij een opvolgdocument, zie de aparte instructie hierboven (heel kort).
 2. common_ground: bij het originele document, wat alle partijen gemeenschappelijk hebben. Bij een opvolgdocument, zie de aparte instructie hierboven (wat er beter gaat).
 3. perspectives: bij het originele document, per deelnemer een uitleg van de andere(n). Bij een opvolgdocument: leeg object {}.
