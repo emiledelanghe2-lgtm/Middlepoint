@@ -867,8 +867,10 @@ function validateAndBuildContent(container) {
     }
     return null;
   }
-  const lines = answers.filter(a => a.answer).map(a => {
-    if (a.qid === 'vertrouwelijke_context') {
+const proExtraLines = Array.from(document.querySelectorAll('.pro-extra-answer'))
+    .filter(t => t.value.trim())
+    .map(t => `Vraag: ${t.dataset.question}\nAntwoord: ${t.value.trim()}`);
+  if (a.qid === 'vertrouwelijke_context') {
       return `Vraag: [VERTROUWELIJK, NOOIT TONEN AAN DE ANDER] ${a.label}\nAntwoord: ${a.answer}`;
     }
     return `Vraag: ${a.label}\nAntwoord: ${a.answer}`;
@@ -1245,8 +1247,17 @@ ${data.otherEntriesCount === 0 ? categoryEditorHTML(session.category) : `
     <div id="error" class="error-box" style="display:none"></div>
 
     <form id="storyForm">
-      <div id="surveyBody">${questionsHTML}</div>
-
+<div id="surveyBody">${questionsHTML}</div>
+    ${session.pro_extra_questions && session.pro_extra_questions.length ? `
+    <div class="form-section" style="margin-top:20px">
+      <span class="form-section-title">Extra vragen</span>
+      <p style="color:var(--ink-soft);font-size:.85rem;margin-bottom:16px">Deze vragen komen van de organisator van dit gesprek. Optioneel om te beantwoorden.</p>
+      ${session.pro_extra_questions.map((q, i) => `
+        <div class="field">
+          <label for="proQ_${i}">${q}</label>
+          <textarea id="proQ_${i}" class="pro-extra-answer" data-question="${q.replace(/"/g,'&quot;')}"></textarea>
+        </div>`).join('')}
+    </div>` : ''}
       <div class="checkbox-row">
         <input type="checkbox" id="anon">
         <label for="anon">Vermeld mijn naam niet bij dit specifieke verhaal in het document (anoniem)</label>
