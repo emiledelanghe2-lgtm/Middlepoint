@@ -71,7 +71,6 @@
   transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
 }
 .chooser-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(43,38,32,.08); }
-.chooser-card.featured{ border-color:var(--clay); background:linear-gradient(180deg, var(--clay-soft) 0%, var(--white) 60%); box-shadow:0 12px 32px rgba(201,113,75,.16); }
 .chooser-icon{ font-size:2.4rem; margin-bottom:16px; display:block; }
 .chooser-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; padding:4px 12px; border-radius:999px; margin-bottom:14px; }
 .chooser-badge.free{ background:#EFF4ED; color:var(--sage); }
@@ -79,6 +78,8 @@
 .chooser-card h3{ margin-bottom:12px; font-size:1.3rem; }
 .chooser-card p{ color:var(--ink-soft); font-size:.92rem; margin-bottom:24px; flex-grow:1; line-height:1.6; }
 .chooser-card .btn{ width:100%; text-align:center; padding:13px; box-sizing:border-box; pointer-events:none; }
+
+.pro-question-row{ margin-bottom:8px; }
 </style>
 </head>
 <body>
@@ -126,7 +127,7 @@
       <p style="color:var(--ink-soft)">Kies wat het best bij jouw situatie past.</p>
     </div>
 
-  <div class="chooser-intro">
+    <div class="chooser-intro">
       <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Twijfel je nog? De meeste mensen beginnen bij een gratis reflectie, en beslissen pas nadien of een gesprek met de ander nodig is. Weet je het al zeker? Dan start je meteen rechts een gesprek.</p>
     </div>
 
@@ -139,7 +140,7 @@
         <span class="btn outline">Start een gratis reflectie</span>
       </div>
 
-     <div class="chooser-card" id="chooseTogetherBtn">
+      <div class="chooser-card" id="chooseTogetherBtn">
         <span class="chooser-badge paid">€4,99</span>
         <span class="chooser-icon" aria-hidden="true">⊙</span>
         <h3>Samen met de ander</h3>
@@ -224,7 +225,7 @@
         <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
         <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
       </div>
-   <div class="field" id="organizerEmailConfirmField" style="display:block">
+      <div class="field" id="organizerEmailConfirmField" style="display:block">
         <label for="organizerEmailConfirm">Herhaal je e-mailadres</label>
         <input type="email" id="organizerEmailConfirm" placeholder="jij@email.be" autocomplete="email">
         <div class="help">Even dubbel typen om tikfouten te vermijden. Dit adres bepaalt of je later kan inloggen bij Mijn gesprekken.</div>
@@ -323,7 +324,6 @@ function showChooserView(pushHistory) {
   }
 }
 
-// Basislijn zetten zodat de allereerste "terug" altijd correct naar de vorige, echte pagina gaat
 history.replaceState({ mpView: 'chooser' }, '', window.location.pathname + window.location.search);
 
 window.addEventListener('popstate', (e) => {
@@ -344,7 +344,7 @@ document.getElementById('backToChooserBtn').addEventListener('click', () => {
   history.back();
 });
 
-/* ===== Rest van de logica ===== */
+/* ===== Opgeslagen concept bij betaling ===== */
 const STORAGE_KEY = 'mp_pending_session';
 function savePending(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {} }
 function loadPending() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
@@ -355,7 +355,67 @@ let activeSubscription = null;
 let organizerEmailIsNew = true;
 let reflectionPrefillText = '';
 let reflectionConfidentialPrefillText = '';
+let isProCustomer = false;
 
+/* ===== Pro: rolkeuze en vragenconfiguratie ===== */
+const PRO_SUGGESTED_QUESTIONS = {
+  hr: [
+    'Is dit al eerder besproken met een leidinggevende of HR?',
+    'Heeft dit invloed op de samenwerking binnen het team?',
+  ],
+  leerkracht: [
+    'Is dit de eerste keer dat dit voorvalt?',
+    'Is er al contact geweest met de ouders hierover?',
+  ],
+  therapeut: [
+    'Speelt dit al langer, en zo ja, hoelang ongeveer?',
+    'Is er al eerder professionele hulp gezocht voor deze situatie?',
+  ],
+  advocaat: [
+    'Zijn er al eerdere stappen ondernomen om dit op te lossen?',
+    'Zijn er praktische of juridische elementen die hierbij een rol spelen?',
+  ],
+  anders: [
+    'Is dit al eerder besproken met iemand anders?',
+  ],
+};
+
+function renderProQuestions(role) {
+  const wrap = document.getElementById('proQuestionsList');
+  const suggestions = PRO_SUGGESTED_QUESTIONS[role] || PRO_SUGGESTED_QUESTIONS.anders;
+  wrap.innerHTML = suggestions.map((q) => `
+    <label class="mc-option pro-question-row" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--white);margin-bottom:8px">
+      <input type="checkbox" class="pro-question-cb" value="${q.replace(/"/g,'&quot;')}" checked>
+      <span>${q}</span>
+    </label>`).join('');
+}
+
+function addProQuestionRow() {
+  const wrap = document.getElementById('proQuestionsList');
+  const div = document.createElement('div');
+  div.className = 'pro-question-row';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" class="pro-custom-question" placeholder="Eigen vraag" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:'Karla',sans-serif">
+      <button type="button" class="icon-btn remove-pro-q" title="Verwijder">✕</button>
+    </div>`;
+  wrap.appendChild(div);
+  div.querySelector('.remove-pro-q').addEventListener('click', () => div.remove());
+}
+
+function updateProConfigVisibility() {
+  const thirdPartyChecked = document.getElementById('isThirdParty').checked;
+  const show = isProCustomer && thirdPartyChecked;
+  document.getElementById('proConfigField').style.display = show ? 'block' : 'none';
+  if (show) renderProQuestions(document.getElementById('organizerRole').value);
+}
+
+document.getElementById('addProQuestion').addEventListener('click', addProQuestionRow);
+document.getElementById('organizerRole').addEventListener('change', (e) => {
+  renderProQuestions(e.target.value);
+});
+
+/* ===== Plan-melding boven het formulier ===== */
 function updatePlanUI() {
   const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
 
@@ -364,6 +424,7 @@ function updatePlanUI() {
   document.getElementById('submitBtn').textContent = hasActiveSub ? 'Sessie aanmaken' : 'Verder naar betaling';
 }
 
+/* ===== E-mailadres herkennen ===== */
 async function checkEmail(email) {
   const confirmField = document.getElementById('organizerEmailConfirmField');
   if (!email || !email.includes('@')) return;
@@ -371,7 +432,7 @@ async function checkEmail(email) {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
     const data = await res.json();
 
-if (!data.known) {
+    if (!data.known) {
       activeSubscription = null;
       organizerEmailIsNew = true;
       isProCustomer = false;
@@ -426,6 +487,7 @@ document.getElementById('organizerEmail').addEventListener('blur', e => {
   checkEmail(e.target.value.trim());
 });
 
+/* ===== Deelnemersvelden ===== */
 function addParticipantRow() {
   const wrap = document.getElementById('participantInputs');
   const div = document.createElement('div');
@@ -463,64 +525,7 @@ document.getElementById('isThirdParty').addEventListener('change', e => {
   updateProConfigVisibility();
 });
 
-let isProCustomer = false;
-const PRO_SUGGESTED_QUESTIONS = {
-  hr: [
-    'Is dit al eerder besproken met een leidinggevende of HR?',
-    'Heeft dit invloed op de samenwerking binnen het team?',
-  ],
-  leerkracht: [
-    'Is dit de eerste keer dat dit voorvalt?',
-    'Is er al contact geweest met de ouders hierover?',
-  ],
-  therapeut: [
-    'Speelt dit al langer, en zo ja, hoelang ongeveer?',
-    'Is er al eerder professionele hulp gezocht voor deze situatie?',
-  ],
-  advocaat: [
-    'Zijn er al eerdere stappen ondernomen om dit op te lossen?',
-    'Zijn er praktische of juridische elementen die hierbij een rol spelen?',
-  ],
-  anders: [
-    'Is dit al eerder besproken met iemand anders?',
-  ],
-};
-
-function renderProQuestions(role) {
-  const wrap = document.getElementById('proQuestionsList');
-  const suggestions = PRO_SUGGESTED_QUESTIONS[role] || PRO_SUGGESTED_QUESTIONS.anders;
-  wrap.innerHTML = suggestions.map((q, i) => `
-    <label class="mc-option" style="margin-bottom:8px">
-      <input type="checkbox" class="pro-question-cb" value="${q.replace(/"/g,'&quot;')}" checked>
-      <span>${q}</span>
-    </label>`).join('');
-}
-
-function addProQuestionRow() {
-  const wrap = document.getElementById('proQuestionsList');
-  const div = document.createElement('div');
-  div.style.marginBottom = '8px';
-  div.innerHTML = `
-    <div style="display:flex;gap:8px;align-items:center">
-      <input type="text" class="pro-custom-question" placeholder="Eigen vraag" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px">
-      <button type="button" class="icon-btn remove-pro-q" title="Verwijder">✕</button>
-    </div>`;
-  wrap.appendChild(div);
-  div.querySelector('.remove-pro-q').addEventListener('click', () => div.remove());
-}
-document.getElementById('addProQuestion').addEventListener('click', addProQuestionRow);
-
-document.getElementById('organizerRole').addEventListener('change', (e) => {
-  renderProQuestions(e.target.value);
-});
-
-function updateProConfigVisibility() {
-  const show = isProCustomer && document.getElementById('isThirdParty').checked;
-  document.getElementById('proConfigField').style.display = show ? 'block' : 'none';
-  if (show) renderProQuestions(document.getElementById('organizerRole').value);
-}
-});
-
+/* ===== Links, uitnodigingen ===== */
 function copyLink(btn, link) {
   navigator.clipboard.writeText(link).then(() => {
     const old = btn.textContent;
@@ -548,12 +553,15 @@ function mailLink(name, fromName, link, toEmail, customMessage) {
   return `mailto:${toEmail || ''}?subject=${subject}&body=${body}`;
 }
 
+/* ===== Indienen ===== */
 document.getElementById('newSessionForm').addEventListener('submit', async e => {
   e.preventDefault();
   const errorBox = document.getElementById('error');
   const limitBox = document.getElementById('limitBox');
   errorBox.style.display = 'none';
   limitBox.style.display = 'none';
+
+  try {
 
   let category = document.getElementById('category').value;
   if (category === 'andere') {
@@ -566,7 +574,11 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   const organizerEmail = document.getElementById('organizerEmail').value.trim();
   const organizerEmailConfirm = document.getElementById('organizerEmailConfirm').value.trim();
   const isThirdParty = document.getElementById('isThirdParty').checked;
-const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
+  const participantsReceiveDocument = isThirdParty ? document.getElementById('participantsReceiveDocument').checked : true;
+  const sendInvites = document.getElementById('sendInvites').checked;
+
   let proExtraQuestions = [];
   if (isProCustomer && isThirdParty) {
     proExtraQuestions = Array.from(document.querySelectorAll('.pro-question-cb:checked')).map(cb => cb.value);
@@ -575,13 +587,8 @@ const organizerRole = isThirdParty ? document.getElementById('organizerRole').va
       if (val) proExtraQuestions.push(val);
     });
   }
-  const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
-  const participantsReceiveDocument = isThirdParty ? document.getElementById('participantsReceiveDocument').checked : true;
-  const sendInvites = document.getElementById('sendInvites').checked;
 
   if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
-
-  try {
 
   await checkEmail(organizerEmail);
   if (organizerEmailIsNew) {
@@ -635,7 +642,7 @@ const organizerRole = isThirdParty ? document.getElementById('organizerRole').va
       errorBox.style.display = 'block';
       return;
     }
- savePending({
+    savePending({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages,
       plan: selectedPlanId, isThirdParty, reflectionPrefillText, reflectionConfidentialPrefillText, proExtraQuestions
@@ -645,7 +652,7 @@ const organizerRole = isThirdParty ? document.getElementById('organizerRole').va
     return;
   }
 
-await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId, proExtraQuestions });
+  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId, proExtraQuestions });
 
   } catch (unexpectedErr) {
     console.error('Onverwachte fout bij indienen:', unexpectedErr);
@@ -661,7 +668,7 @@ async function createSession({ category, organizerName, organizerEmail, organize
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({
+      body: JSON.stringify({
         category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail,
         organizerSeesDocument, plan,
         organizerParticipates: !isThirdParty,
@@ -751,6 +758,7 @@ async function createSession({ category, organizerName, organizerEmail, organize
   }
 }
 
+/* ===== Bij het laden van de pagina ===== */
 window.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const isPaid = urlParams.get('paid') === 'true';
