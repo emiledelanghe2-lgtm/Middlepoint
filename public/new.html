@@ -224,7 +224,7 @@
         <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
         <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
       </div>
-      <div class="field" id="organizerEmailConfirmField" style="display:block">
+   <div class="field" id="organizerEmailConfirmField" style="display:block">
         <label for="organizerEmailConfirm">Herhaal je e-mailadres</label>
         <input type="email" id="organizerEmailConfirm" placeholder="jij@email.be" autocomplete="email">
         <div class="help">Even dubbel typen om tikfouten te vermijden. Dit adres bepaalt of je later kan inloggen bij Mijn gesprekken.</div>
@@ -234,16 +234,6 @@
         <label for="isThirdParty">Ik neem zelf niet deel (bv. ik ben HR, leerkracht of therapeut)</label>
       </div>
       <div id="organizerRoleField" style="display:none">
-        <div class="field">
-          <label for="organizerRole">Jouw rol</label>
-          <select id="organizerRole">
-            <option value="hr">HR</option>
-            <option value="leerkracht">Leerkracht</option>
-            <option value="therapeut">Therapeut</option>
-            <option value="advocaat">Advocaat</option>
-            <option value="anders">Anders</option>
-          </select>
-        </div>
         <div class="checkbox-row">
           <input type="checkbox" id="organizerSeesDocument" checked>
           <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
@@ -253,6 +243,24 @@
           <label for="participantsReceiveDocument">De deelnemers ontvangen zelf ook het afgewerkte document en een mail</label>
         </div>
         <div class="help" style="margin-top:-6px;margin-bottom:12px">Zet je dit uit, dan krijgen enkel jij het document en de mail te zien, niet de deelnemers zelf. Zij krijgen wel nog steeds de uitnodiging om hun deel in te vullen. Je kan dit later altijd nog wijzigen via Mijn gesprekken.</div>
+      </div>
+      <div id="proConfigField" style="display:none">
+        <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-top:8px">
+          <p style="margin:0 0 14px;font-weight:600">Pro: extra vragen voor de deelnemers</p>
+          <div class="field">
+            <label for="organizerRole">Jouw rol</label>
+            <select id="organizerRole">
+              <option value="hr">HR</option>
+              <option value="leerkracht">Leerkracht</option>
+              <option value="therapeut">Therapeut</option>
+              <option value="advocaat">Advocaat</option>
+              <option value="anders">Anders</option>
+            </select>
+          </div>
+          <div id="proQuestionsList"></div>
+          <button type="button" id="addProQuestion" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:8px">+ Eigen vraag toevoegen</button>
+          <p style="color:var(--ink-soft);font-size:.82rem;margin-top:10px">Deze vragen komen als extra, optioneel onderdeel bij de gewone vragenlijst van de deelnemers.</p>
+        </div>
       </div>
     </div>
 
@@ -363,9 +371,11 @@ async function checkEmail(email) {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
     const data = await res.json();
 
-    if (!data.known) {
+if (!data.known) {
       activeSubscription = null;
       organizerEmailIsNew = true;
+      isProCustomer = false;
+      updateProConfigVisibility();
       confirmField.style.display = 'block';
       document.getElementById('limitBox').style.display = 'none';
       document.getElementById('submitBtn').disabled = false;
@@ -375,6 +385,8 @@ async function checkEmail(email) {
     }
 
     activeSubscription = data;
+    isProCustomer = data.plan === 'pro';
+    updateProConfigVisibility();
     organizerEmailIsNew = false;
     confirmField.style.display = 'none';
     document.getElementById('organizerEmailConfirm').value = '';
@@ -448,6 +460,65 @@ document.getElementById('category').addEventListener('change', e => {
 
 document.getElementById('isThirdParty').addEventListener('change', e => {
   document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
+  updateProConfigVisibility();
+});
+
+let isProCustomer = false;
+const PRO_SUGGESTED_QUESTIONS = {
+  hr: [
+    'Is dit al eerder besproken met een leidinggevende of HR?',
+    'Heeft dit invloed op de samenwerking binnen het team?',
+  ],
+  leerkracht: [
+    'Is dit de eerste keer dat dit voorvalt?',
+    'Is er al contact geweest met de ouders hierover?',
+  ],
+  therapeut: [
+    'Speelt dit al langer, en zo ja, hoelang ongeveer?',
+    'Is er al eerder professionele hulp gezocht voor deze situatie?',
+  ],
+  advocaat: [
+    'Zijn er al eerdere stappen ondernomen om dit op te lossen?',
+    'Zijn er praktische of juridische elementen die hierbij een rol spelen?',
+  ],
+  anders: [
+    'Is dit al eerder besproken met iemand anders?',
+  ],
+};
+
+function renderProQuestions(role) {
+  const wrap = document.getElementById('proQuestionsList');
+  const suggestions = PRO_SUGGESTED_QUESTIONS[role] || PRO_SUGGESTED_QUESTIONS.anders;
+  wrap.innerHTML = suggestions.map((q, i) => `
+    <label class="mc-option" style="margin-bottom:8px">
+      <input type="checkbox" class="pro-question-cb" value="${q.replace(/"/g,'&quot;')}" checked>
+      <span>${q}</span>
+    </label>`).join('');
+}
+
+function addProQuestionRow() {
+  const wrap = document.getElementById('proQuestionsList');
+  const div = document.createElement('div');
+  div.style.marginBottom = '8px';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" class="pro-custom-question" placeholder="Eigen vraag" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px">
+      <button type="button" class="icon-btn remove-pro-q" title="Verwijder">✕</button>
+    </div>`;
+  wrap.appendChild(div);
+  div.querySelector('.remove-pro-q').addEventListener('click', () => div.remove());
+}
+document.getElementById('addProQuestion').addEventListener('click', addProQuestionRow);
+
+document.getElementById('organizerRole').addEventListener('change', (e) => {
+  renderProQuestions(e.target.value);
+});
+
+function updateProConfigVisibility() {
+  const show = isProCustomer && document.getElementById('isThirdParty').checked;
+  document.getElementById('proConfigField').style.display = show ? 'block' : 'none';
+  if (show) renderProQuestions(document.getElementById('organizerRole').value);
+}
 });
 
 function copyLink(btn, link) {
@@ -495,7 +566,15 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   const organizerEmail = document.getElementById('organizerEmail').value.trim();
   const organizerEmailConfirm = document.getElementById('organizerEmailConfirm').value.trim();
   const isThirdParty = document.getElementById('isThirdParty').checked;
-  const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  let proExtraQuestions = [];
+  if (isProCustomer && isThirdParty) {
+    proExtraQuestions = Array.from(document.querySelectorAll('.pro-question-cb:checked')).map(cb => cb.value);
+    Array.from(document.querySelectorAll('.pro-custom-question')).forEach(input => {
+      const val = input.value.trim();
+      if (val) proExtraQuestions.push(val);
+    });
+  }
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
   const participantsReceiveDocument = isThirdParty ? document.getElementById('participantsReceiveDocument').checked : true;
   const sendInvites = document.getElementById('sendInvites').checked;
@@ -556,17 +635,17 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
       errorBox.style.display = 'block';
       return;
     }
-    savePending({
+ savePending({
       category, organizerName, organizerEmail, organizerRole,
       organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages,
-      plan: selectedPlanId, isThirdParty, reflectionPrefillText, reflectionConfidentialPrefillText
+      plan: selectedPlanId, isThirdParty, reflectionPrefillText, reflectionConfidentialPrefillText, proExtraQuestions
     });
     const separator = selectedPlan.ctaLink.includes('?') ? '&' : '?';
     window.location.href = `${selectedPlan.ctaLink}${separator}prefilled_email=${encodeURIComponent(organizerEmail)}`;
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId });
+await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId, proExtraQuestions });
 
   } catch (unexpectedErr) {
     console.error('Onverwachte fout bij indienen:', unexpectedErr);
@@ -575,18 +654,19 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
   }
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan, proExtraQuestions }) {
   const errorBox = document.getElementById('error');
   const limitBox = document.getElementById('limitBox');
   try {
     const res = await fetch('/.netlify/functions/create-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+     body: JSON.stringify({
         category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail,
         organizerSeesDocument, plan,
         organizerParticipates: !isThirdParty,
         participantsReceiveDocument,
+        proExtraQuestions: proExtraQuestions || [],
       }),
     });
     const data = await res.json();
