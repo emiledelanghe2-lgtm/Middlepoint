@@ -119,7 +119,7 @@
       <label for="pEmail">Jouw e-mailadres *</label>
       <input type="email" id="pEmail" required>
     </div>
-    <div class="field">
+<div class="field">
       <label for="pOrgType">Type organisatie *</label>
       <select id="pOrgType" required>
         <option value="">Kies...</option>
@@ -129,6 +129,10 @@
         <option value="Advocatenkantoor">Advocatenkantoor</option>
         <option value="Andere">Andere</option>
       </select>
+    </div>
+    <div class="field">
+      <label for="pOrgName">Naam van de organisatie *</label>
+      <input type="text" id="pOrgName" required placeholder="bv. Basisschool De Wingerd">
     </div>
     <div class="field">
       <label for="pVolume">Geschat aantal gesprekken per maand (optioneel)</label>
@@ -162,10 +166,11 @@ document.getElementById('proContactForm').addEventListener('submit', async (e) =
   try {
     const res = await fetch('/.netlify/functions/submit-pro-contact', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+  body: JSON.stringify({
         name: document.getElementById('pName').value.trim(),
         email: document.getElementById('pEmail').value.trim(),
         orgType: document.getElementById('pOrgType').value,
+        orgName: document.getElementById('pOrgName').value.trim(),
         volume: document.getElementById('pVolume').value.trim(),
         message: document.getElementById('pMessage').value.trim(),
       }),
