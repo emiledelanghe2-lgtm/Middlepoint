@@ -106,7 +106,7 @@ exports.handler = async (event) => {
 
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
-      .insert({
+.insert({
         category,
         organizer_role: organizerRole || null,
         organizer_email: normalizedEmail,
@@ -115,6 +115,7 @@ exports.handler = async (event) => {
         participants_receive_document: participates ? true : (participantsReceiveDocument !== false),
         plan: sessionPlan,
         include_followups: includeFollowups !== false,
+        pro_extra_questions: proExtraQuestions || [],
       })
       .select()
       .single();
