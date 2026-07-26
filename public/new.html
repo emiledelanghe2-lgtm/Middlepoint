@@ -71,6 +71,7 @@
   transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
 }
 .chooser-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(43,38,32,.08); }
+.chooser-card.featured{ border-color:var(--clay); background:linear-gradient(180deg, var(--clay-soft) 0%, var(--white) 60%); box-shadow:0 12px 32px rgba(201,113,75,.16); }
 .chooser-icon{ font-size:2.4rem; margin-bottom:16px; display:block; }
 .chooser-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; padding:4px 12px; border-radius:999px; margin-bottom:14px; }
 .chooser-badge.free{ background:#EFF4ED; color:var(--sage); }
@@ -235,6 +236,16 @@
         <label for="isThirdParty">Ik neem zelf niet deel (bv. ik ben HR, leerkracht of therapeut)</label>
       </div>
       <div id="organizerRoleField" style="display:none">
+        <div class="field">
+          <label for="organizerRole">Jouw rol</label>
+          <select id="organizerRole">
+            <option value="hr">HR</option>
+            <option value="leerkracht">Leerkracht</option>
+            <option value="therapeut">Therapeut</option>
+            <option value="advocaat">Advocaat</option>
+            <option value="anders">Anders</option>
+          </select>
+        </div>
         <div class="checkbox-row">
           <input type="checkbox" id="organizerSeesDocument" checked>
           <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
@@ -244,23 +255,14 @@
           <label for="participantsReceiveDocument">De deelnemers ontvangen zelf ook het afgewerkte document en een mail</label>
         </div>
         <div class="help" style="margin-top:-6px;margin-bottom:12px">Zet je dit uit, dan krijgen enkel jij het document en de mail te zien, niet de deelnemers zelf. Zij krijgen wel nog steeds de uitnodiging om hun deel in te vullen. Je kan dit later altijd nog wijzigen via Mijn gesprekken.</div>
-      </div>
-      <div id="proConfigField" style="display:none">
-        <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-top:8px">
-          <p style="margin:0 0 14px;font-weight:600">Pro: extra vragen voor de deelnemers</p>
-          <div class="field">
-            <label for="organizerRole">Jouw rol</label>
-            <select id="organizerRole">
-              <option value="hr">HR</option>
-              <option value="leerkracht">Leerkracht</option>
-              <option value="therapeut">Therapeut</option>
-              <option value="advocaat">Advocaat</option>
-              <option value="anders">Anders</option>
-            </select>
+
+        <div id="proConfigField" style="display:none">
+          <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-top:8px">
+            <p style="margin:0 0 14px;font-weight:600">Pro: extra vragen voor de deelnemers</p>
+            <div id="proQuestionsList"></div>
+            <button type="button" id="addProQuestion" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:8px">+ Eigen vraag toevoegen</button>
+            <p style="color:var(--ink-soft);font-size:.82rem;margin-top:10px">Deze vragen komen als extra, optioneel onderdeel bij de gewone vragenlijst van de deelnemers.</p>
           </div>
-          <div id="proQuestionsList"></div>
-          <button type="button" id="addProQuestion" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:8px">+ Eigen vraag toevoegen</button>
-          <p style="color:var(--ink-soft);font-size:.82rem;margin-top:10px">Deze vragen komen als extra, optioneel onderdeel bij de gewone vragenlijst van de deelnemers.</p>
         </div>
       </div>
     </div>
@@ -306,7 +308,7 @@
 </div>
 
 <script>
-/* ===== Chooser-logica: identieke kaarten, met correcte terug-navigatie via browsergeschiedenis ===== */
+/* ===== Chooser-logica: identieke kaarten, verspringende gloed, correcte terug-navigatie ===== */
 function showFormView(pushHistory) {
   document.getElementById('chooserView').style.display = 'none';
   document.getElementById('formView').style.display = 'block';
@@ -334,10 +336,23 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
-document.getElementById('chooseSoloCard').addEventListener('click', () => {
+const chooseSoloCard = document.getElementById('chooseSoloCard');
+const chooseTogetherCard = document.getElementById('chooseTogetherBtn');
+function setFeaturedCard(card) {
+  chooseSoloCard.classList.remove('featured');
+  chooseTogetherCard.classList.remove('featured');
+  card.classList.add('featured');
+}
+setFeaturedCard(chooseSoloCard);
+chooseSoloCard.addEventListener('mouseenter', () => setFeaturedCard(chooseSoloCard));
+chooseSoloCard.addEventListener('touchstart', () => setFeaturedCard(chooseSoloCard), { passive: true });
+chooseTogetherCard.addEventListener('mouseenter', () => setFeaturedCard(chooseTogetherCard));
+chooseTogetherCard.addEventListener('touchstart', () => setFeaturedCard(chooseTogetherCard), { passive: true });
+
+chooseSoloCard.addEventListener('click', () => {
   window.location.href = '/reflectie.html';
 });
-document.getElementById('chooseTogetherBtn').addEventListener('click', () => {
+chooseTogetherCard.addEventListener('click', () => {
   showFormView();
 });
 document.getElementById('backToChooserBtn').addEventListener('click', () => {
@@ -357,7 +372,7 @@ let reflectionPrefillText = '';
 let reflectionConfidentialPrefillText = '';
 let isProCustomer = false;
 
-/* ===== Pro: rolkeuze en vragenconfiguratie ===== */
+/* ===== Pro: vragenconfiguratie, gebruikt de gedeelde rolkeuze ===== */
 const PRO_SUGGESTED_QUESTIONS = {
   hr: [
     'Is dit al eerder besproken met een leidinggevende of HR?',
@@ -412,7 +427,7 @@ function updateProConfigVisibility() {
 
 document.getElementById('addProQuestion').addEventListener('click', addProQuestionRow);
 document.getElementById('organizerRole').addEventListener('change', (e) => {
-  renderProQuestions(e.target.value);
+  if (isProCustomer) renderProQuestions(e.target.value);
 });
 
 /* ===== Plan-melding boven het formulier ===== */
@@ -797,6 +812,21 @@ window.addEventListener('DOMContentLoaded', async () => {
           catSelect.value = 'andere';
           document.getElementById('categoryOtherField').style.display = 'block';
           document.getElementById('categoryOther').value = r.category;
+        }
+
+        const thirdPartyParam = urlParams.get('thirdParty') === '1';
+        if (thirdPartyParam) {
+          const checkbox = document.getElementById('isThirdParty');
+          checkbox.checked = true;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          const context = urlParams.get('thirdPartyContext');
+          if (context) {
+            const hint = document.createElement('div');
+            hint.className = 'reflection-notice';
+            hint.style.marginBottom = '16px';
+            hint.innerHTML = `<p style="margin:0">Je gaf eerder aan dat dit gaat over: <strong>${context}</strong>. Vul hieronder hun namen en e-mailadressen in als deelnemers.</p>`;
+            document.getElementById('stepDeelnemers').insertAdjacentElement('afterbegin', hint);
+          }
         }
       }
     } catch (e) { /* stil falen, gewoon normaal verder laten gaan */ }
