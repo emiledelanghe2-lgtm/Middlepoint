@@ -14,7 +14,7 @@ exports.handler = async (event) => {
   }
   try {
     const body = JSON.parse(event.body || '{}');
-    const {
+const {
       category,
       organizerName,
       participantNames,
@@ -26,6 +26,7 @@ exports.handler = async (event) => {
       participantsReceiveDocument,
       plan,
       includeFollowups,
+      proExtraQuestions,
     } = body;
 
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
