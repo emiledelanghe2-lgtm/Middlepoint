@@ -157,8 +157,10 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
-const advisorContext = session.plan === 'pro'
-      ? `\n\nBELANGRIJKE EXTRA OPDRACHT, ENKEL VOOR DEZE PRO-SESSIE: naast alle andere onderdelen, geef je ook "advisor_insight": een kort, professioneel geformuleerd inzicht (4 tot 6 zinnen) specifiek gericht aan de begeleider (therapeut, leerkracht, HR of advocaat) die dit gesprek opstartte, NOOIT zichtbaar voor de deelnemers zelf. Beschrijf hier vakkundig: welke dynamiek je opmerkt tussen de deelnemers, of er signalen zijn die verder professioneel opvolgen zouden rechtvaardigen, en een korte, praktische suggestie voor hoe de begeleider dit verder zou kunnen opvolgen. Blijf feitelijk en voorzichtig, doe geen diagnose, en verzin niets dat niet steunt op de antwoorden.`
+    const advisorContext = session.plan === 'pro'
+      ? `\n\nBELANGRIJKE EXTRA OPDRACHT, ENKEL VOOR DEZE PRO-SESSIE: naast alle andere onderdelen, geef je ook "advisor_insight": een kort, professioneel geformuleerd inzicht (4 tot 6 zinnen) specifiek gericht aan de begeleider (therapeut, leerkracht, HR of advocaat) die dit gesprek opstartte, NOOIT zichtbaar voor de deelnemers zelf. Beschrijf hier vakkundig: welke dynamiek je opmerkt tussen de deelnemers, of er signalen zijn die verder professioneel opvolgen zouden rechtvaardigen, en een korte, praktische suggestie voor hoe de begeleider dit verder zou kunnen opvolgen. Doe geen diagnose.
+
+Dit onderdeel volgt DEZELFDE strenge regels als de rest van het document: geen papegaai-effect (nooit letterlijk of bijna letterlijk herhalen wat er in de antwoorden staat), elke uitspraak moet gedragen zijn door concrete aanwijzingen uit de antwoorden, forceer geen diepgang als de antwoorden dat niet dragen (zeg dan gewoon dat er geen bijzondere signalen zijn), en pas dezelfde zelfcontrole toe voor je antwoordt: bevat elke zin iets nieuws en onderbouwds, en is de taal helder en correct?`
       : '';
 
     const followupContext = isFollowup && previousDoc
@@ -266,7 +268,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat${sess
 
     const nextVersion = existingDocs && existingDocs.length ? existingDocs[0].version + 1 : 1;
 
-await supabase.from('documents').insert({
+    await supabase.from('documents').insert({
       session_id: sessionId,
       version: nextVersion,
       key_points: parsed.key_points || [],
