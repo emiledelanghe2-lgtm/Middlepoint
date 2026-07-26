@@ -41,8 +41,9 @@ exports.handler = async (event) => {
       .filter(p => !p.email)
       .map(p => p.display_name);
 
-    const plan = session.plan || 'gratis';
+  const plan = session.plan || 'gratis';
     const isPaid = plan !== 'gratis';
+    const showAdvisorInsight = plan === 'pro' && participant.is_organizer;
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -51,6 +52,8 @@ exports.handler = async (event) => {
         sessionStatus: session.status,
         category: session.category,
         isPaid,
+        plan,
+        showAdvisorInsight,
         missingEmailNames,
         documents: documents || [],
       }),
