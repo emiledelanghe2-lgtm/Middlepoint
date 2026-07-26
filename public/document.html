@@ -131,6 +131,7 @@ function renderDoc(data, displayVersion) {
   const allVersions = data.documents;
   const doc = displayVersion ? allVersions.find(d => d.version === displayVersion) : allVersions[0];
   const isPaid = data.isPaid || false;
+  const showAdvisorInsight = data.showAdvisorInsight && doc.advisor_insight;
   const myName = data.myName;
   const isThirdPartyViewer = !!data.isThirdPartyViewer;
   const category = data.category || 'andere';
@@ -244,6 +245,13 @@ function renderDoc(data, displayVersion) {
           <div class="who">${name} kan vragen</div>
           <ul class="tip-list">${qs.map(q => `<li>${q}</li>`).join('')}</ul>
         </div>`).join('')}
+    </div>` : ''}
+
+${showAdvisorInsight ? `
+    <div class="doc-section no-print" style="background:var(--navy);color:#fff;border-radius:var(--radius);padding:24px">
+      <span class="label" style="color:#fff;opacity:.8">◇ Voor de begeleider, enkel zichtbaar voor jou</span>
+      <h3 style="color:#fff">Professioneel inzicht</h3>
+      <p style="color:#fff;opacity:.92">${doc.advisor_insight}</p>
     </div>` : ''}
 
     <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
