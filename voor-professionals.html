@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Middlepoint voor professionals | Therapeuten, scholen, HR</title>
+<meta name="description" content="Middlepoint voor therapeuten, scholen, HR en advocaten. Start gesprekken tussen anderen, met professionele inzichten erbij.">
+<link rel="canonical" href="https://middlepoint.net/voor-professionals.html">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Hoofdnavigatie">
+  <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/">Home</a>
+    <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html">Prijzen</a>
+    <a href="/testimonials.html">Getuigenissen</a>
+    <a href="/login.html">Mijn gesprekken</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/new.html" class="btn">Start een gesprek</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+
+<section class="section" style="max-width:760px">
+  <span class="label">Voor professionals</span>
+  <h1 style="font-size:2.2rem;margin-bottom:16px">Bemiddel met een objectieve basis, geen giswerk</h1>
+  <p style="color:var(--ink-soft);font-size:1.05rem;margin-bottom:32px">Voor therapeuten, leerkrachten, HR-medewerkers en advocaten die een gesprek willen opstarten tussen twee (of meer) anderen, zonder zelf partij te zijn.</p>
+
+  <div class="grid-3" style="margin-bottom:40px">
+    <div class="card">
+      <span class="icon" aria-hidden="true">✎</span>
+      <h3>Scholen</h3>
+      <p>Bemiddel tussen leerlingen op basis van wat beiden apart aangaven, gericht op begrip in plaats van straf.</p>
+    </div>
+    <div class="card">
+      <span class="icon" aria-hidden="true">▣</span>
+      <h3>HR</h3>
+      <p>Start een gesprek tussen twee collega's, met een objectief overzicht als vertrekpunt voor jullie gesprek.</p>
+    </div>
+    <div class="card">
+      <span class="icon" aria-hidden="true">◇</span>
+      <h3>Therapeuten &amp; advocaten</h3>
+      <p>Laat cliënten vooraf apart hun kant delen. Begin de sessie met het volledige beeld al op tafel.</p>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <span class="label">Wat je extra krijgt</span>
+    <h2>Meer dan een gewoon gesprek</h2>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <h3>Professioneel inzicht</h3>
+    <p style="color:var(--ink-soft)">Naast het gewone, gedeelde document krijg jij als begeleider een extra, professioneel geformuleerd inzicht, nooit zichtbaar voor de deelnemers zelf.</p>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <h3>Volledige keuze wie wat ziet</h3>
+    <p style="color:var(--ink-soft)">Jij kiest zelf of de deelnemers het document te zien krijgen, of enkel jij. Niets gebeurt automatisch.</p>
+  </div>
+  <div class="card" style="margin-bottom:40px">
+    <h3>Onbeperkt gebruik, prijs op maat</h3>
+    <p style="color:var(--ink-soft)">Geen vaste limiet per maand. We bekijken samen wat een eerlijke prijs is voor jouw situatie.</p>
+  </div>
+
+  <div class="card" style="background:#EFF4ED;border:none;padding:20px;margin-bottom:40px">
+    <p style="margin:0;font-size:.9rem"><strong>Over privacy:</strong> jij bepaalt zelf wie het document ziet. Gegevens van minderjarigen of cliënten worden met dezelfde zorg behandeld als bij elk ander gesprek. Meer details in ons <a href="/privacy.html">privacybeleid</a>.</p>
+  </div>
+
+  <div class="section-head">
+    <span class="label">Interesse?</span>
+    <h2>Vertel ons kort over jouw situatie</h2>
+  </div>
+
+  <div id="formMsg" style="display:none;margin-bottom:16px"></div>
+  <form id="proContactForm">
+    <div class="field">
+      <label for="pName">Jouw naam *</label>
+      <input type="text" id="pName" required>
+    </div>
+    <div class="field">
+      <label for="pEmail">Jouw e-mailadres *</label>
+      <input type="email" id="pEmail" required>
+    </div>
+    <div class="field">
+      <label for="pOrgType">Type organisatie *</label>
+      <select id="pOrgType" required>
+        <option value="">Kies...</option>
+        <option value="School">School</option>
+        <option value="Therapeutenpraktijk">Therapeutenpraktijk</option>
+        <option value="HR-afdeling">HR-afdeling</option>
+        <option value="Advocatenkantoor">Advocatenkantoor</option>
+        <option value="Andere">Andere</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="pVolume">Geschat aantal gesprekken per maand (optioneel)</label>
+      <input type="text" id="pVolume" placeholder="bv. 10 tot 20">
+    </div>
+    <div class="field">
+      <label for="pMessage">Vertel kort waarvoor je Middlepoint zou willen gebruiken (optioneel)</label>
+      <textarea id="pMessage"></textarea>
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="pSubmitBtn">Verstuur aanvraag</button>
+  </form>
+</section>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">De plek om elkaar terug te vinden.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Vragen? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/login.html">Mijn gesprekken</a>
+    &nbsp;·&nbsp; <a href="/privacy.html">Privacybeleid</a>
+  </p>
+  <a href="/faq.html" class="hint-chip" style="text-decoration:none">Veelgestelde vragen</a>
+</footer>
+
+<script>
+document.getElementById('proContactForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('pSubmitBtn');
+  const msg = document.getElementById('formMsg');
+  btn.disabled = true;
+  btn.textContent = 'Versturen...';
+  try {
+    const res = await fetch('/.netlify/functions/submit-pro-contact', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('pName').value.trim(),
+        email: document.getElementById('pEmail').value.trim(),
+        orgType: document.getElementById('pOrgType').value,
+        volume: document.getElementById('pVolume').value.trim(),
+        message: document.getElementById('pMessage').value.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    document.getElementById('proContactForm').style.display = 'none';
+    msg.style.display = 'block';
+    msg.style.color = 'var(--sage)';
+    msg.textContent = 'Bedankt! We nemen zo snel mogelijk persoonlijk contact met je op.';
+  } catch (err) {
+    msg.style.display = 'block';
+    msg.style.color = '#8A4222';
+    msg.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Verstuur aanvraag';
+  }
+});
+</script>
+</body>
+</html>
