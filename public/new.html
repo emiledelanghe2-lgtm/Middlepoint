@@ -673,9 +673,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const isPaid = urlParams.get('paid') === 'true';
   const fromReflectionParam = urlParams.get('fromReflection');
+  const planParam = urlParams.get('plan');
   const pending = loadPending();
 
-  if (isPaid || fromReflectionParam || pending) {
+  if (isPaid || fromReflectionParam || planParam || pending) {
     showFormView(false);
   }
 
