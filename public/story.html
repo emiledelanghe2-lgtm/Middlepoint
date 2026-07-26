@@ -867,15 +867,16 @@ function validateAndBuildContent(container) {
     }
     return null;
   }
-const proExtraLines = Array.from(document.querySelectorAll('.pro-extra-answer'))
-    .filter(t => t.value.trim())
-    .map(t => `Vraag: ${t.dataset.question}\nAntwoord: ${t.value.trim()}`);
-  if (a.qid === 'vertrouwelijke_context') {
+const lines = answers.filter(a => a.answer).map(a => {
+    if (a.qid === 'vertrouwelijke_context') {
       return `Vraag: [VERTROUWELIJK, NOOIT TONEN AAN DE ANDER] ${a.label}\nAntwoord: ${a.answer}`;
     }
     return `Vraag: ${a.label}\nAntwoord: ${a.answer}`;
   });
-  return lines.join('\n\n');
+  const proExtraLines = Array.from(document.querySelectorAll('.pro-extra-answer'))
+    .filter(t => t.value.trim())
+    .map(t => `Vraag: ${t.dataset.question}\nAntwoord: ${t.value.trim()}`);
+  return [...lines, ...proExtraLines].join('\n\n');
 }
 
 function serializeFormState(container) {
