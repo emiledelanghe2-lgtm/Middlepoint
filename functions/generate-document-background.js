@@ -157,6 +157,10 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
+const advisorContext = session.plan === 'pro'
+      ? `\n\nBELANGRIJKE EXTRA OPDRACHT, ENKEL VOOR DEZE PRO-SESSIE: naast alle andere onderdelen, geef je ook "advisor_insight": een kort, professioneel geformuleerd inzicht (4 tot 6 zinnen) specifiek gericht aan de begeleider (therapeut, leerkracht, HR of advocaat) die dit gesprek opstartte, NOOIT zichtbaar voor de deelnemers zelf. Beschrijf hier vakkundig: welke dynamiek je opmerkt tussen de deelnemers, of er signalen zijn die verder professioneel opvolgen zouden rechtvaardigen, en een korte, praktische suggestie voor hoe de begeleider dit verder zou kunnen opvolgen. Blijf feitelijk en voorzichtig, doe geen diagnose, en verzin niets dat niet steunt op de antwoorden.`
+      : '';
+
     const followupContext = isFollowup && previousDoc
       ? `\n\nBELANGRIJK, DIT IS EEN OPVOLGDOCUMENT, GEEN NIEUW CONFLICTRAPPORT. Dit document moet een kort, gericht voortgangsrapport zijn, gebaseerd VOORAL op wat de deelnemers nu net hebben ingevuld in de opvolgvragenlijst, niet op een herhaling of uitbreiding van de oorspronkelijke conflictanalyse. Gebruik het vorige document enkel als achtergrond om te begrijpen waar dit over ging, niet als hoofdbron voor de inhoud.
 
@@ -178,7 +182,7 @@ Vorig shared_summary (enkel ter achtergrond): ${previousDoc.shared_summary}\n\nV
 BELANGRIJK OVER HET AANTAL DEELNEMERS: er zijn in dit gesprek ${participantCount} deelnemers: ${participantNames}. Dit kunnen er 2, 3 of meer zijn. Voor ELK van de onderdelen perspectives, tips, questions_to_ask en suggested_phrases moet je een apart item toevoegen voor IEDERE deelnemer bij naam, niet enkel voor twee, ongeacht hoeveel mensen er zijn. (Bij een opvolgdocument geldt dit niet voor perspectives en questions_to_ask, zie de aparte instructie hieronder.)
 
 BELANGRIJK OVER DE INPUT: je krijgt geen vrij geschreven verhalen, maar antwoorden op een gestructureerde vragenlijst per persoon (meerkeuze, ja of nee, een schaal uitgedrukt in woorden, en enkele open vragen inclusief een afsluitende vraag "wat wil je nog toevoegen"). Lees dit geheel als het volledige beeld dat deze persoon wil meegeven, en combineer de antwoorden van alle deelnemers tot een samenhangend verhaal, niet als een lijst vraag per vraag.
-${followupContext}
+${followupContext}${advisorContext}
 
 KRITIEKE REGEL OVER VERTROUWELIJKE INFORMATIE: sommige antwoorden zijn expliciet gemarkeerd in de input met "[VERTROUWELIJK, NOOIT TONEN AAN DE ANDER]". Deze informatie mag onder geen enkele voorwaarde letterlijk, geparafraseerd, gesuggereerd of impliciet zichtbaar worden in enig onderdeel van het document, ook niet in versluierde vorm. Je mag deze informatie enkel gebruiken om je eigen begrip en interpretatie van de situatie te verrijken, zodat je toon en nuance juister zijn, maar de inhoud zelf mag nergens terug te herleiden zijn in wat je schrijft. Bij twijfel: laat het gewoon volledig weg.
 
@@ -227,7 +231,7 @@ Bouw het rapport met exact deze onderdelen:
 6. suggested_phrases: per persoon, 3 tot 5 concrete zinnen. PRIVE.
 7. shared_actions: een array van 3 tot 5 concrete, praktische afspraken, SPECIFIEK voor deze situatie, nooit generiek, kort en puntig geformuleerd.
 
-Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
+Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat${session.plan === 'pro' ? ' (let op: dit is een Pro-sessie, dus voeg ook "advisor_insight" toe)' : ''}:
 {
   "key_points": ["...", "...", "..."],
   "shared_summary": "...",
@@ -236,7 +240,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
   "tips": { "Naam1": ["...", "...", "..."], "Naam2": [...] },
   "questions_to_ask": { "Naam1": ["...", "...", "..."], "Naam2": [...] },
   "suggested_phrases": { "Naam1": ["...", "...", "..."], "Naam2": [...] },
-  "shared_actions": ["...", "...", "..."]
+  "shared_actions": ["...", "...", "..."]${session.plan === 'pro' ? ',\n  "advisor_insight": "..."' : ''}
 }`;
 
     const userPrompt = `Conflict tussen: ${participantNames}\n\n${fullText}\n\nGeef het volledige rapport in het gevraagde JSON-formaat, in het Nederlands.`;
@@ -262,7 +266,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 
     const nextVersion = existingDocs && existingDocs.length ? existingDocs[0].version + 1 : 1;
 
-    await supabase.from('documents').insert({
+await supabase.from('documents').insert({
       session_id: sessionId,
       version: nextVersion,
       key_points: parsed.key_points || [],
@@ -273,6 +277,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
       questions_to_ask: parsed.questions_to_ask,
       suggested_phrases: parsed.suggested_phrases,
       shared_actions: parsed.shared_actions || [],
+      advisor_insight: session.plan === 'pro' ? (parsed.advisor_insight || null) : null,
     });
 
     await supabase
