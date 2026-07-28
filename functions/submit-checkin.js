@@ -135,8 +135,9 @@ exports.handler = async (event) => {
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
 
-    if (!everyoneSubmitted) {
-      const others = allParticipants.filter(p => p.id !== participant.id && p.email);
+  if (!everyoneSubmitted) {
+      const pendingIds = requiredIds.filter(id => !submittedIds.has(id));
+      const others = allParticipants.filter(p => pendingIds.includes(p.id) && p.email);
       await Promise.all(
         others.map(p =>
           sendCheckinSubmittedEmail(p.email, p.display_name, participant.display_name, siteUrl, `/story.html?token=${p.access_token}`)
