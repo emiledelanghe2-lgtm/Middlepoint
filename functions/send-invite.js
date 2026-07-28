@@ -12,17 +12,23 @@ exports.handler = async (event) => {
     if (!process.env.RESEND_API_KEY) {
       return { statusCode: 503, body: JSON.stringify({ error: 'E-mailverzending is nog niet ingesteld (RESEND_API_KEY ontbreekt).' }) };
     }
+function escHtml(s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    const safeFromName = escHtml(fromName);
+    const safeToName = escHtml(toName);
+    const safeCategory = escHtml(category);
     const subject = `${fromName} wil graag iets met jou uitklaren via Middlepoint`;
     const personalBlock = customMessage && customMessage.trim()
-      ? `<div style="background:#F1DCC9;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0;font-style:italic">"${customMessage.trim()}"</p></div>`
+      ? `<div style="background:#F1DCC9;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0;font-style:italic">"${escHtml(customMessage.trim())}"</p></div>`
       : '';
     const html = `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
-        <h2 style="color:#2C3A52">Hey${toName ? ' ' + toName : ''},</h2>
-        <p><strong>${fromName}</strong> heeft een gesprek gestart op Middlepoint.</p>
+        <h2 style="color:#2C3A52">Hey${safeToName ? ' ' + safeToName : ''},</h2>
+        <p><strong>${safeFromName}</strong> heeft een gesprek gestart op Middlepoint.</p>
         ${personalBlock}
-        <p>Middlepoint is een tool waarmee twee kanten van een verhaal apart en anoniem hun kant kunnen delen via een korte vragenlijst. Op basis daarvan wordt een eerlijk, neutraal overzicht opgesteld dat helpt om elkaar beter te begrijpen, nog voor jullie er zelf een gesprek over voeren. Er wordt geen schuldige aangewezen, en niemand leest jouw antwoorden rechtstreeks, ook ${fromName} niet.</p>
-        <p>${fromName} heeft al zijn of haar kant ingevuld (categorie: ${category || 'algemeen'}), en zou het waarderen als jij ook jouw kant deelt.</p>
+        <p>Middlepoint is een tool waarmee twee kanten van een verhaal apart en anoniem hun kant kunnen delen via een korte vragenlijst. Op basis daarvan wordt een eerlijk, neutraal overzicht opgesteld dat helpt om elkaar beter te begrijpen, nog voor jullie er zelf een gesprek over voeren. Er wordt geen schuldige aangewezen, en niemand leest jouw antwoorden rechtstreeks, ook ${safeFromName} niet.</p>
+        <p>${safeFromName} heeft al zijn of haar kant ingevuld (categorie: ${safeCategory || 'algemeen'}), en zou het waarderen als jij ook jouw kant deelt.</p>
         ${emailButtonHtml(accessLink, 'Mijn kant van het verhaal vertellen', '#C76F46')}
         <p style="color:#888;font-size:.85rem">Dit is geen rechtszaak en geen beschuldiging, gewoon een eerlijke start voor een gesprek.</p>
       </div>`;
