@@ -444,9 +444,9 @@ const SELFHELP_Q1_OPTIONS = [
   'Weten hoe ik dit kan voorkomen',
 ];
 const SELFHELP_Q2_OPTIONS = [
-  'Ik weet niet goed waar ik moet beginnen',
-  'Ik ben bang dat het toch niet zal helpen',
-  'Ik heb er nog geen tijd voor genomen',
+  'Ik weet niet goed hoe ik dit verder kan aanpakken',
+  'Ik ben bang dat het uiteindelijk toch niet zal helpen',
+  'Ik heb al een eerste stap gezet, maar het voelt nog niet opgelost',
   'Ik dacht dat het vanzelf wel zou overgaan',
   'Niets eigenlijk, ik wil gewoon concrete hulp',
 ];
@@ -493,14 +493,14 @@ async function renderSelfHelpForm(token) {
         </div>
       </div>
 
-      <div class="q-block">
-        <label class="q-label">Wat houdt je nu tegen om hier zelf al mee aan de slag te gaan?</label>
+    <div class="q-block">
+        <label class="q-label">Wat maakt het nu nog moeilijk om hier verder mee om te gaan?</label>
         <div class="q-note" style="margin-bottom:8px">Je mag meerdere opties aanvinken.</div>
         <div class="mc-group" id="shQ2Group">
           ${SELFHELP_Q2_OPTIONS.map(o => `
             <label class="mc-option"><input type="checkbox" name="shq2" value="${o}"><span>${o}</span></label>`).join('')}
           <label class="mc-option"><input type="checkbox" id="shQ2AndereToggle"><span>Iets anders, ik schrijf het zelf op</span></label>
-          <input type="text" id="shQ2AndereInput" class="other-input" style="display:none" placeholder="Wat houdt jou tegen?">
+          <input type="text" id="shQ2AndereInput" class="other-input" style="display:none" placeholder="Wat maakt het nog moeilijk?">
         </div>
         <div id="shQ2TekstWrap" style="display:none">
           <textarea class="q-textarea" id="shQ2Tekst" style="min-height:60px;margin-top:10px" placeholder="Wil je dit nog toelichten? (optioneel)"></textarea>
@@ -579,7 +579,7 @@ async function renderSelfHelpForm(token) {
 
     const lines = [];
     if (q1.vals.length) lines.push(`Vraag: Wat zou jij het liefst willen bereiken?\nAntwoord: ${q1.vals.join(', ')}${q1.tekst ? '. Toelichting: ' + q1.tekst : ''}`);
-    if (q2.vals.length) lines.push(`Vraag: Wat houdt je nu tegen om hier zelf al mee aan de slag te gaan?\nAntwoord: ${q2.vals.join(', ')}${q2.tekst ? '. Toelichting: ' + q2.tekst : ''}`);
+    if (q2.vals.length) lines.push(`Vraag: Wat maakt het nu nog moeilijk om hier verder mee om te gaan?\nAntwoord: ${q2.vals.join(', ')}${q2.tekst ? '. Toelichting: ' + q2.tekst : ''}`);
     if (q3.vals.length) lines.push(`Vraag: Als je over een maand terugkijkt, wat zou je dan graag anders zien?\nAntwoord: ${q3.vals.join(', ')}${q3.tekst ? '. Toelichting: ' + q3.tekst : ''}`);
     Array.from(document.querySelectorAll('.shEarlierAnswer')).forEach(t => {
       const answer = t.value.trim();
