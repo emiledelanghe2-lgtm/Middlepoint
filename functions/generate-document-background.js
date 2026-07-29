@@ -218,8 +218,7 @@ Je toon is menselijk, geen kil rapport, maar ook niet zweverig. Gebruik in de vo
 
 BEKNOPTHEID, DIT IS BELANGRIJK: mensen ervaren de documenten nu als te lang en te dicht beschreven. Schrijf daarom compacter: elke paragraaf (shared_summary, common_ground, elk onderdeel van perspectives) maximaal 3 tot 4 zinnen, geen overbodige inleidende zinnen, ga direct naar de kern van wat er speelt.
 
-TAAL EN LEESBAARHEID, DIT IS CRUCIAAL: schrijf in heldere, grammaticaal correcte, vlot leesbare zinnen. Vermijd omslachtige of onduidelijke formuleringen (zoals een zin die probeert te veel tegelijk te zeggen, of een woord dat niet grammaticaal klopt met de rest van de zin). Lees elke zin die je schrijft in gedachten nog eens hardop: klinkt die natuurlijk, of moet een lezer 'm twee keer lezen om te snappen wat er staat? Is dat laatste het geval, herschrijf de zin dan korter en directer.
-
+TAAL EN LEESBAARHEID, DIT IS CRUCIAAL: schrijf in heldere, grammaticaal correcte, vlot leesbare zinnen. Vermijd omslachtige of onduidelijke formuleringen (zoals een zin die probeert te veel tegelijk te zeggen, of een woord dat niet grammaticaal klopt met de rest van de zin). Lees elke zin die je schrijft in gedachten nog eens hardop: klinkt die natuurlijk, of moet een lezer 'm twee keer lezen om te snappen wat er staat? Is dat laatste het geval, herschrijf de zin dan korter en directer. Gebruik daarnaast altijd het meest alledaagse woord in plaats van een moeilijker of literair synoniem (bijvoorbeeld "koppig" in plaats van "star", "verwaand" in plaats van "aanmatigend"), ook al is dat moeilijkere woord op zich correct Nederlands.
 Bouw het rapport met exact deze onderdelen:
 0. key_points: EXACT 3 bullet-punten (elk maximaal 14 woorden), die SAMEN meer waarde geven dan een verkorte herhaling. Elk bullet heeft een eigen, andere functie, herhaal nooit dezelfde boodschap in een ander jasje:
    - bullet 1: de kern van het conflict in één scherpe zin
