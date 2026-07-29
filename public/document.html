@@ -196,10 +196,11 @@ function renderDoc(data, displayVersion) {
       <p>${doc.common_ground}</p>
     </div>`;
 
-  app.innerHTML = `
+app.innerHTML = `
     <a href="${backLink}" class="btn ghost no-print" style="margin-bottom:16px;display:inline-block">← ${backLabel}</a>
     <span class="label">${docTitleFor(doc.version)}${isThirdPartyViewer ? ' — volledig overzicht' : ''}</span>
     <h1>Jullie document</h1>
+    ${isFollowupDoc ? `<p style="color:var(--ink-soft);margin-bottom:20px">Dit is jullie <strong>opvolgdocument</strong>: een bijgewerkte versie op basis van hoe het sinds jullie eerste gesprek is gegaan.</p>` : ''}
 
     ${missingEmailBanner}
 
