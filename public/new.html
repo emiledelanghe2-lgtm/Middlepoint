@@ -673,7 +673,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     return;
   }
 
-await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: activeSubscription.plan, proExtraQuestions });
+await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: activeSubscription.plan, proExtraQuestions, organizationId: activeSubscription.organizationId });
   } catch (unexpectedErr) {
     console.error('Onverwachte fout bij indienen:', unexpectedErr);
     errorBox.textContent = 'Er ging onverwacht iets mis. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
@@ -681,7 +681,7 @@ await createSession({ category, organizerName, organizerEmail, organizerRole, or
   }
 });
 
-async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan, proExtraQuestions }) {
+async function createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan, proExtraQuestions, organizationId }) {
   const errorBox = document.getElementById('error');
   const limitBox = document.getElementById('limitBox');
   try {
@@ -690,10 +690,11 @@ async function createSession({ category, organizerName, organizerEmail, organize
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail,
-        organizerSeesDocument, plan,
+      organizerSeesDocument, plan,
         organizerParticipates: !isThirdParty,
         participantsReceiveDocument,
         proExtraQuestions: proExtraQuestions || [],
+        organizationId: organizationId || null,
       }),
     });
     const data = await res.json();
