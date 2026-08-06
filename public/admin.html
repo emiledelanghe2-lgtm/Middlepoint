@@ -15,6 +15,14 @@ table.leads-table th{ text-align:left; padding:8px 10px; border-bottom:2px solid
 table.leads-table td{ padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
 .plan-badge{ display:inline-block; padding:2px 8px; border-radius:6px; font-size:.75rem; font-weight:600; background:var(--clay-soft); color:var(--clay); }
 .plan-badge.gratis{ background:#EFF4ED; color:var(--sage); }
+.org-card{ border:1px solid var(--line); border-radius:10px; margin-bottom:14px; overflow:hidden; }
+.org-card summary{ cursor:pointer; list-style:none; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; background:var(--white); }
+.org-card summary::-webkit-details-marker{ display:none; }
+.org-card summary::marker{ content:''; }
+.org-card-body{ padding:16px 18px; border-top:1px solid var(--line); background:#FBF9F6; }
+.org-member-row{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; font-size:.88rem; }
+.org-member-row button{ background:none; border:none; color:#8A4222; cursor:pointer; font-size:.8rem; }
+.org-usage{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -38,12 +46,14 @@ table.leads-table td{ padding:8px 10px; border-bottom:1px solid var(--line); ver
   </div>
 
   <div id="mainBox" style="display:none;margin-top:24px">
-    <div class="admin-tabs">
+  <div class="admin-tabs">
       <button type="button" class="admin-tab active" data-tab="testimonials">Testimonials</button>
       <button type="button" class="admin-tab" data-tab="leads">Leads</button>
+      <button type="button" class="admin-tab" data-tab="organizations">Bedrijven</button>
     </div>
     <div id="testimonialsPanel"></div>
     <div id="leadsPanel" style="display:none"></div>
+    <div id="organizationsPanel" style="display:none"></div>
   </div>
 </div>
 
@@ -51,6 +61,7 @@ table.leads-table td{ padding:8px 10px; border-bottom:1px solid var(--line); ver
 let adminPassword = '';
 let testimonialsLoaded = false;
 let leadsLoaded = false;
+let organizationsLoaded = false;
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
   adminPassword = document.getElementById('adminPassword').value;
@@ -62,10 +73,12 @@ document.querySelectorAll('.admin-tab').forEach(tab => {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     const target = tab.dataset.tab;
-    document.getElementById('testimonialsPanel').style.display = target === 'testimonials' ? 'block' : 'none';
+ document.getElementById('testimonialsPanel').style.display = target === 'testimonials' ? 'block' : 'none';
     document.getElementById('leadsPanel').style.display = target === 'leads' ? 'block' : 'none';
+    document.getElementById('organizationsPanel').style.display = target === 'organizations' ? 'block' : 'none';
     if (target === 'testimonials' && !testimonialsLoaded) loadTestimonials();
     if (target === 'leads' && !leadsLoaded) loadLeads();
+    if (target === 'organizations' && !organizationsLoaded) loadOrganizations();
   });
 });
 
@@ -180,10 +193,140 @@ async function loadLeads() {
               </tr>`).join('')}
           </tbody>
         </table>
-      </div>
+    </div>
     `;
   } catch (err) {
     panel.innerHTML = `<div class="error-box">${err.message}</div>`;
+  }
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function loadOrganizations() {
+  const panel = document.getElementById('organizationsPanel');
+  panel.innerHTML = '<p style="color:var(--ink-soft)">Even laden...</p>';
+  try {
+    const res = await fetch('/.netlify/functions/admin-list-organizations', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    organizationsLoaded = true;
+
+    const orgs = data.organizations || [];
+
+    panel.innerHTML = `
+      <div class="card" style="margin-bottom:20px;padding:20px">
+        <p style="margin:0 0 12px;font-weight:600">Nieuw bedrijf toevoegen</p>
+        <div id="newOrgError" class="error-box" style="display:none;margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="field" style="flex:2;min-width:180px;margin-bottom:0">
+            <label for="newOrgName">Naam bedrijf</label>
+            <input type="text" id="newOrgName" placeholder="bv. Bakkerij Janssens">
+          </div>
+          <div class="field" style="flex:1;min-width:140px;margin-bottom:0">
+            <label for="newOrgLimit">Gesprekken per maand</label>
+            <input type="number" id="newOrgLimit" placeholder="bv. 100" min="1">
+          </div>
+          <button type="button" id="createOrgBtn" class="btn clay" style="padding:11px 20px">Aanmaken</button>
+        </div>
+      </div>
+
+      ${orgs.length ? orgs.map(o => organizationCard(o)).join('') : '<p style="color:var(--ink-soft)">Nog geen bedrijven aangemaakt.</p>'}
+    `;
+
+    document.getElementById('createOrgBtn').addEventListener('click', createOrganization);
+    document.querySelectorAll('[data-add-member-org]').forEach(btn => {
+      btn.addEventListener('click', () => addOrgMember(btn.dataset.addMemberOrg));
+    });
+    document.querySelectorAll('[data-remove-member]').forEach(btn => {
+      btn.addEventListener('click', () => removeOrgMember(btn.dataset.removeMember));
+    });
+  } catch (err) {
+    panel.innerHTML = `<div class="error-box">${err.message}</div>`;
+  }
+}
+
+function organizationCard(o) {
+  const periodEndStr = o.periodEnd ? new Date(o.periodEnd).toLocaleDateString('nl-BE') : '–';
+  return `
+    <details class="org-card">
+      <summary>
+        <span style="font-weight:600">${esc(o.name)}</span>
+        <span class="org-usage">${o.sessionsUsedThisPeriod} / ${o.sessionLimit} gesprekken gebruikt · reset op ${periodEndStr}</span>
+      </summary>
+      <div class="org-card-body">
+        <p style="margin:0 0 10px;font-weight:600;font-size:.9rem">Leden (${o.members.length})</p>
+        <div id="membersList-${o.id}">
+          ${o.members.length ? o.members.map(m => `
+            <div class="org-member-row">
+              <span>${esc(m.email)}</span>
+              <button type="button" data-remove-member="${m.id}">Verwijderen</button>
+            </div>`).join('') : '<p style="color:var(--ink-soft);font-size:.85rem">Nog geen leden.</p>'}
+        </div>
+        <div id="addMemberError-${o.id}" class="error-box" style="display:none;margin-top:10px;font-size:.82rem"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <input type="email" id="newMemberEmail-${o.id}" placeholder="e-mailadres@bedrijf.be" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:.88rem">
+          <button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" data-add-member-org="${o.id}">+ Toevoegen</button>
+        </div>
+      </div>
+    </details>`;
+}
+
+async function createOrganization() {
+  const errorBox = document.getElementById('newOrgError');
+  errorBox.style.display = 'none';
+  const btn = document.getElementById('createOrgBtn');
+  const name = document.getElementById('newOrgName').value.trim();
+  const sessionLimit = document.getElementById('newOrgLimit').value.trim();
+  btn.disabled = true;
+  try {
+    const res = await fetch('/.netlify/functions/admin-create-organization', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, name, sessionLimit }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadOrganizations();
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+  }
+}
+
+async function addOrgMember(organizationId) {
+  const input = document.getElementById(`newMemberEmail-${organizationId}`);
+  const errorBox = document.getElementById(`addMemberError-${organizationId}`);
+  errorBox.style.display = 'none';
+  const email = input.value.trim();
+  if (!email) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-add-org-member', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, organizationId, email }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadOrganizations();
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+  }
+}
+
+async function removeOrgMember(memberId) {
+  try {
+    const res = await fetch('/.netlify/functions/admin-remove-org-member', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, memberId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadOrganizations();
+  } catch (err) {
+    alert(err.message);
   }
 }
 </script>
