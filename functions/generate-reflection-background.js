@@ -42,9 +42,14 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function sendReflectionReadyEmail(toEmail, toName, link) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
+    const safeToName = escHtml(toName);
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -57,7 +62,7 @@ async function sendReflectionReadyEmail(toEmail, toName, link) {
         subject: 'Jouw reflectie staat klaar',
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
-            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
+            <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
             <p>Je persoonlijke reflectie staat klaar.</p>
             ${emailButtonHtml(link, 'Bekijk mijn reflectie')}
             <p style="color:#888;font-size:.85rem">Bewaar deze link, dit is jouw persoonlijke toegang.</p>
