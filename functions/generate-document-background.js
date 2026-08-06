@@ -41,9 +41,14 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
+    const safeToName = escHtml(toName);
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -56,7 +61,7 @@ async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
         subject: 'Jullie document staat klaar',
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
-            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
+            <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
             <p>Het document is klaar. Je kan het nu rustig samen bekijken.</p>
             <p style="margin:28px 0">
               <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk het document</a>
