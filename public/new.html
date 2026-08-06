@@ -673,8 +673,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     return;
   }
 
-  await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: selectedPlanId, proExtraQuestions });
-
+await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: activeSubscription.plan, proExtraQuestions });
   } catch (unexpectedErr) {
     console.error('Onverwachte fout bij indienen:', unexpectedErr);
     errorBox.textContent = 'Er ging onverwacht iets mis. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
