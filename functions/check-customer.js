@@ -7,10 +7,42 @@ exports.handler = async (event) => {
   }
   try {
     const supabase = getSupabase();
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Eerst checken of dit e-mailadres bij een bedrijf hoort. Bedrijfslidmaatschap
+    // wint van een eventueel individueel abonnement met hetzelfde e-mailadres.
+    const { data: membership } = await supabase
+      .from('organization_members')
+      .select('*, organizations(*)')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
+
+    if (membership && membership.organizations) {
+      const org = membership.organizations;
+      const limit = org.session_limit || 0;
+      const used = org.sessions_used_this_period || 0;
+      const remaining = Math.max(0, limit - used);
+      return {
+        statusCode: 200,
+        body: JSON.stringify({
+          known: true,
+          plan: 'pro',
+          planLabel: `Pro (${org.name})`,
+          planStatus: 'active',
+          sessionsUsed: used,
+          sessionsLimit: limit,
+          sessionsRemaining: remaining,
+          periodEnd: org.period_end,
+          organizationId: org.id,
+          organizationName: org.name,
+        }),
+      };
+    }
+
     const { data: customer } = await supabase
       .from('customers')
       .select('*')
-      .eq('email', email.toLowerCase().trim())
+      .eq('email', normalizedEmail)
       .maybeSingle();
     if (!customer) {
       return { statusCode: 200, body: JSON.stringify({ known: false }) };
