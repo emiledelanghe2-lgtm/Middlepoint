@@ -41,9 +41,15 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
+    const safeToName = escHtml(toName);
+    const safeFromName = escHtml(fromName);
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -56,8 +62,8 @@ async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, acces
         subject: `${fromName} heeft zijn verhaal ingediend`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
-            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
-            <p><strong>${fromName}</strong> heeft zojuist zijn kant van het verhaal ingediend bij Middlepoint.</p>
+            <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
+            <p><strong>${safeFromName}</strong> heeft zojuist zijn kant van het verhaal ingediend bij Middlepoint.</p>
             <p>Zodra iedereen zijn verhaal heeft ingediend, gaan we verder met de volgende stap.</p>
             <p style="margin:28px 0">
               <a href="${siteUrl}${accessLink}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk mijn status</a>
