@@ -14,7 +14,7 @@ exports.handler = async (event) => {
   }
   try {
     const body = JSON.parse(event.body || '{}');
-const {
+    const {
       category,
       organizerName,
       participantNames,
@@ -27,19 +27,15 @@ const {
       plan,
       includeFollowups,
       proExtraQuestions,
+      organizationId,
     } = body;
 
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
       return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
     }
 
-    // organizerParticipates: standaard true (organisator doet zelf mee).
-    // Enkel false als de frontend dit expliciet meegeeft (derde persoon, bv. therapeut/HR).
     const participates = organizerParticipates !== false;
 
-    // Minstens 2 echte deelnemers die de vragenlijst zelf invullen:
-    // - doet de organisator zelf mee: organisator + minstens 1 naam in participantNames
-    // - doet de organisator niet mee (derde partij): minstens 2 namen in participantNames
     const minParticipantNames = participates ? 1 : 2;
     if (participantNames.length < minParticipantNames) {
       return {
@@ -54,7 +50,6 @@ const {
 
     const emails = Array.isArray(participantEmails) ? participantEmails : [];
 
-    // E-mailadres is verplicht voor elke echte deelnemer die de vragenlijst invult.
     const missingEmailIndex = participantNames.findIndex((_, i) => !emails[i] || !emails[i].trim());
     if (missingEmailIndex !== -1) {
       return {
@@ -67,47 +62,76 @@ const {
     const normalizedEmail = organizerEmail.toLowerCase().trim();
     const sessionPlan = plan || 'gratis';
 
-    const { data: customer } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-
-    if (customer) {
-      const customerPlan = customer.plan || 'gratis';
-      const used = customer.sessions_used_this_period || 0;
-      const now = new Date();
-      const periodEnd = customer.period_end ? new Date(customer.period_end) : null;
-      const periodStillValid = periodEnd ? now < periodEnd : true;
-
-      if (sessionPlan === 'gratis' && customer.free_session_used) {
+    // Bedrijfsgesprek: gedeelde pot van de organisatie, geen individuele klant-logica.
+    let organization = null;
+    if (organizationId) {
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('id', organizationId)
+        .maybeSingle();
+      if (!org) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Ongeldige organisatie.' }) };
+      }
+      const used = org.sessions_used_this_period || 0;
+      if (used >= (org.session_limit || 0)) {
         return {
           statusCode: 403,
           body: JSON.stringify({
-            error: 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.',
+            error: `Jullie hebben de limiet van ${org.session_limit} gesprekken voor ${org.name} bereikt voor deze periode.`,
             limitReached: true,
           }),
         };
       }
+      organization = org;
+    }
 
-      if (['starter', 'plus', 'pro'].includes(customerPlan) && periodStillValid) {
-        const limit = PLAN_LIMITS[customerPlan] ?? 3;
-        if (used >= limit) {
-          const planLabels = { starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+    // Enkel de individuele klant-logica toepassen als dit GEEN bedrijfsgesprek is.
+    let customer = null;
+    if (!organization) {
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+      customer = existingCustomer;
+
+      if (customer) {
+        const customerPlan = customer.plan || 'gratis';
+        const used = customer.sessions_used_this_period || 0;
+        const now = new Date();
+        const periodEnd = customer.period_end ? new Date(customer.period_end) : null;
+        const periodStillValid = periodEnd ? now < periodEnd : true;
+
+        if (sessionPlan === 'gratis' && customer.free_session_used) {
           return {
             statusCode: 403,
             body: JSON.stringify({
-              error: `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`,
+              error: 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.',
               limitReached: true,
             }),
           };
+        }
+
+        if (['starter', 'plus', 'pro'].includes(customerPlan) && periodStillValid) {
+          const limit = PLAN_LIMITS[customerPlan] ?? 3;
+          if (used >= limit) {
+            const planLabels = { starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+            return {
+              statusCode: 403,
+              body: JSON.stringify({
+                error: `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`,
+                limitReached: true,
+              }),
+            };
+          }
         }
       }
     }
 
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
-.insert({
+      .insert({
         category,
         organizer_role: organizerRole || null,
         organizer_email: normalizedEmail,
@@ -117,15 +141,12 @@ const {
         plan: sessionPlan,
         include_followups: includeFollowups !== false,
         pro_extra_questions: proExtraQuestions || [],
+        organization_id: organizationId || null,
       })
       .select()
       .single();
     if (sessionError) throw sessionError;
 
-    // De organisator krijgt altijd een eigen participants-rij en toegangslink, ook als
-    // hij zelf niet meedoet: die link geeft dan enkel toegang om het document te bekijken,
-    // niet om de vragenlijst in te vullen (dat wordt elders, in story.html, afgehandeld
-    // op basis van sessions.organizer_participates).
     let participantsToInsert;
     if (participates) {
       participantsToInsert = [organizerName, ...participantNames].map((name, i) => ({
@@ -156,9 +177,14 @@ const {
     if (participantsError) throw participantsError;
 
     const now = new Date();
-    if (customer) {
+    if (organization) {
+      await supabase.from('organizations').update({
+        sessions_used_this_period: (organization.sessions_used_this_period || 0) + 1,
+        updated_at: now.toISOString(),
+      }).eq('id', organization.id);
+    } else if (customer) {
       const samesPlan = customer.plan === sessionPlan;
-     const updates = {
+      const updates = {
         plan: sessionPlan,
         plan_status: 'active',
         sessions_used_this_period: sessionPlan === 'los' ? 1 : (samesPlan ? (customer.sessions_used_this_period || 0) + 1 : 1),
