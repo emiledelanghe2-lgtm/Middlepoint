@@ -42,9 +42,15 @@ Antwoord alleen met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
+    const safeToName = escHtml(toName);
+    const safeFromName = escHtml(fromName);
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -57,8 +63,8 @@ async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, acc
         subject: `${fromName} heeft de opvolging ingevuld`,
         html: `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
-            <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
-            <p><strong>${fromName}</strong> heeft zojuist de opvolging ingevuld bij Middlepoint.</p>
+            <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
+            <p><strong>${safeFromName}</strong> heeft zojuist de opvolging ingevuld bij Middlepoint.</p>
             <p>Zodra jij ook je opvolging invult, stellen we een bijgewerkte versie van jullie document op.</p>
             ${emailButtonHtml(`${siteUrl}${accessLink}`, 'Vul mijn opvolging in')}
           </div>`,
