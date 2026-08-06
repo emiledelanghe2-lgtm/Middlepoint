@@ -235,7 +235,7 @@
         <input type="checkbox" id="isThirdParty">
         <label for="isThirdParty">Ik neem zelf niet deel (bv. ik ben HR, leerkracht of therapeut)</label>
       </div>
-      <div id="organizerRoleField" style="display:none">
+   <div id="organizerRoleField" style="display:none">
         <div class="field">
           <label for="organizerRole">Jouw rol</label>
           <select id="organizerRole">
@@ -246,23 +246,29 @@
             <option value="anders">Anders</option>
           </select>
         </div>
-        <div class="checkbox-row">
-          <input type="checkbox" id="organizerSeesDocument" checked>
-          <label for="organizerSeesDocument">Ik wil het volledige document kunnen inzien</label>
-        </div>
-        <div class="checkbox-row">
-          <input type="checkbox" id="participantsReceiveDocument" checked>
-          <label for="participantsReceiveDocument">De deelnemers ontvangen zelf ook het afgewerkte document en een mail</label>
-        </div>
-        <div class="help" style="margin-top:-6px;margin-bottom:12px">Zet je dit uit, dan krijgen enkel jij het document en de mail te zien, niet de deelnemers zelf. Zij krijgen wel nog steeds de uitnodiging om hun deel in te vullen. Je kan dit later altijd nog wijzigen via Mijn gesprekken.</div>
 
-        <div id="proConfigField" style="display:none">
-          <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-top:8px">
-            <p style="margin:0 0 14px;font-weight:600">Pro: extra vragen voor de deelnemers</p>
-            <div id="proQuestionsList"></div>
-            <button type="button" id="addProQuestion" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:8px">+ Eigen vraag toevoegen</button>
-            <p style="color:var(--ink-soft);font-size:.82rem;margin-top:10px">Deze vragen worden aan de deelnemers gesteld en hun antwoorden komen mee in het document terecht.</p>
+        <div class="field">
+          <label>Wie krijgt het document te zien?</label>
+          <div class="checkbox-row">
+            <input type="checkbox" id="organizerSeesDocument" checked>
+            <label for="organizerSeesDocument">Ikzelf</label>
           </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="participantsReceiveDocument" checked>
+            <label for="participantsReceiveDocument">Ook de deelnemers zelf</label>
+          </div>
+          <div class="help" style="margin-top:2px">De deelnemers krijgen sowieso altijd de uitnodiging om hun deel in te vullen. Later nog te wijzigen via Mijn gesprekken.</div>
+        </div>
+
+        <div id="proConfigField" style="display:none;margin-top:16px">
+          <details>
+            <summary style="cursor:pointer;font-weight:600;color:var(--clay)">+ Eigen vragen toevoegen aan de vragenlijst (optioneel)</summary>
+            <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-top:10px">
+              <div id="proQuestionsList"></div>
+              <button type="button" id="addProQuestion" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:8px">+ Eigen vraag toevoegen</button>
+              <p style="color:var(--ink-soft);font-size:.82rem;margin-top:10px">Deze vragen worden aan de deelnemers gesteld en hun antwoorden komen mee in het document terecht.</p>
+            </div>
+          </details>
         </div>
       </div>
     </div>
