@@ -1,34 +1,30 @@
 const { getSupabase } = require('./_supabase');
-
 exports.handler = async (event) => {
   try {
-    const token = event.queryStringParameters && event.queryStringParameters.token;
-    if (!token) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'token is verplicht.' }) };
+    const authHeader = event.headers.authorization || event.headers.Authorization || '';
+    const accessToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!accessToken) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Niet ingelogd.' }) };
     }
     const supabase = getSupabase();
+    const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
+    if (userError || !userData || !userData.user) {
+      return { statusCode: 401, body: JSON.stringify({ error: 'Je sessie is verlopen. Log opnieuw in.' }) };
+    }
+    const email = userData.user.email.toLowerCase().trim();
+
     const { data: customer } = await supabase
       .from('customers')
       .select('*')
-      .eq('magic_link_token', token)
+      .eq('email', email)
       .maybeSingle();
-    if (!customer) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige of verlopen link.' }) };
-    }
-    if (new Date(customer.magic_link_expires) < new Date()) {
-      return { statusCode: 401, body: JSON.stringify({ error: 'Deze link is verlopen. Vraag een nieuwe op via de loginpagina.' }) };
-    }
 
-    // Reflecties worden ALTIJD opgehaald, ook als er (nog) geen enkel betaald gesprek is.
-    // Dit stond eerder na een vroege return, waardoor mensen met enkel een reflectie
-    // ze nooit te zien kregen in Mijn gesprekken.
     const { data: reflections } = await supabase
       .from('reflections')
       .select('*')
-      .eq('email', customer.email)
+      .eq('email', email)
       .order('created_at', { ascending: false });
-
- const reflectionsPayload = (reflections || []).map(r => ({
+    const reflectionsPayload = (reflections || []).map(r => ({
       id: r.id,
       token: r.access_token,
       name: r.name,
@@ -43,15 +39,15 @@ exports.handler = async (event) => {
     const { data: participants } = await supabase
       .from('participants')
       .select('*, sessions(*)')
-      .eq('email', customer.email)
+      .eq('email', email)
       .order('created_at', { ascending: false });
 
     if (!participants || participants.length === 0) {
       return {
         statusCode: 200,
         body: JSON.stringify({
-          email: customer.email,
-          plan: customer.plan,
+          email,
+          plan: customer ? customer.plan : 'gratis',
           sessions: [],
           reflections: reflectionsPayload,
         }),
@@ -67,7 +63,6 @@ exports.handler = async (event) => {
     (allDocs || []).forEach(d => {
       maxVersionBySession[d.session_id] = Math.max(maxVersionBySession[d.session_id] || 0, d.version);
     });
-
     const sessions = participants.map(p => {
       const isDocAvailable = p.sessions.status === 'klaar' || (p.sessions.status || '').startsWith('nieuwe_ronde_');
       return {
@@ -87,8 +82,8 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        email: customer.email,
-        plan: customer.plan,
+        email,
+        plan: customer ? customer.plan : 'gratis',
         sessions,
         reflections: reflectionsPayload,
       }),
