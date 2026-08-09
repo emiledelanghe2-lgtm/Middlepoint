@@ -11,7 +11,8 @@ exports.handler = async (event) => {
     if (userError || !userData || !userData.user) {
       return { statusCode: 401, body: JSON.stringify({ error: 'Je sessie is verlopen. Log opnieuw in.' }) };
     }
-    const email = userData.user.email.toLowerCase().trim();
+const email = userData.user.email.toLowerCase().trim();
+    const name = (userData.user.user_metadata && userData.user.user_metadata.name) || email.split('@')[0];
 
     const { data: customer } = await supabase
       .from('customers')
@@ -46,8 +47,9 @@ exports.handler = async (event) => {
       return {
         statusCode: 200,
         body: JSON.stringify({
-          email,
-          plan: customer ? customer.plan : 'gratis',
+      email,
+        name,
+        plan: customer ? customer.plan : 'gratis',
           sessions: [],
           reflections: reflectionsPayload,
         }),
@@ -82,7 +84,8 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        email,
+  email,
+        name,
         plan: customer ? customer.plan : 'gratis',
         sessions,
         reflections: reflectionsPayload,
