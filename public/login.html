@@ -115,8 +115,16 @@ function makeSupabaseClient(persistent) {
 function rememberModeIsPersistent() {
   return localStorage.getItem('mp_remember_me') === 'true';
 }
-let supabaseClient = makeSupabaseClient(rememberModeIsPersistent());
-
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(rememberModeIsPersistent());
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig (SUPABASE_URL/SUPABASE_ANON_KEY nog niet ingevuld?):', e);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('error').textContent = 'De inlogfunctie is momenteel niet beschikbaar. Neem contact op als dit blijft duren.';
+    document.getElementById('error').style.display = 'block';
+  });
+}
 const loginTabBtn = document.getElementById('loginTabBtn');
 const registerTabBtn = document.getElementById('registerTabBtn');
 const loginForm = document.getElementById('loginForm');
