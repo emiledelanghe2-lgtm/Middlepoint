@@ -225,8 +225,9 @@
         <label for="categoryOther">Omschrijf kort jouw situatie</label>
         <input type="text" id="categoryOther" placeholder="bv. een conflict met mijn huisbaas">
       </div>
-   <div class="card" style="background:#EFF4ED;border:none;padding:16px;margin-bottom:20px">
+<div class="card" style="background:#EFF4ED;border:none;padding:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <p style="margin:0;font-size:.9rem">Ingelogd als <strong id="loggedInEmailDisplay"></strong></p>
+        <a href="#" id="newPageLogoutLink" style="color:var(--clay);font-size:.85rem;text-decoration:none">Log uit</a>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="isThirdParty">
@@ -349,6 +350,11 @@ function updateAuthUI() {
   document.getElementById('newSessionForm').style.display = loggedIn ? 'block' : 'none';
   if (loggedIn) {
     document.getElementById('loggedInEmailDisplay').textContent = currentUser.email;
+    document.getElementById('newPageLogoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (supabaseClient) await supabaseClient.auth.signOut();
+      window.location.href = '/';
+    });
     checkEmail(currentUser.email);
   }
 }
