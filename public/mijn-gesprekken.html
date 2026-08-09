@@ -271,7 +271,7 @@ async function load() {
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:#EFF4ED;border-radius:var(--radius)">
-        <span style="font-size:.88rem;color:var(--ink)">Ingelogd als <strong id="currentEmailDisplay">${esc(data.email)}</strong></span>
+        <span style="font-size:.88rem;color:var(--ink)">Ingelogd als <strong id="currentEmailDisplay">${esc(firstName(data.name))}</strong></span>
         <a href="#" id="logoutBtn" style="color:var(--clay);font-size:.85rem;text-decoration:none;font-weight:600">Log uit</a>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
