@@ -15,6 +15,7 @@
 <meta name="description" content="Vertel wat er speelt en krijg meteen een eerlijke reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander zinvol is.">
 <link rel="canonical" href="https://middlepoint.net/reflectie.html">
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .q-block{ margin-bottom:26px; }
 .q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
@@ -89,6 +90,52 @@ const existingToken = new URLSearchParams(window.location.search).get('token');
 const selfhelpReturn = new URLSearchParams(window.location.search).get('selfhelp') === 'true';
 const app = document.getElementById('app');
 
+// TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
+const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
+const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig:', e);
+}
+
+let currentUser = null;
+
+async function checkAuth() {
+  if (!supabaseClient) return false;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    currentUser = {
+      email: session.user.email,
+      name: (session.user.user_metadata && session.user.user_metadata.name) || session.user.email.split('@')[0],
+    };
+    return true;
+  }
+  currentUser = null;
+  return false;
+}
+
+function renderAuthGate() {
+  app.innerHTML = `
+    <span class="label">Gratis reflectie</span>
+    <h1>Even inloggen</h1>
+    <div class="card" style="text-align:center;padding:32px">
+      <p style="color:var(--ink-soft);margin-bottom:20px">Log in of registreer om je reflectie te starten. Zo vind je ze later altijd terug, en hoef je je gegevens maar één keer in te vullen.</p>
+      <a href="/login.html" class="btn clay" style="padding:12px 28px">Inloggen of registreren</a>
+    </div>`;
+}
+
+async function logoutFromReflectie() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  window.location.href = '/';
+}
+
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function downloadReflectionPDF() { window.print(); }
@@ -154,6 +201,10 @@ function renderForm() {
   app.innerHTML = `
     <span class="label">Gratis reflectie</span>
     <h1>Vertel wat er speelt</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:#EFF4ED;border-radius:var(--radius)">
+      <span style="font-size:.88rem;color:var(--ink)">Ingelogd als <strong>${esc(currentUser.email)}</strong></span>
+      <a href="#" id="reflectionLogoutLink" style="color:var(--clay);font-size:.85rem;text-decoration:none;font-weight:600">Log uit</a>
+    </div>
     <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:20px">
       <p style="margin:0 0 10px;font-weight:600">Zeg ons wat er op je lever ligt</p>
       <p style="margin:0 0 14px;color:var(--ink-soft);font-size:.92rem">Beantwoord de vragen hieronder. We laten je daarna weten: kan je dit zelf oplossen, of is een gesprek met de ander zinvol? Wil je nog dieper, met een concreet actieplan (Reflectie+, €2,99)? Dat kan meteen na je reflectie. Kiezen jullie voor een gesprek, dan starten we dat meteen voor je, met je verhaal al ingevuld.</p>
@@ -164,21 +215,6 @@ function renderForm() {
     <div id="error" class="error-box" style="display:none"></div>
 
     <form id="reflectionForm">
-      <div class="field">
-        <label for="rName">Jouw naam <span style="color:var(--clay)">*</span></label>
-        <input type="text" id="rName" required placeholder="bv. Sarah">
-      </div>
-      <div class="field">
-        <label for="rEmail">Jouw e-mailadres <span style="color:var(--clay)">*</span></label>
-        <input type="email" id="rEmail" required placeholder="jij@email.be">
-        <div class="help">Zodat je je reflectie kan terugvinden, en om je verder te helpen als je later een gesprek wil starten.</div>
-      </div>
-      <div class="field">
-        <label for="rEmailConfirm">Herhaal je e-mailadres <span style="color:var(--clay)">*</span></label>
-        <input type="email" id="rEmailConfirm" required placeholder="jij@email.be">
-        <div class="help">Even dubbel typen om tikfouten te vermijden.</div>
-      </div>
-
       <div class="q-block">
         <label class="q-label">Waar heeft dit betrekking op? <span style="color:var(--clay)">*</span></label>
         <select id="categorySelect" required style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px;background:var(--white)">
@@ -284,6 +320,11 @@ function renderForm() {
     </form>
   `;
 
+  document.getElementById('reflectionLogoutLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    logoutFromReflectie();
+  });
+
   document.querySelectorAll('#gevoelGroup input[name=gevoel]').forEach(cb => {
     cb.addEventListener('change', () => {
       const anyChecked = document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked').length > 0;
@@ -345,9 +386,8 @@ function renderForm() {
     const errorBox = document.getElementById('error');
     errorBox.style.display = 'none';
 
-    const name = document.getElementById('rName').value.trim();
-    const email = document.getElementById('rEmail').value.trim();
-    const emailConfirm = document.getElementById('rEmailConfirm').value.trim();
+    const name = currentUser.name;
+    const email = currentUser.email;
     let category = categorySelect.value;
     if (!category) {
       errorBox.textContent = 'Kies eerst een categorie.';
@@ -371,18 +411,6 @@ function renderForm() {
     const dieperChecked = (document.querySelector('input[name=dieper]:checked') || {}).value;
     const diepgangChecked = document.querySelector('input[name=diepgang]:checked');
     const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
-
-    if (!name || !email || !emailConfirm) {
-      errorBox.textContent = 'Vul je naam en e-mailadres in.';
-      errorBox.style.display = 'block';
-      return;
-    }
-    if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
-      errorBox.textContent = 'De twee e-mailadressen komen niet overeen. Controleer even of je jouw adres correct herhaald hebt.';
-      errorBox.style.display = 'block';
-      document.getElementById('rEmailConfirm').scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
 
     const lines = [];
     if (perspectief === 'derde') {
@@ -624,6 +652,7 @@ async function pollResult(token) {
         <h1>Dit overstijgt wat wij kunnen helpen oplossen</h1>
         <p style="color:var(--ink-soft)">Op basis van wat er geschreven is, denken we dat professionele of gespecialiseerde hulp nu belangrijker is dan een reflectie. Je staat er niet alleen voor.</p>
         <div class="status-box" style="text-align:left">
+          <p><strong>Zelfmoord
           <p><strong>Zelfmoordlijn (BE):</strong> 1813, <a href="https://www.zelfmoord1813.be" target="_blank">zelfmoord1813.be</a></p>
           <p><strong>1712, Geweld, Misbruik, Kindermishandeling (BE):</strong> 1712, <a href="https://www.1712.be" target="_blank">1712.be</a></p>
           <p><strong>Internationaal overzicht:</strong> <a href="https://findahelpline.com" target="_blank">findahelpline.com</a></p>
@@ -785,21 +814,31 @@ async function pollResult(token) {
   }
 }
 
-if (selfhelpReturn) {
-  let pendingToken = null;
-  try { pendingToken = localStorage.getItem('mp_pending_selfhelp'); } catch (e) {}
-  if (pendingToken) {
-    try { localStorage.removeItem('mp_pending_selfhelp'); } catch (e) {}
-    window.history.replaceState({}, '', `/reflectie.html?token=${pendingToken}`);
-    renderSelfHelpForm(pendingToken);
+(async () => {
+  if (selfhelpReturn) {
+    let pendingToken = null;
+    try { pendingToken = localStorage.getItem('mp_pending_selfhelp'); } catch (e) {}
+    if (pendingToken) {
+      try { localStorage.removeItem('mp_pending_selfhelp'); } catch (e) {}
+      window.history.replaceState({}, '', `/reflectie.html?token=${pendingToken}`);
+      renderSelfHelpForm(pendingToken);
+    } else {
+      app.innerHTML = `<div class="error-box">We konden je reflectie niet automatisch terugvinden. Gebruik de link uit je bevestigingsmail, of neem contact op via middlepoint@zohomail.eu.</div>`;
+    }
+  } else if (existingToken) {
+    // Een bestaande reflectie bekijken via een link vereist GEEN inloggen,
+    // zodat gedeelde links (bv. via WhatsApp) voor iedereen blijven werken.
+    pollResult(existingToken);
   } else {
-    app.innerHTML = `<div class="error-box">We konden je reflectie niet automatisch terugvinden. Gebruik de link uit je bevestigingsmail, of neem contact op via middlepoint@zohomail.eu.</div>`;
+    // Enkel het STARTEN van een nieuwe reflectie vereist inloggen.
+    await checkAuth();
+    if (currentUser) {
+      renderForm();
+    } else {
+      renderAuthGate();
+    }
   }
-} else if (existingToken) {
-  pollResult(existingToken);
-} else {
-  renderForm();
-}
+})();
 </script>
 
 <footer class="footer">
