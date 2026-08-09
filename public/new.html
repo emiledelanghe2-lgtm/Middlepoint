@@ -344,12 +344,14 @@ async function checkAuth() {
   return false;
 }
 
+function firstName(name) { return (name || '').trim().split(/\s+/)[0] || name || ''; }
+
 function updateAuthUI() {
   const loggedIn = !!currentUser;
   document.getElementById('authGate').style.display = loggedIn ? 'none' : 'block';
   document.getElementById('newSessionForm').style.display = loggedIn ? 'block' : 'none';
   if (loggedIn) {
-    document.getElementById('loggedInEmailDisplay').textContent = currentUser.email;
+    document.getElementById('loggedInEmailDisplay').textContent = firstName(currentUser.name);
     document.getElementById('newPageLogoutLink').addEventListener('click', async (e) => {
       e.preventDefault();
       if (supabaseClient) await supabaseClient.auth.signOut();
