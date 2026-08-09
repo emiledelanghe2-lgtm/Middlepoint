@@ -49,34 +49,19 @@
 
 <script>
 const token = new URLSearchParams(window.location.search).get('token');
-const returnToken = new URLSearchParams(window.location.search).get('from');
 const viewMode = new URLSearchParams(window.location.search).get('view');
-const backLink = returnToken ? `/mijn-gesprekken.html?token=${returnToken}` : '/';
-const backLabel = returnToken ? 'Terug naar Mijn gesprekken' : 'Terug naar startpagina';
+const backLink = '/';
+const backLabel = 'Terug naar startpagina';
 const app = document.getElementById('app');
 let currentPlan = 'gratis';
 let pendingSubmitContent = '';
 
 function docLinkWithReturn(tok) {
-  return `/document.html?token=${tok}${returnToken ? '&from=' + encodeURIComponent(returnToken) : ''}`;
+  return `/document.html?token=${tok}`;
 }
 
-async function goToMijnGesprekken() {
-  if (returnToken) {
-    window.location.href = `/mijn-gesprekken.html?token=${encodeURIComponent(returnToken)}`;
-    return;
-  }
-  try {
-    const res = await fetch(`/.netlify/functions/get-my-sessions-link?token=${token}`);
-    const data = await res.json();
-    if (res.ok && data.link) {
-      window.location.href = data.link;
-    } else {
-      window.location.href = '/login.html';
-    }
-  } catch (e) {
-    window.location.href = '/login.html';
-  }
+function goToMijnGesprekken() {
+  window.location.href = '/mijn-gesprekken.html';
 }
 
 function draftKey(suffix) { return `mp_draft_${suffix}_${token}`; }
