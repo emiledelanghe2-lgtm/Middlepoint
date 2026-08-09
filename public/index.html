@@ -95,10 +95,12 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
       auth: { storage: persistent ? window.localStorage : window.sessionStorage },
     });
 const { data: { session } } = await client.auth.getSession();
-    if (session && session.user) {
+if (session && session.user) {
+      const name = (session.user.user_metadata && session.user.user_metadata.name) || session.user.email;
+      const firstName = name.trim().split(/\s+/)[0];
       document.getElementById('authNavBtn').style.display = 'none';
       document.getElementById('authStatus').style.display = 'inline';
-      document.getElementById('authEmailDisplay').textContent = session.user.email;
+      document.getElementById('authEmailDisplay').textContent = firstName;
       document.getElementById('authLogoutLink').addEventListener('click', async (e) => {
         e.preventDefault();
         await client.auth.signOut();
