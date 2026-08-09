@@ -320,11 +320,17 @@ function makeSupabaseClient(persistent) {
     auth: { storage: persistent ? window.localStorage : window.sessionStorage },
   });
 }
-const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig (SUPABASE_URL/SUPABASE_ANON_KEY nog niet ingevuld?):', e);
+}
 
 let currentUser = null;
 
 async function checkAuth() {
+  if (!supabaseClient) return false;
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session && session.user) {
     currentUser = {
