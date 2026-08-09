@@ -54,7 +54,12 @@
 // TODO: zelfde twee waarden invullen als in login.html — Supabase-dashboard → Settings → API
 const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
 const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
 
 const app = document.getElementById('app');
 const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
