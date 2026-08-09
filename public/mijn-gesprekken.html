@@ -72,7 +72,7 @@ const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
 let currentAccessToken = null;
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
+function firstName(name) { return (name || '').trim().split(/\s+/)[0] || name || ''; }
 function goToSelfHelpPayment(reflectionToken, email) {
   try { localStorage.setItem('mp_pending_selfhelp', reflectionToken); } catch (e) {}
   const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
