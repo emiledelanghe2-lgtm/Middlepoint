@@ -243,8 +243,14 @@ async function loadOrganizations() {
    document.querySelectorAll('[data-remove-member]').forEach(btn => {
       btn.addEventListener('click', () => removeOrgMember(btn.dataset.removeMember));
     });
-    document.querySelectorAll('[data-remove-all-org]').forEach(btn => {
+ document.querySelectorAll('[data-remove-all-org]').forEach(btn => {
       btn.addEventListener('click', () => removeAllOrgMembers(btn.dataset.removeAllOrg));
+    });
+    document.querySelectorAll('[data-save-limit]').forEach(btn => {
+      btn.addEventListener('click', () => saveOrgLimit(btn.dataset.saveLimit));
+    });
+    document.querySelectorAll('[data-delete-org]').forEach(btn => {
+      btn.addEventListener('click', () => deleteOrganization(btn.dataset.deleteOrg));
     });
   } catch (err) {
     panel.innerHTML = `<div class="error-box">${err.message}</div>`;
@@ -254,12 +260,21 @@ async function loadOrganizations() {
 function organizationCard(o) {
   const periodEndStr = o.periodEnd ? new Date(o.periodEnd).toLocaleDateString('nl-BE') : '–';
   return `
-    <details class="org-card">
+   <details class="org-card">
       <summary>
         <span style="font-weight:600">${esc(o.name)}</span>
         <span class="org-usage">${o.sessionsUsedThisPeriod} / ${o.sessionLimit} gesprekken gebruikt · reset op ${periodEndStr}</span>
       </summary>
-    <div class="org-card-body">
+      <div class="org-card-body">
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap">
+          <div class="field" style="margin-bottom:0;flex:1;min-width:140px">
+            <label>Limiet aanpassen</label>
+            <input type="number" id="editLimit-${o.id}" value="${o.sessionLimit}" min="1" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:.88rem">
+          </div>
+          <button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" data-save-limit="${o.id}">Opslaan</button>
+          <button type="button" data-delete-org="${o.id}" style="background:none;border:1px solid #8A4222;color:#8A4222;border-radius:8px;padding:8px 14px;font-size:.85rem;cursor:pointer">Bedrijf verwijderen</button>
+        </div>
+        <div id="editOrgError-${o.id}" class="error-box" style="display:none;margin-bottom:12px;font-size:.82rem"></div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
           <p style="margin:0;font-weight:600;font-size:.9rem">Leden (${o.members.length})</p>
           ${o.members.length ? `<button type="button" data-remove-all-org="${o.id}" style="background:none;border:none;color:#8A4222;cursor:pointer;font-size:.78rem;text-decoration:underline">Verwijder alle leden</button>` : ''}
@@ -358,3 +373,36 @@ async function removeAllOrgMembers(organizationId) {
 </script>
 </body>
 </html>
+async function saveOrgLimit(organizationId) {
+  const input = document.getElementById(`editLimit-${organizationId}`);
+  const errorBox = document.getElementById(`editOrgError-${organizationId}`);
+  errorBox.style.display = 'none';
+  try {
+    const res = await fetch('/.netlify/functions/admin-update-organization', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, organizationId, sessionLimit: input.value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadOrganizations();
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+  }
+}
+
+async function deleteOrganization(organizationId) {
+  const confirmed = confirm('Weet je zeker dat je dit bedrijf volledig wil verwijderen? Dit kan niet ongedaan gemaakt worden.');
+  if (!confirmed) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-delete-organization', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, organizationId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadOrganizations();
+  } catch (err) {
+    alert(err.message);
+  }
+}
