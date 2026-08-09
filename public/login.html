@@ -175,13 +175,17 @@ loginForm.addEventListener('submit', async (e) => {
   try {
     localStorage.setItem('mp_remember_me', rememberMe ? 'true' : 'false');
     supabaseClient = makeSupabaseClient(rememberMe);
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    window.location.href = '/mijn-gesprekken.html';
+    redirectAfterAuth();
   } catch (err) {
-    errorBox.textContent = err.message === 'Invalid login credentials'
-      ? 'E-mailadres of wachtwoord klopt niet.'
-      : err.message;
+    if (err.message === 'Invalid login credentials') {
+      errorBox.textContent = 'We herkennen dit e-mailadres en wachtwoord niet. Controleer of je ze correct hebt ingetypt, of registreer een nieuw account als je nog geen account hebt.';
+    } else if (err.message === 'Email not confirmed') {
+      errorBox.textContent = 'Bevestig eerst je e-mailadres via de link die we je stuurden, voor je kan inloggen.';
+    } else {
+      errorBox.textContent = 'Er ging iets mis bij het inloggen. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
+    }
     errorBox.style.display = 'block';
     btn.disabled = false;
     btn.textContent = 'Inloggen';
