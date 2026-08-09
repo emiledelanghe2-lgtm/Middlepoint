@@ -313,8 +313,8 @@
 <script>
 /* ===== Inloggen vereist om een gesprek te starten ===== */
 // TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
-const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
-const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
 function makeSupabaseClient(persistent) {
   return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { storage: persistent ? window.localStorage : window.sessionStorage },
