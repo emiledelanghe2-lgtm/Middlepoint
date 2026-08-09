@@ -204,6 +204,9 @@ function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replac
 
 async function loadOrganizations() {
   const panel = document.getElementById('organizationsPanel');
+  const openOrgIds = new Set(
+    Array.from(panel.querySelectorAll('details.org-card[open]')).map(d => d.dataset.orgId)
+  );
   panel.innerHTML = '<p style="color:var(--ink-soft)">Even laden...</p>';
   try {
     const res = await fetch('/.netlify/functions/admin-list-organizations', {
@@ -236,6 +239,11 @@ async function loadOrganizations() {
       ${orgs.length ? orgs.map(o => organizationCard(o)).join('') : '<p style="color:var(--ink-soft)">Nog geen bedrijven aangemaakt.</p>'}
     `;
 
+openOrgIds.forEach(id => {
+      const el = panel.querySelector(`details.org-card[data-org-id="${id}"]`);
+      if (el) el.open = true;
+    });
+
     document.getElementById('createOrgBtn').addEventListener('click', createOrganization);
     document.querySelectorAll('[data-add-member-org]').forEach(btn => {
       btn.addEventListener('click', () => addOrgMember(btn.dataset.addMemberOrg));
@@ -246,8 +254,8 @@ async function loadOrganizations() {
  document.querySelectorAll('[data-remove-all-org]').forEach(btn => {
       btn.addEventListener('click', () => removeAllOrgMembers(btn.dataset.removeAllOrg));
     });
-    document.querySelectorAll('[data-save-limit]').forEach(btn => {
-      btn.addEventListener('click', () => saveOrgLimit(btn.dataset.saveLimit));
+    document.querySelectorAll('[data-edit-limit]').forEach(btn => {
+      btn.addEventListener('click', () => toggleEditLimit(btn.dataset.editLimit));
     });
     document.querySelectorAll('[data-delete-org]').forEach(btn => {
       btn.addEventListener('click', () => deleteOrganization(btn.dataset.deleteOrg));
@@ -260,7 +268,7 @@ async function loadOrganizations() {
 function organizationCard(o) {
   const periodEndStr = o.periodEnd ? new Date(o.periodEnd).toLocaleDateString('nl-BE') : '–';
   return `
-   <details class="org-card">
+   <details class="org-card" data-org-id="${o.id}">
       <summary>
         <span style="font-weight:600">${esc(o.name)}</span>
         <span class="org-usage">${o.sessionsUsedThisPeriod} / ${o.sessionLimit} gesprekken gebruikt · reset op ${periodEndStr}</span>
@@ -268,10 +276,10 @@ function organizationCard(o) {
       <div class="org-card-body">
         <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap">
           <div class="field" style="margin-bottom:0;flex:1;min-width:140px">
-            <label>Limiet aanpassen</label>
-            <input type="number" id="editLimit-${o.id}" value="${o.sessionLimit}" min="1" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:.88rem">
+            <label>Limiet</label>
+            <input type="number" id="editLimit-${o.id}" value="${o.sessionLimit}" min="1" disabled style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:.88rem;background:#EDEBE6;color:var(--ink-soft)">
           </div>
-          <button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" data-save-limit="${o.id}">Opslaan</button>
+          <button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" data-edit-limit="${o.id}">Limiet aanpassen</button>
           <button type="button" data-delete-org="${o.id}" style="background:none;border:1px solid #8A4222;color:#8A4222;border-radius:8px;padding:8px 14px;font-size:.85rem;cursor:pointer">Bedrijf verwijderen</button>
         </div>
         <div id="editOrgError-${o.id}" class="error-box" style="display:none;margin-bottom:12px;font-size:.82rem"></div>
@@ -367,8 +375,24 @@ async function removeAllOrgMembers(organizationId) {
   }
 }
 
+function toggleEditLimit(organizationId) {
+  const input = document.getElementById(`editLimit-${organizationId}`);
+  const btn = document.querySelector(`[data-edit-limit="${organizationId}"]`);
+  if (input.disabled) {
+    input.disabled = false;
+    input.style.background = 'var(--white)';
+    input.style.color = 'var(--ink)';
+    input.focus();
+    input.select();
+    btn.textContent = 'Opslaan';
+  } else {
+    saveOrgLimit(organizationId);
+  }
+}
+
 async function saveOrgLimit(organizationId) {
   const input = document.getElementById(`editLimit-${organizationId}`);
+  const btn = document.querySelector(`[data-edit-limit="${organizationId}"]`);
   const errorBox = document.getElementById(`editOrgError-${organizationId}`);
   errorBox.style.display = 'none';
   try {
@@ -378,7 +402,19 @@ async function saveOrgLimit(organizationId) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    loadOrganizations();
+    input.value = data.organization.session_limit;
+    input.disabled = true;
+    input.style.background = '#EDEBE6';
+    input.style.color = 'var(--ink-soft)';
+    btn.textContent = 'Limiet aanpassen';
+    const card = input.closest('.org-card');
+    const usageSpan = card ? card.querySelector('.org-usage') : null;
+    if (usageSpan) {
+      const usedMatch = usageSpan.textContent.match(/^(\d+)/);
+      const used = usedMatch ? usedMatch[1] : '0';
+      const afterDot = usageSpan.textContent.split('·')[1] || '';
+      usageSpan.textContent = `${used} / ${data.organization.session_limit} gesprekken gebruikt ·${afterDot}`;
+    }
   } catch (err) {
     errorBox.textContent = err.message;
     errorBox.style.display = 'block';
