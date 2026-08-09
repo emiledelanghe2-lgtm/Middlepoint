@@ -240,8 +240,11 @@ async function loadOrganizations() {
     document.querySelectorAll('[data-add-member-org]').forEach(btn => {
       btn.addEventListener('click', () => addOrgMember(btn.dataset.addMemberOrg));
     });
-    document.querySelectorAll('[data-remove-member]').forEach(btn => {
+   document.querySelectorAll('[data-remove-member]').forEach(btn => {
       btn.addEventListener('click', () => removeOrgMember(btn.dataset.removeMember));
+    });
+    document.querySelectorAll('[data-remove-all-org]').forEach(btn => {
+      btn.addEventListener('click', () => removeAllOrgMembers(btn.dataset.removeAllOrg));
     });
   } catch (err) {
     panel.innerHTML = `<div class="error-box">${err.message}</div>`;
@@ -256,8 +259,11 @@ function organizationCard(o) {
         <span style="font-weight:600">${esc(o.name)}</span>
         <span class="org-usage">${o.sessionsUsedThisPeriod} / ${o.sessionLimit} gesprekken gebruikt · reset op ${periodEndStr}</span>
       </summary>
-      <div class="org-card-body">
-        <p style="margin:0 0 10px;font-weight:600;font-size:.9rem">Leden (${o.members.length})</p>
+    <div class="org-card-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <p style="margin:0;font-weight:600;font-size:.9rem">Leden (${o.members.length})</p>
+          ${o.members.length ? `<button type="button" data-remove-all-org="${o.id}" style="background:none;border:none;color:#8A4222;cursor:pointer;font-size:.78rem;text-decoration:underline">Verwijder alle leden</button>` : ''}
+        </div>
         <div id="membersList-${o.id}">
           ${o.members.length ? o.members.map(m => `
             <div class="org-member-row">
@@ -325,6 +331,22 @@ async function removeOrgMember(memberId) {
     const res = await fetch('/.netlify/functions/admin-remove-org-member', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: adminPassword, memberId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    loadOrganizations();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function removeAllOrgMembers(organizationId) {
+  const confirmed = confirm('Weet je zeker dat je ALLE leden van dit bedrijf wil verwijderen? Dit kan niet ongedaan gemaakt worden.');
+  if (!confirmed) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-remove-all-org-members', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, organizationId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
