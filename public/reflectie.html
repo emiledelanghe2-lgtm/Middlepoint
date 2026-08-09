@@ -830,11 +830,12 @@ async function pollResult(token) {
     // zodat gedeelde links (bv. via WhatsApp) voor iedereen blijven werken.
     pollResult(existingToken);
   } else {
-    // Enkel het STARTEN van een nieuwe reflectie vereist inloggen.
+// Enkel het STARTEN van een nieuwe reflectie vereist inloggen.
     await checkAuth();
     if (currentUser) {
       renderForm();
     } else {
+      try { localStorage.setItem('mp_return_to', '/reflectie.html'); } catch (e) {}
       renderAuthGate();
     }
   }
