@@ -187,7 +187,8 @@ loginForm.addEventListener('submit', async (e) => {
       errorBox.textContent = 'We herkennen dit e-mailadres en wachtwoord niet. Controleer of je ze correct hebt ingetypt, of registreer een nieuw account als je nog geen account hebt.';
     } else if (err.message === 'Email not confirmed') {
       errorBox.textContent = 'Bevestig eerst je e-mailadres via de link die we je stuurden, voor je kan inloggen.';
-    } else {
+} else {
+      console.error('Inlogfout (technische details):', err.message);
       errorBox.textContent = 'Er ging iets mis bij het inloggen. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
     }
     errorBox.style.display = 'block';
