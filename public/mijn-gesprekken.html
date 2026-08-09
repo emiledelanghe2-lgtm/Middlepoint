@@ -64,8 +64,12 @@ const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me')
     auth: { storage: persistent ? window.localStorage : window.sessionStorage },
   });
 }
-const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
-
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig (SUPABASE_URL/SUPABASE_ANON_KEY nog niet ingevuld?):', e);
+}
 const app = document.getElementById('app');
 const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
 const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
@@ -203,6 +207,10 @@ async function deleteSession(sessionId, btn) {
 }
 
 async function load() {
+  if (!supabaseClient) {
+    app.innerHTML = `<div class="error-box">Er ging iets mis met de configuratie van deze pagina. Neem contact op als dit blijft duren.</div>`;
+    return;
+  }
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
     window.location.href = '/login.html';
