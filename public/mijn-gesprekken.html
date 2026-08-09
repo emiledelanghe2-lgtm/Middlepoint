@@ -60,6 +60,11 @@ function makeSupabaseClient(persistent) {
   });
 }
 const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
 
 const app = document.getElementById('app');
 const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
