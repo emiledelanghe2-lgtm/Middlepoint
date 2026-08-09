@@ -68,9 +68,10 @@
       <label for="loginEmail">E-mailadres</label>
       <input type="email" id="loginEmail" required placeholder="jij@email.be" autocomplete="email">
     </div>
-    <div class="field">
+<div class="field" style="position:relative">
       <label for="loginPassword">Wachtwoord</label>
-      <input type="password" id="loginPassword" required placeholder="Je wachtwoord" autocomplete="current-password" style="width:100% !important;box-sizing:border-box !important;padding:13px 14px !important">
+      <input type="password" id="loginPassword" required placeholder="Je wachtwoord" autocomplete="current-password" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="loginPassword" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
     </div>
     <div class="checkbox-row">
       <input type="checkbox" id="rememberMeCheckbox">
@@ -88,13 +89,15 @@
       <label for="regEmailConfirm">Herhaal e-mailadres</label>
       <input type="email" id="regEmailConfirm" required placeholder="jij@email.be" autocomplete="email">
     </div>
-    <div class="field">
+<div class="field" style="position:relative">
       <label for="regPassword">Wachtwoord</label>
-      <input type="password" id="regPassword" required placeholder="Minstens 6 tekens" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 14px !important">
+      <input type="password" id="regPassword" required placeholder="Minstens 6 tekens" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="regPassword" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
     </div>
-    <div class="field">
+    <div class="field" style="position:relative">
       <label for="regPasswordConfirm">Herhaal wachtwoord</label>
-      <input type="password" id="regPasswordConfirm" required placeholder="Herhaal je wachtwoord" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 14px !important">
+      <input type="password" id="regPasswordConfirm" required placeholder="Herhaal je wachtwoord" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="regPasswordConfirm" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
     </div>
  <button type="submit" class="btn clay" style="width:100%;padding:14px" id="registerSubmitBtn">Account aanmaken</button>
     <p style="font-size:.78rem;color:var(--ink-soft);margin-top:10px;text-align:center">Gebruikte je dit e-mailadres al eerder voor een reflectie of gesprek? Die vind je hierna automatisch terug, je verliest niets.</p>
@@ -245,6 +248,14 @@ registerForm.addEventListener('submit', async (e) => {
     btn.disabled = false;
     btn.textContent = 'Account aanmaken';
   }
+});
+  document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+  });
 });
 </script>
 </body>
