@@ -13,6 +13,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inloggen | Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header class="nav-bar">
@@ -48,51 +49,166 @@
     });
   })();
 </script>
+
 <div class="app-wrap" style="max-width:480px">
   <a href="/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Terug naar startpagina</a>
   <span class="label">Mijn gesprekken</span>
-  <h1>Inloggen</h1>
-  <p style="color:var(--ink-soft)">Vul je e-mailadres in. Je ontvangt een link waarmee je al jouw gesprekken en documenten kan terugvinden.</p>
-  <div id="error" class="error-box" style="display:none"></div>
-  <div id="success" style="display:none" class="status-box">
-    <p style="margin:0;color:var(--sage)">We hebben een link verstuurd naar jouw e-mailadres. Kijk in je inbox (en eventueel je spammap) en klik op de link om in te loggen.</p>
+  <h1 id="pageTitle">Inloggen</h1>
+
+  <div style="display:flex;margin-bottom:28px;border-bottom:1px solid var(--line)">
+    <button type="button" id="loginTabBtn" style="padding:10px 4px;margin-right:24px;background:none;border:none;border-bottom:2px solid var(--clay);color:var(--clay);font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em">Inloggen</button>
+    <button type="button" id="registerTabBtn" style="padding:10px 4px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em">Registreren</button>
   </div>
+
+  <div id="error" class="error-box" style="display:none"></div>
+  <div id="success" style="display:none" class="status-box"></div>
+
   <form id="loginForm">
     <div class="field">
-      <label for="email">Jouw e-mailadres</label>
-      <input type="email" id="email" required placeholder="jij@email.be" autocomplete="email">
+      <label for="loginEmail">E-mailadres</label>
+      <input type="email" id="loginEmail" required placeholder="jij@email.be" autocomplete="email">
     </div>
-    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Stuur mij een toegangslink</button>
+    <div class="field">
+      <label for="loginPassword">Wachtwoord</label>
+      <input type="password" id="loginPassword" required placeholder="Je wachtwoord" autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="loginSubmitBtn">Inloggen</button>
   </form>
+
+  <form id="registerForm" style="display:none">
+    <div class="field">
+      <label for="regEmail">E-mailadres</label>
+      <input type="email" id="regEmail" required placeholder="jij@email.be" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="regEmailConfirm">Herhaal e-mailadres</label>
+      <input type="email" id="regEmailConfirm" required placeholder="jij@email.be" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="regPassword">Wachtwoord</label>
+      <input type="password" id="regPassword" required placeholder="Minstens 6 tekens" autocomplete="new-password" minlength="6">
+    </div>
+    <div class="field">
+      <label for="regPasswordConfirm">Herhaal wachtwoord</label>
+      <input type="password" id="regPasswordConfirm" required placeholder="Herhaal je wachtwoord" autocomplete="new-password" minlength="6">
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="registerSubmitBtn">Account aanmaken</button>
+  </form>
+
   <p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)">Heb je nog geen gesprek gestart? <a href="/new.html">Begin hier</a>.</p>
-  <p style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)">Verkeerd e-mailadres ingesteld? Log in en wijzig het bovenaan de pagina 'Mijn gesprekken'.</p>
 </div>
+
 <script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
+// TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
+const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
+const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const loginTabBtn = document.getElementById('loginTabBtn');
+const registerTabBtn = document.getElementById('registerTabBtn');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const errorBox = document.getElementById('error');
+const successBox = document.getElementById('success');
+const pageTitle = document.getElementById('pageTitle');
+
+function showLoginTab() {
+  loginTabBtn.style.borderBottomColor = 'var(--clay)';
+  loginTabBtn.style.color = 'var(--clay)';
+  registerTabBtn.style.borderBottomColor = 'transparent';
+  registerTabBtn.style.color = 'var(--ink-soft)';
+  loginForm.style.display = 'block';
+  registerForm.style.display = 'none';
+  successBox.style.display = 'none';
+  pageTitle.textContent = 'Inloggen';
+  errorBox.style.display = 'none';
+}
+function showRegisterTab() {
+  registerTabBtn.style.borderBottomColor = 'var(--clay)';
+  registerTabBtn.style.color = 'var(--clay)';
+  loginTabBtn.style.borderBottomColor = 'transparent';
+  loginTabBtn.style.color = 'var(--ink-soft)';
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'block';
+  successBox.style.display = 'none';
+  pageTitle.textContent = 'Account aanmaken';
+  errorBox.style.display = 'none';
+}
+loginTabBtn.addEventListener('click', showLoginTab);
+registerTabBtn.addEventListener('click', showRegisterTab);
+
+(async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) window.location.href = '/mijn-gesprekken.html';
+})();
+
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const email = document.getElementById('email').value.trim();
-  const errorBox = document.getElementById('error');
-  const successBox = document.getElementById('success');
-  const submitBtn = document.getElementById('submitBtn');
+  errorBox.style.display = 'none';
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Even geduld...';
+  try {
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    window.location.href = '/mijn-gesprekken.html';
+  } catch (err) {
+    errorBox.textContent = err.message === 'Invalid login credentials'
+      ? 'E-mailadres of wachtwoord klopt niet.'
+      : err.message;
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Inloggen';
+  }
+});
+
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
   errorBox.style.display = 'none';
   successBox.style.display = 'none';
-  submitBtn.textContent = 'Even geduld...';
-  submitBtn.disabled = true;
-  try {
-    const res = await fetch('/.netlify/functions/send-magic-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    document.getElementById('loginForm').style.display = 'none';
-    successBox.style.display = 'block';
-  } catch (err) {
-    errorBox.textContent = err.message;
+  const email = document.getElementById('regEmail').value.trim();
+  const emailConfirm = document.getElementById('regEmailConfirm').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+  const btn = document.getElementById('registerSubmitBtn');
+
+  if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
+    errorBox.textContent = 'De twee e-mailadressen komen niet overeen.';
     errorBox.style.display = 'block';
-    submitBtn.textContent = 'Stuur mij een toegangslink';
-    submitBtn.disabled = false;
+    return;
+  }
+  if (password !== passwordConfirm) {
+    errorBox.textContent = 'De twee wachtwoorden komen niet overeen.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errorBox.textContent = 'Je wachtwoord moet minstens 6 tekens lang zijn.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Even geduld...';
+  try {
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) throw error;
+    if (data.session) {
+      window.location.href = '/mijn-gesprekken.html';
+      return;
+    }
+    registerForm.style.display = 'none';
+    successBox.style.display = 'block';
+    successBox.innerHTML = '<p style="margin:0;color:var(--sage)">Bijna klaar! We stuurden een bevestigingsmail naar je e-mailadres. Klik op de link daarin, en kom dan terug om in te loggen.</p>';
+  } catch (err) {
+    errorBox.textContent = err.message.includes('already registered')
+      ? 'Er bestaat al een account met dit e-mailadres. Probeer in te loggen.'
+      : err.message;
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Account aanmaken';
   }
 });
 </script>
