@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mijn gesprekken, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <header class="nav-bar">
@@ -50,10 +51,18 @@
 </div>
 
 <script>
-const token = new URLSearchParams(window.location.search).get('token');
+// TODO: zelfde twee waarden invullen als in login.html — Supabase-dashboard → Settings → API
+const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
+const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const app = document.getElementById('app');
 const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
 const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
+
+let currentAccessToken = null;
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function goToSelfHelpPayment(reflectionToken, email) {
   try { localStorage.setItem('mp_pending_selfhelp', reflectionToken); } catch (e) {}
@@ -80,9 +89,9 @@ function planLabel(plan) {
   return labels[plan] || plan;
 }
 
-function withReturnParam(link) {
-  const sep = link.includes('?') ? '&' : '?';
-  return `${link}${sep}from=${encodeURIComponent(token)}`;
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = '/login.html';
 }
 
 async function loadSessionLinks(sessionToken, containerId) {
@@ -94,21 +103,21 @@ async function loadSessionLinks(sessionToken, containerId) {
     if (!res.ok) throw new Error(data.error);
     box.innerHTML = data.links.map(l => `
       <div style="margin-bottom:10px">
-        <div style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px">${l.name}${l.isOrganizer ? ' (jij)' : ''} · ${l.email || 'geen e-mailadres'}</div>
+        <div style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px">${esc(l.name)}${l.isOrganizer ? ' (jij)' : ''} · ${esc(l.email) || 'geen e-mailadres'}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
           <input type="text" readonly value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
           <button onclick="navigator.clipboard.writeText('${window.location.origin}${l.accessLink}')" class="icon-btn" title="Kopieer">📋</button>
         </div>
         ${!l.isOrganizer ? `
-        <div style="font-size:.72rem;color:var(--ink-soft);margin-bottom:4px">E-mailadres van ${l.name} wijzigen</div>
+        <div style="font-size:.72rem;color:var(--ink-soft);margin-bottom:4px">E-mailadres van ${esc(l.name)} wijzigen</div>
         <div style="display:flex;gap:8px;align-items:center">
-          <input type="email" id="emailEdit_${l.id}" placeholder="Nieuw e-mailadres" value="${l.email || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:.78rem">
+          <input type="email" id="emailEdit_${l.id}" placeholder="Nieuw e-mailadres" value="${esc(l.email) || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:.78rem">
           <button type="button" class="btn outline" style="padding:6px 10px;font-size:.75rem" onclick="updateParticipantEmail('${sessionToken}', '${l.id}', 'emailEdit_${l.id}', this)">Wijzig e-mail</button>
         </div>
         <div id="emailEditMsg_${l.id}" style="font-size:.75rem;margin-top:4px"></div>` : ''}
       </div>`).join('');
   } catch (err) {
-    box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
+    box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${esc(err.message)}</p>`;
   }
 }
 
@@ -144,8 +153,8 @@ async function updateParticipantEmail(sessionToken, participantId, inputId, btn)
   }
 }
 
-async function startFollowup(accessLinkWithReturn, btn) {
-  const t = new URLSearchParams(accessLinkWithReturn.split('?')[1]).get('token');
+async function startFollowup(accessLinkAbsolute, btn) {
+  const t = new URLSearchParams(accessLinkAbsolute.split('?')[1]).get('token');
   btn.disabled = true;
   btn.textContent = 'Even geduld...';
   try {
@@ -155,7 +164,7 @@ async function startFollowup(accessLinkWithReturn, btn) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    window.location.href = accessLinkWithReturn;
+    window.location.href = accessLinkAbsolute;
   } catch (err) {
     btn.disabled = false;
     btn.textContent = 'Vul opvolgdocument in';
@@ -169,8 +178,9 @@ async function deleteSession(sessionId, btn) {
   btn.textContent = 'Bezig...';
   try {
     const res = await fetch('/.netlify/functions/delete-session', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ magicToken: token, sessionId }),
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentAccessToken}` },
+      body: JSON.stringify({ sessionId }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
@@ -183,25 +193,25 @@ async function deleteSession(sessionId, btn) {
 }
 
 async function load() {
-  if (!token) {
-    app.innerHTML = `
-      <span class="label">Mijn gesprekken</span>
-      <h1>Inloggen vereist</h1>
-      <p style="color:var(--ink-soft)">Gebruik de link uit je e-mail om je gesprekken en reflecties te bekijken.</p>
-      <a href="/login.html" class="btn clay">Naar inlogpagina</a>`;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = '/login.html';
     return;
   }
+  currentAccessToken = session.access_token;
 
   try {
-    const res = await fetch(`/.netlify/functions/get-my-sessions?token=${token}`);
+    const res = await fetch('/.netlify/functions/get-my-sessions', {
+      headers: { 'Authorization': `Bearer ${currentAccessToken}` },
+    });
     const data = await res.json();
 
     if (!res.ok) {
       app.innerHTML = `
         <span class="label">Fout</span>
-        <h1>Link ongeldig of verlopen</h1>
-        <p style="color:var(--ink-soft)">${data.error}</p>
-        <a href="/login.html" class="btn clay">Vraag een nieuwe link op</a>`;
+        <h1>Er ging iets mis</h1>
+        <p style="color:var(--ink-soft)">${esc(data.error)}</p>
+        <a href="/login.html" class="btn clay">Opnieuw inloggen</a>`;
       return;
     }
 
@@ -213,8 +223,11 @@ async function load() {
       app.innerHTML = `
         <span class="label">Mijn gesprekken</span>
         <h1>Nog niets gevonden</h1>
-        <p style="color:var(--ink-soft)">We vonden geen gesprekken of reflecties gekoppeld aan ${data.email}.</p>
-        <a href="/reflectie.html" class="btn clay">Start een gratis reflectie</a>`;
+        <p style="color:var(--ink-soft)">We vonden geen gesprekken of reflecties gekoppeld aan ${esc(data.email)}.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="/reflectie.html" class="btn clay">Start een gratis reflectie</a>
+          <button type="button" class="btn outline" onclick="logout()">Log uit</button>
+        </div>`;
       return;
     }
 
@@ -223,16 +236,7 @@ async function load() {
     app.innerHTML = `
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
-      <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong id="currentEmailDisplay">${data.email}</strong> · <button type="button" id="changeEmailToggle" class="btn outline" style="padding:4px 10px;font-size:.75rem;vertical-align:middle">Wijzig e-mailadres</button></p>
-      <div id="changeEmailBox" style="display:none;max-width:420px;margin-bottom:16px" class="card">
-        <div class="field">
-          <label for="newEmailInput">Nieuw e-mailadres</label>
-          <input type="email" id="newEmailInput" placeholder="nieuw@email.be">
-        </div>
-        <button type="button" id="submitEmailChange" class="btn clay" style="padding:9px 16px;font-size:.85rem">Bevestigen</button>
-        <div id="changeEmailMsg" style="margin-top:8px;font-size:.85rem"></div>
-        <p style="font-size:.78rem;color:var(--ink-soft);margin-top:8px">Dit wijzigt je e-mailadres overal: al je gesprekken, reflecties, je plan en je login bij Mijn gesprekken.</p>
-      </div>
+      <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong id="currentEmailDisplay">${esc(data.email)}</strong> · <button type="button" id="logoutBtn" class="btn outline" style="padding:4px 10px;font-size:.75rem;vertical-align:middle">Log uit</button></p>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
         ${isPaidPlan ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
@@ -260,41 +264,7 @@ ${hasReflections ? `
         <a href="/reflectie.html" class="btn outline">Nieuwe reflectie maken</a>
       </div>`;
 
-    document.getElementById('changeEmailToggle').addEventListener('click', () => {
-      const box = document.getElementById('changeEmailBox');
-      box.style.display = box.style.display === 'none' ? 'block' : 'none';
-    });
-    document.getElementById('submitEmailChange').addEventListener('click', async () => {
-      const btn = document.getElementById('submitEmailChange');
-      const msg = document.getElementById('changeEmailMsg');
-      const newEmail = document.getElementById('newEmailInput').value.trim();
-      msg.textContent = '';
-      msg.style.color = '';
-      if (!newEmail || !newEmail.includes('@')) {
-        msg.style.color = '#8A4222';
-        msg.textContent = 'Vul een geldig e-mailadres in.';
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Bezig...';
-      try {
-        const res = await fetch('/.netlify/functions/update-my-email', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, newEmail }),
-        });
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.error);
-        msg.style.color = 'var(--sage)';
-        msg.textContent = 'Gelukt! Je e-mailadres is overal gewijzigd. Deze pagina herlaadt zo.';
-        setTimeout(() => window.location.reload(), 1800);
-      } catch (err) {
-        msg.style.color = '#8A4222';
-        msg.textContent = err.message;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Bevestigen';
-      }
-    });
+    document.getElementById('logoutBtn').addEventListener('click', logout);
 
     if (hasSessions) {
       const list = document.getElementById('sessionsList');
@@ -306,21 +276,19 @@ ${hasReflections ? `
         const isFollowupBezig = (s.status || '').startsWith('nieuwe_ronde_');
         const statusText = statusLabel(s.status);
         const linksBoxId = `linksBox_${idx}`;
-        const accessLinkWithReturn = withReturnParam(s.accessLink);
-        const documentLinkWithReturn = s.documentLink ? withReturnParam(s.documentLink) : null;
         const followupUsed = !!s.followupUsed;
 
         let followupButton = '';
         if (isKlaar && s.plan && s.plan !== 'gratis' && !followupUsed) {
-          followupButton = `<button type="button" class="btn outline" onclick="startFollowup('${window.location.origin}${accessLinkWithReturn}', this)">Vul opvolgdocument in</button>`;
+          followupButton = `<button type="button" class="btn outline" onclick="startFollowup('${window.location.origin}${s.accessLink}', this)">Vul opvolgdocument in</button>`;
         } else if (isFollowupBezig) {
-          followupButton = `<a href="${accessLinkWithReturn}" class="btn outline">Ga verder met opvolging</a>`;
+          followupButton = `<a href="${s.accessLink}" class="btn outline">Ga verder met opvolging</a>`;
         }
 
         card.innerHTML = `
           <div class="session-card-header">
             <div>
-              <div class="who">${s.category}</div>
+              <div class="who">${esc(s.category)}</div>
               <div class="session-card-meta">
                 Gestart op ${new Date(s.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}${s.updatedAt ? ` · laatst bijgewerkt ${new Date(s.updatedAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
               </div>
@@ -330,9 +298,9 @@ ${hasReflections ? `
             </span>
           </div>
           <div class="session-card-actions">
-            <a href="${accessLinkWithReturn}" class="btn outline">Mijn verhaal / status</a>
-            <a href="${accessLinkWithReturn}&view=antwoorden" class="btn outline">Bekijk mijn antwoorden</a>
-            ${documentLinkWithReturn ? `<a href="${documentLinkWithReturn}" class="btn clay">Bekijk document</a>` : ''}
+            <a href="${s.accessLink}" class="btn outline">Mijn verhaal / status</a>
+            <a href="${s.accessLink}&view=antwoorden" class="btn outline">Bekijk mijn antwoorden</a>
+            ${s.documentLink ? `<a href="${s.documentLink}" class="btn clay">Bekijk document</a>` : ''}
             ${followupButton}
             ${s.isOrganizer ? `<button class="btn outline" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">Bekijk alle links</button>` : ''}
           </div>
@@ -356,15 +324,15 @@ ${hasReflections ? `
         rCard.innerHTML = `
           <div class="session-card-header">
             <div>
-              <div class="who">${r.category || 'Reflectie'}</div>
+              <div class="who">${esc(r.category) || 'Reflectie'}</div>
               <div class="session-card-meta">${new Date(r.createdAt).toLocaleDateString('nl-BE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
             </div>
             ${isKlaar && r.recommendation ? `<span class="session-status-badge" style="background:#EFF4ED;color:${recColor[r.recommendation] || 'var(--ink-soft)'}">${recLabel[r.recommendation] || r.recommendation}</span>` : ''}
           </div>
-      ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${r.situationSummary}</p>` : ''}
+      ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${esc(r.situationSummary)}</p>` : ''}
           <div class="session-card-actions">
             <a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
-            ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${data.email}')">Ontvang mijn actieplan – €2,99</button>` : ''}
+            ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${esc(data.email)}')">Ontvang mijn actieplan – €2,99</button>` : ''}
             <a href="/new.html?fromReflection=${r.token}" class="btn outline">Maak er een gesprek van</a>
           </div>`;
         rList.appendChild(rCard);
@@ -372,7 +340,7 @@ ${hasReflections ? `
     }
 
   } catch (err) {
-    app.innerHTML = `<div class="error-box">Er ging iets mis: ${err.message}</div>`;
+    app.innerHTML = `<div class="error-box">Er ging iets mis: ${esc(err.message)}</div>`;
   }
 }
 
