@@ -265,11 +265,10 @@ function organizationCard(o) {
               <button type="button" data-remove-member="${m.id}">Verwijderen</button>
             </div>`).join('') : '<p style="color:var(--ink-soft);font-size:.85rem">Nog geen leden.</p>'}
         </div>
-        <div id="addMemberError-${o.id}" class="error-box" style="display:none;margin-top:10px;font-size:.82rem"></div>
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <input type="email" id="newMemberEmail-${o.id}" placeholder="e-mailadres@bedrijf.be" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:.88rem">
-          <button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem" data-add-member-org="${o.id}">+ Toevoegen</button>
-        </div>
+       <div id="addMemberError-${o.id}" class="error-box" style="display:none;margin-top:10px;font-size:.82rem"></div>
+        <div id="addMemberSuccess-${o.id}" style="display:none;margin-top:10px;font-size:.82rem;color:var(--sage)"></div>
+        <textarea id="newMemberEmail-${o.id}" placeholder="Eén of meerdere e-mailadressen, elk op een nieuwe regel of gescheiden door een komma" style="width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:.88rem;min-height:70px;margin-top:14px"></textarea>
+        <button type="button" class="btn outline" style="padding:9px 16px;font-size:.85rem;margin-top:8px" data-add-member-org="${o.id}">+ Toevoegen</button>
       </div>
     </details>`;
 }
@@ -300,15 +299,20 @@ async function addOrgMember(organizationId) {
   const input = document.getElementById(`newMemberEmail-${organizationId}`);
   const errorBox = document.getElementById(`addMemberError-${organizationId}`);
   errorBox.style.display = 'none';
-  const email = input.value.trim();
-  if (!email) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+  const emails = raw.split(/[\n,]+/).map(e => e.trim()).filter(Boolean);
   try {
-    const res = await fetch('/.netlify/functions/admin-add-org-member', {
+    const res = await fetch('/.netlify/functions/admin-add-org-members', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: adminPassword, organizationId, email }),
+      body: JSON.stringify({ password: adminPassword, organizationId, emails }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+    const parts = [];
+    if (data.added.length) parts.push(`${data.added.length} toegevoegd`);
+    if (data.alreadyInThisOrg.length) parts.push(`${data.alreadyInThisOrg.length} stonden al bij dit bedrijf`);
+    if (data.belongsElsewhere.length) parts.push(`${data.belongsElsewhere.length} horen al bij een ander bedrijf (overgeslagen)`);
     loadOrganizations();
   } catch (err) {
     errorBox.textContent = err.message;
