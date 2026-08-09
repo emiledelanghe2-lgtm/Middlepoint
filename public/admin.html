@@ -330,10 +330,6 @@ async function addOrgMember(organizationId) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-    const parts = [];
-    if (data.added.length) parts.push(`${data.added.length} toegevoegd`);
-    if (data.alreadyInThisOrg.length) parts.push(`${data.alreadyInThisOrg.length} stonden al bij dit bedrijf`);
-    if (data.belongsElsewhere.length) parts.push(`${data.belongsElsewhere.length} horen al bij een ander bedrijf (overgeslagen)`);
     loadOrganizations();
   } catch (err) {
     errorBox.textContent = err.message;
@@ -370,9 +366,7 @@ async function removeAllOrgMembers(organizationId) {
     alert(err.message);
   }
 }
-</script>
-</body>
-</html>
+
 async function saveOrgLimit(organizationId) {
   const input = document.getElementById(`editLimit-${organizationId}`);
   const errorBox = document.getElementById(`editOrgError-${organizationId}`);
@@ -406,3 +400,6 @@ async function deleteOrganization(organizationId) {
     alert(err.message);
   }
 }
+</script>
+</body>
+</html>
