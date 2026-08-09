@@ -201,6 +201,26 @@ async function deleteSession(sessionId, btn) {
   }
 }
 
+async function deleteReflection(reflectionId, btn) {
+  if (!confirm('Weet je zeker dat je deze reflectie definitief wil verwijderen? Dit kan niet ongedaan gemaakt worden.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Bezig...';
+  try {
+    const res = await fetch('/.netlify/functions/delete-reflection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentAccessToken}` },
+      body: JSON.stringify({ reflectionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    load();
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Verwijder reflectie';
+  }
+}
+
 async function load() {
   if (!supabaseClient) {
     app.innerHTML = `<div class="error-box">Er ging iets mis met de configuratie van deze pagina. Neem contact op via middlepoint@zohomail.eu als dit blijft duren.</div>`;
@@ -238,9 +258,9 @@ async function load() {
         <span class="label">Mijn gesprekken</span>
         <h1>Nog niets gevonden</h1>
         <p style="color:var(--ink-soft)">We vonden geen gesprekken of reflecties gekoppeld aan ${esc(data.email)}.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
           <a href="/reflectie.html" class="btn clay">Start een gratis reflectie</a>
-          <button type="button" class="btn outline" onclick="logout()">Log uit</button>
+          <a href="#" onclick="logout(); return false;" style="color:var(--clay);font-size:.9rem;text-decoration:none;font-weight:600">Log uit</a>
         </div>`;
       return;
     }
@@ -250,7 +270,10 @@ async function load() {
     app.innerHTML = `
       <span class="label">Mijn gesprekken</span>
       <h1>Welkom terug</h1>
-      <p style="color:var(--ink-soft);margin-bottom:8px">Ingelogd als <strong id="currentEmailDisplay">${esc(data.email)}</strong> · <button type="button" id="logoutBtn" class="btn outline" style="padding:4px 10px;font-size:.75rem;vertical-align:middle">Log uit</button></p>
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:#EFF4ED;border-radius:var(--radius)">
+        <span style="font-size:.88rem;color:var(--ink)">Ingelogd als <strong id="currentEmailDisplay">${esc(data.email)}</strong></span>
+        <a href="#" id="logoutBtn" style="color:var(--clay);font-size:.85rem;text-decoration:none;font-weight:600">Log uit</a>
+      </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
         ${isPaidPlan ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
@@ -344,10 +367,13 @@ ${hasReflections ? `
             ${isKlaar && r.recommendation ? `<span class="session-status-badge" style="background:#EFF4ED;color:${recColor[r.recommendation] || 'var(--ink-soft)'}">${recLabel[r.recommendation] || r.recommendation}</span>` : ''}
           </div>
       ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${esc(r.situationSummary)}</p>` : ''}
-          <div class="session-card-actions">
+        <div class="session-card-actions">
             <a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
             ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${esc(data.email)}')">Ontvang mijn actieplan – €2,99</button>` : ''}
             <a href="/new.html?fromReflection=${r.token}" class="btn outline">Maak er een gesprek van</a>
+          </div>
+          <div class="session-card-footer">
+            <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteReflection('${r.id}', this)">Verwijder reflectie</button>
           </div>`;
         rList.appendChild(rCard);
       });
