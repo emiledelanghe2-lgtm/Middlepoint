@@ -63,14 +63,18 @@
   <div id="error" class="error-box" style="display:none"></div>
   <div id="success" style="display:none" class="status-box"></div>
 
-  <form id="loginForm">
+<form id="loginForm">
     <div class="field">
       <label for="loginEmail">E-mailadres</label>
       <input type="email" id="loginEmail" required placeholder="jij@email.be" autocomplete="email">
     </div>
     <div class="field">
       <label for="loginPassword">Wachtwoord</label>
-<input type="password" id="loginPassword" required placeholder="Je wachtwoord" autocomplete="current-password" style="width:100%;box-sizing:border-box">
+      <input type="password" id="loginPassword" required placeholder="Je wachtwoord" autocomplete="current-password" style="width:100% !important;box-sizing:border-box !important;padding:13px 14px !important">
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="rememberMeCheckbox">
+      <label for="rememberMeCheckbox">Ingelogd blijven op dit toestel</label>
     </div>
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="loginSubmitBtn">Inloggen</button>
   </form>
@@ -102,7 +106,16 @@
 // TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
 const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
 const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+function rememberModeIsPersistent() {
+  return localStorage.getItem('mp_remember_me') === 'true';
+}
+let supabaseClient = makeSupabaseClient(rememberModeIsPersistent());
 
 const loginTabBtn = document.getElementById('loginTabBtn');
 const registerTabBtn = document.getElementById('registerTabBtn');
@@ -147,10 +160,13 @@ loginForm.addEventListener('submit', async (e) => {
   errorBox.style.display = 'none';
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
+  const rememberMe = document.getElementById('rememberMeCheckbox').checked;
   const btn = document.getElementById('loginSubmitBtn');
   btn.disabled = true;
   btn.textContent = 'Even geduld...';
   try {
+    localStorage.setItem('mp_remember_me', rememberMe ? 'true' : 'false');
+    supabaseClient = makeSupabaseClient(rememberMe);
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
     window.location.href = '/mijn-gesprekken.html';
@@ -193,6 +209,8 @@ registerForm.addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'Even geduld...';
   try {
+    localStorage.setItem('mp_remember_me', 'true');
+    supabaseClient = makeSupabaseClient(true);
     const { data, error } = await supabaseClient.auth.signUp({ email, password });
     if (error) throw error;
     if (data.session) {
