@@ -22,6 +22,7 @@
 <link rel="canonical" href="https://middlepoint.net/new.html">
 <link rel="stylesheet" href="/style.css">
 <script src="/pricing-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .form-section{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
 .form-section-title{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--clay); margin-bottom:16px; display:block; }
@@ -191,13 +192,20 @@
     <span class="name">Eén gesprek</span>
     <span class="price">€4,99 eenmalig</span>
   </div>
-  <div id="activeSubNotice" style="display:none;margin-bottom:20px">
+<div id="activeSubNotice" style="display:none;margin-bottom:20px">
     <div class="customer-info">
       <div id="customerInfoText"></div>
     </div>
   </div>
 
-  <form id="newSessionForm">
+  <div id="authGate" style="display:none;text-align:center;padding:32px" class="card">
+    <span class="label" style="display:block;margin-bottom:10px">Even inloggen</span>
+    <h3 style="margin-bottom:12px">Log in of registreer om te starten</h3>
+    <p style="color:var(--ink-soft);margin-bottom:20px">Zo vind je dit gesprek later altijd terug via Mijn gesprekken, en hoef je je gegevens maar één keer in te vullen.</p>
+    <a href="/login.html" id="authGateLink" class="btn clay" style="padding:12px 28px">Inloggen of registreren</a>
+  </div>
+
+  <form id="newSessionForm" style="display:none">
 
     <div class="form-section" id="stepGegevens">
       <span class="form-section-title">1. Jouw gegevens</span>
@@ -217,19 +225,8 @@
         <label for="categoryOther">Omschrijf kort jouw situatie</label>
         <input type="text" id="categoryOther" placeholder="bv. een conflict met mijn huisbaas">
       </div>
-      <div class="field">
-        <label for="organizerName">Jouw naam <span style="color:var(--clay)">*</span></label>
-        <input type="text" id="organizerName" required placeholder="bv. Sarah">
-      </div>
-      <div class="field">
-        <label for="organizerEmail">Jouw e-mailadres <span style="color:var(--clay)">*</span></label>
-        <input type="email" id="organizerEmail" required placeholder="jij@email.be" autocomplete="email">
-        <div class="help">We gebruiken dit om je te verwittigen wanneer het document klaar is, en zodat je je gesprekken later kan terugvinden via <a href="/login.html">Mijn gesprekken</a>.</div>
-      </div>
-      <div class="field" id="organizerEmailConfirmField" style="display:block">
-        <label for="organizerEmailConfirm">Herhaal je e-mailadres</label>
-        <input type="email" id="organizerEmailConfirm" placeholder="jij@email.be" autocomplete="email">
-        <div class="help">Even dubbel typen om tikfouten te vermijden. Dit adres bepaalt of je later kan inloggen bij Mijn gesprekken.</div>
+   <div class="card" style="background:#EFF4ED;border:none;padding:16px;margin-bottom:20px">
+        <p style="margin:0;font-size:.9rem">Ingelogd als <strong id="loggedInEmailDisplay"></strong></p>
       </div>
       <div class="checkbox-row">
         <input type="checkbox" id="isThirdParty">
@@ -314,6 +311,42 @@
 </div>
 
 <script>
+/* ===== Inloggen vereist om een gesprek te starten ===== */
+// TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
+const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
+const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+
+let currentUser = null;
+
+async function checkAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    currentUser = {
+      email: session.user.email,
+      name: (session.user.user_metadata && session.user.user_metadata.name) || session.user.email.split('@')[0],
+    };
+    return true;
+  }
+  currentUser = null;
+  return false;
+}
+
+function updateAuthUI() {
+  const loggedIn = !!currentUser;
+  document.getElementById('authGate').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('newSessionForm').style.display = loggedIn ? 'block' : 'none';
+  if (loggedIn) {
+    document.getElementById('loggedInEmailDisplay').textContent = currentUser.email;
+    checkEmail(currentUser.email);
+  }
+}
+
 /* ===== Chooser-logica: identieke kaarten, verspringende gloed, correcte terug-navigatie ===== */
 function showFormView(pushHistory) {
   document.getElementById('chooserView').style.display = 'none';
@@ -373,7 +406,6 @@ function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e)
 
 const selectedPlanId = 'los';
 let activeSubscription = null;
-let organizerEmailIsNew = true;
 let reflectionPrefillText = '';
 let reflectionConfidentialPrefillText = '';
 let isProCustomer = false;
@@ -447,7 +479,6 @@ function updatePlanUI() {
 
 /* ===== E-mailadres herkennen ===== */
 async function checkEmail(email) {
-  const confirmField = document.getElementById('organizerEmailConfirmField');
   if (!email || !email.includes('@')) return;
   try {
     const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
@@ -455,10 +486,8 @@ async function checkEmail(email) {
 
     if (!data.known) {
       activeSubscription = null;
-      organizerEmailIsNew = true;
       isProCustomer = false;
       updateProConfigVisibility();
-      confirmField.style.display = 'block';
       document.getElementById('limitBox').style.display = 'none';
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('submitBtn').style.opacity = '1';
@@ -469,9 +498,6 @@ async function checkEmail(email) {
     activeSubscription = data;
     isProCustomer = data.plan === 'pro';
     updateProConfigVisibility();
-    organizerEmailIsNew = false;
-    confirmField.style.display = 'none';
-    document.getElementById('organizerEmailConfirm').value = '';
     const isSubscriptionPlan = ['starter', 'plus', 'pro'].includes(data.plan);
 
     document.getElementById('limitBox').style.display = 'none';
@@ -499,14 +525,8 @@ async function checkEmail(email) {
     updatePlanUI();
   } catch (err) {
     console.error('Email check mislukt:', err);
-    organizerEmailIsNew = true;
-    confirmField.style.display = 'block';
   }
 }
-
-document.getElementById('organizerEmail').addEventListener('blur', e => {
-  checkEmail(e.target.value.trim());
-});
 
 /* ===== Deelnemersvelden ===== */
 function addParticipantRow() {
@@ -591,9 +611,13 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     category = custom;
   }
 
-  const organizerName = document.getElementById('organizerName').value.trim();
-  const organizerEmail = document.getElementById('organizerEmail').value.trim();
-  const organizerEmailConfirm = document.getElementById('organizerEmailConfirm').value.trim();
+if (!currentUser) {
+    errorBox.textContent = 'Log eerst in om een gesprek te starten.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const organizerName = currentUser.name;
+  const organizerEmail = currentUser.email;
   const isThirdParty = document.getElementById('isThirdParty').checked;
   const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
   const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
@@ -609,17 +633,7 @@ document.getElementById('newSessionForm').addEventListener('submit', async e => 
     });
   }
 
-  if (!organizerEmail) { errorBox.textContent = 'Jouw e-mailadres is verplicht.'; errorBox.style.display = 'block'; return; }
-
-  await checkEmail(organizerEmail);
-  if (organizerEmailIsNew) {
-    if (!organizerEmailConfirm || organizerEmailConfirm.toLowerCase() !== organizerEmail.toLowerCase()) {
-      errorBox.textContent = 'De twee e-mailadressen komen niet overeen. Controleer even of je jouw adres correct herhaald hebt.';
-      errorBox.style.display = 'block';
-      document.getElementById('organizerEmailConfirmField').scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-  }
+await checkEmail(organizerEmail);
 
   const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
   const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
@@ -781,6 +795,11 @@ async function createSession({ category, organizerName, organizerEmail, organize
 
 /* ===== Bij het laden van de pagina ===== */
 window.addEventListener('DOMContentLoaded', async () => {
+  await checkAuth();
+  updateAuthUI();
+  if (!currentUser) {
+    try { localStorage.setItem('mp_return_to', '/new.html' + window.location.search); } catch (e) {}
+  }
   const urlParams = new URLSearchParams(window.location.search);
   const isPaid = urlParams.get('paid') === 'true';
   const fromReflectionParam = urlParams.get('fromReflection');
@@ -800,13 +819,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       const res = await fetch(`/.netlify/functions/get-reflection?token=${fromReflectionParam}`);
       const data = await res.json();
       if (res.ok && data.reflection) {
-        const r = data.reflection;
+   const r = data.reflection;
         document.getElementById('reflectionNotice').style.display = 'block';
-        document.getElementById('organizerName').value = r.name || '';
-        if (r.email) {
-          document.getElementById('organizerEmail').value = r.email;
-          checkEmail(r.email);
-        }
         reflectionPrefillText = r.situation_summary || '';
         reflectionConfidentialPrefillText = r.deeper_layer || '';
 
