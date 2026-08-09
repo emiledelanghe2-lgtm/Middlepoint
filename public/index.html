@@ -25,6 +25,7 @@
 <meta name="twitter:card" content="summary">
 <link rel="canonical" href="https://middlepoint.net/">
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .hoe-card{ position:relative; }
 .hoe-card summary{ cursor:pointer; list-style:none; font-size:.84rem; color:var(--clay); font-weight:600; margin-top:8px; }
@@ -56,6 +57,7 @@
     <a href="/login.html">Mijn gesprekken</a>
   </div>
 <div class="nav-actions">
+    <a href="/login.html" class="btn outline" id="authNavBtn">Inloggen / Registreren</a>
     <a href="/new.html" class="btn">Start een gesprek</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
@@ -78,6 +80,25 @@
       });
     });
   })();
+</script>
+<script>
+// TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
+const SUPABASE_URL = 'JOUW_SUPABASE_URL_HIER';
+const SUPABASE_ANON_KEY = 'JOUW_SUPABASE_ANON_KEY_HIER';
+(async () => {
+  try {
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const btn = document.getElementById('authNavBtn');
+      btn.textContent = 'Mijn gesprekken';
+      btn.href = '/mijn-gesprekken.html';
+    }
+  } catch (e) { /* stil falen, knop blijft gewoon "Inloggen / Registreren" */ }
+})();
 </script>
 
 <main>
