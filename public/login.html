@@ -232,10 +232,14 @@ registerForm.addEventListener('submit', async (e) => {
     registerForm.style.display = 'none';
     successBox.style.display = 'block';
     successBox.innerHTML = '<p style="margin:0;color:var(--sage)">Bijna klaar! We stuurden een bevestigingsmail naar je e-mailadres. Klik op de link daarin, en kom dan terug om in te loggen.</p>';
-  } catch (err) {
-    errorBox.textContent = err.message.includes('already registered')
-      ? 'Er bestaat al een account met dit e-mailadres. Probeer in te loggen.'
-      : err.message;
+} catch (err) {
+    if (err.message && err.message.includes('already registered')) {
+      errorBox.textContent = 'Er bestaat al een account met dit e-mailadres. Probeer in te loggen.';
+    } else if (err.message && err.message.includes('supabaseUrl')) {
+      errorBox.textContent = 'Registreren is momenteel niet beschikbaar. Neem contact op via middlepoint@zohomail.eu.';
+    } else {
+      errorBox.textContent = 'Er ging iets mis bij het registreren. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu als dit blijft gebeuren.';
+    }
     errorBox.style.display = 'block';
     btn.disabled = false;
     btn.textContent = 'Account aanmaken';
