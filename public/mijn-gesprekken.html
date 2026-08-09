@@ -51,15 +51,9 @@
 </div>
 
 <script>
-// TODO: zelfde twee waarden invullen als in login.html — Supabase-dashboard → Settings → API
 const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
 function makeSupabaseClient(persistent) {
-  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
-  });
-}
-const supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
   return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { storage: persistent ? window.localStorage : window.sessionStorage },
   });
@@ -68,8 +62,9 @@ let supabaseClient = null;
 try {
   supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
 } catch (e) {
-  console.error('Supabase-configuratie ontbreekt of is ongeldig (SUPABASE_URL/SUPABASE_ANON_KEY nog niet ingevuld?):', e);
+  console.error('Supabase-configuratie ontbreekt of is ongeldig:', e);
 }
+
 const app = document.getElementById('app');
 const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
 const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
@@ -104,7 +99,7 @@ function planLabel(plan) {
 }
 
 async function logout() {
-  await supabaseClient.auth.signOut();
+  if (supabaseClient) await supabaseClient.auth.signOut();
   window.location.href = '/login.html';
 }
 
@@ -208,9 +203,10 @@ async function deleteSession(sessionId, btn) {
 
 async function load() {
   if (!supabaseClient) {
-    app.innerHTML = `<div class="error-box">Er ging iets mis met de configuratie van deze pagina. Neem contact op als dit blijft duren.</div>`;
+    app.innerHTML = `<div class="error-box">Er ging iets mis met de configuratie van deze pagina. Neem contact op via middlepoint@zohomail.eu als dit blijft duren.</div>`;
     return;
   }
+
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
     window.location.href = '/login.html';
@@ -376,5 +372,13 @@ function toggleLinks(sessionToken, containerId, btn) {
 
 load();
 </script>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">De plek om elkaar terug te vinden.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Vragen? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/privacy.html">Privacybeleid</a>
+  </p>
+</footer>
 </body>
 </html>
