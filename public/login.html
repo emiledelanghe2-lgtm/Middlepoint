@@ -82,6 +82,10 @@
 
   <form id="registerForm" style="display:none">
     <div class="field">
+      <label for="regUsername">Gebruikersnaam</label>
+      <input type="text" id="regUsername" required placeholder="Hoe je genoemd wil worden" maxlength="40" autocomplete="nickname">
+    </div>
+    <div class="field">
       <label for="regEmail">E-mailadres</label>
       <input type="email" id="regEmail" required placeholder="jij@email.be" autocomplete="email">
     </div>
@@ -200,12 +204,18 @@ registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   errorBox.style.display = 'none';
   successBox.style.display = 'none';
+  const username = document.getElementById('regUsername').value.trim();
   const email = document.getElementById('regEmail').value.trim();
   const emailConfirm = document.getElementById('regEmailConfirm').value.trim();
   const password = document.getElementById('regPassword').value;
   const passwordConfirm = document.getElementById('regPasswordConfirm').value;
   const btn = document.getElementById('registerSubmitBtn');
 
+  if (!username) {
+    errorBox.textContent = 'Vul een gebruikersnaam in.';
+    errorBox.style.display = 'block';
+    return;
+  }
   if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
     errorBox.textContent = 'De twee e-mailadressen komen niet overeen.';
     errorBox.style.display = 'block';
@@ -227,7 +237,7 @@ registerForm.addEventListener('submit', async (e) => {
   try {
  localStorage.setItem('mp_remember_me', 'true');
     const client = makeSupabaseClient(true);
-    const { data, error } = await client.auth.signUp({ email, password, options: { data: { name } } });
+    const { data, error } = await client.auth.signUp({ email, password, options: { data: { name: username } } });
     if (error) throw error;
     if (data.session) {
       window.location.href = '/mijn-gesprekken.html';

@@ -57,9 +57,9 @@
     <a href="/login.html">Mijn gesprekken</a>
   </div>
 <div class="nav-actions">
-    <span id="authStatus" style="display:none;font-size:.78rem;color:var(--ink-soft);align-self:center;margin-right:8px">
-      <span id="authEmailDisplay"></span> · <a href="#" id="authLogoutLink" style="color:var(--clay);text-decoration:none">Log uit</a>
-    </span>
+    <a href="/mijn-gesprekken.html" id="authStatus" style="display:none;align-self:center;margin-right:4px;width:32px;height:32px;border-radius:50%;background:var(--clay);color:#fff;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.9rem;align-items:center;justify-content:center;text-decoration:none" title="Mijn gesprekken">
+      <span id="authInitial"></span>
+    </a>
     <a href="/login.html" class="hint-chip" id="authNavBtn" style="text-decoration:none;align-self:center">Inloggen / Registreren</a>
     <a href="/new.html" class="btn">Start een gesprek</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
@@ -96,16 +96,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
     });
 const { data: { session } } = await client.auth.getSession();
 if (session && session.user) {
-      const name = (session.user.user_metadata && session.user.user_metadata.name) || session.user.email;
-      const firstName = name.trim().split(/\s+/)[0];
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
       document.getElementById('authNavBtn').style.display = 'none';
-      document.getElementById('authStatus').style.display = 'inline';
-      document.getElementById('authEmailDisplay').textContent = firstName;
-      document.getElementById('authLogoutLink').addEventListener('click', async (e) => {
-        e.preventDefault();
-        await client.auth.signOut();
-        window.location.href = '/';
-      });
+      document.getElementById('authStatus').style.display = 'flex';
+      document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
     }
   } catch (e) { /* stil falen, knop blijft gewoon "Inloggen / Registreren" */ }
 })();
