@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+const crypto = require('crypto');
 
 async function sendEmailChangedConfirmation(toEmail, siteUrl, magicToken) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
@@ -70,12 +71,22 @@ exports.handler = async (event) => {
       return { statusCode: 409, body: JSON.stringify({ error: 'Dit e-mailadres is al in gebruik bij een ander account. Neem contact op als je denkt dat dit een vergissing is.' }) };
     }
 
-    await supabase.from('customers').update({ email: normalizedEmail, updated_at: new Date().toISOString() }).eq('magic_link_token', token);
+    // Nieuwe magic link genereren: de oude blijft anders nog tot 24u bruikbaar
+    // om het e-mailadres opnieuw te wijzigen als de mail ooit doorgestuurd raakt.
+    const newToken = crypto.randomBytes(32).toString('hex');
+    const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    await supabase.from('customers').update({
+      email: normalizedEmail,
+      magic_link_token: newToken,
+      magic_link_expires: newExpires,
+      updated_at: new Date().toISOString(),
+    }).eq('magic_link_token', token);
     await supabase.from('sessions').update({ organizer_email: normalizedEmail, updated_at: new Date().toISOString() }).eq('organizer_email', oldEmail);
     await supabase.from('participants').update({ email: normalizedEmail }).eq('email', oldEmail);
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
-    await sendEmailChangedConfirmation(normalizedEmail, siteUrl, token);
+    await sendEmailChangedConfirmation(normalizedEmail, siteUrl, newToken);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true, newEmail: normalizedEmail }) };
   } catch (err) {

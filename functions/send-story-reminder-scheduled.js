@@ -45,6 +45,7 @@ exports.handler = async () => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, processed: 0 }) };
     }
 
+    const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
     let processed = 0;
 
     for (const session of candidates) {
@@ -69,7 +70,7 @@ const realParticipants = participants.filter(p => !(p.is_organizer && session.or
       if (notSubmitted.length) {
         await Promise.all(
           notSubmitted.map(p => {
-            const link = `/story.html?token=${p.access_token || ''}`;
+            const link = `${siteUrl}/story.html?token=${p.access_token || ''}`;
             return sendReminderEmail(p.email, p.display_name, organizer ? organizer.display_name : 'Iemand', link);
           })
         );

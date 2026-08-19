@@ -2,15 +2,18 @@ const { getSupabase } = require('./_supabase');
 
 // Mapping van Stripe price-bedragen naar je plannen (in centen, EUR)
 // Pas dit aan als je prijzen ooit wijzigen in Stripe.
+// Geeft null terug bij een onherkend bedrag, zodat we nooit blind een
+// verkeerd plan toekennen (bv. de €2,99 zelfhulp-toevoeging, die geen
+// gesprek-plan is en apart wordt afgehandeld via client_reference_id).
 function mapAmountToPlan(amountInCents, isRecurring) {
   if (!isRecurring) {
-    if (amountInCents === 399) return 'los';
-    return 'los'; // fallback voor eenmalige betalingen
+    if (amountInCents === 499) return 'los';
+    return null;
   }
   if (amountInCents === 499) return 'starter';
   if (amountInCents === 1299) return 'plus';
   if (amountInCents === 3499) return 'pro';
-  return 'starter'; // fallback
+  return null;
 }
 
 function sessionsForPlan(plan) {
@@ -41,6 +44,23 @@ exports.handler = async (event) => {
 
     if (stripeEvent.type === 'checkout.session.completed') {
       const session = stripeEvent.data.object;
+
+      // Betaling voor de €2,99 zelfhulp-toevoeging op een reflectie: geen
+      // gesprek-plan, gewoon de bijbehorende reflectie als betaald markeren.
+      const clientReferenceId = session.client_reference_id || '';
+      if (clientReferenceId.startsWith('selfhelp:')) {
+        const reflectionToken = clientReferenceId.slice('selfhelp:'.length);
+        if (reflectionToken) {
+          await supabase
+            .from('reflections')
+            .update({ self_help_paid: true })
+            .eq('access_token', reflectionToken);
+        } else {
+          console.error('Zelfhulp-betaling zonder reflectie-token in client_reference_id.');
+        }
+        return { statusCode: 200, body: JSON.stringify({ received: true }) };
+      }
+
       const customerEmail = session.customer_details ? session.customer_details.email : session.customer_email;
       if (!customerEmail) {
         console.error('Geen e-mailadres gevonden in checkout session.');
@@ -50,8 +70,11 @@ exports.handler = async (event) => {
       const isRecurring = session.mode === 'subscription';
       const amountTotal = session.amount_total; // in centen
       const plan = mapAmountToPlan(amountTotal, isRecurring);
+      if (!plan) {
+        console.error(`Onherkend Stripe-bedrag (${amountTotal}, recurring=${isRecurring}), geen plan toegekend.`);
+        return { statusCode: 200, body: JSON.stringify({ received: true }) };
+      }
 
-      const periodEnd = isRecurring ? null : null; // bij eenmalig: geen periode-einde nodig
       const now = new Date().toISOString();
 
       const { data: existing } = await supabase

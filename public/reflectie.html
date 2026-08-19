@@ -178,7 +178,9 @@ function shareReflectionEmail() {
 function goToSelfHelpPayment(token, email) {
   try { localStorage.setItem('mp_pending_selfhelp', token); } catch (e) {}
   const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
-  window.location.href = email ? `${SELF_HELP_STRIPE_LINK}${sep}prefilled_email=${encodeURIComponent(email)}` : SELF_HELP_STRIPE_LINK;
+  let url = `${SELF_HELP_STRIPE_LINK}${sep}client_reference_id=${encodeURIComponent('selfhelp:' + token)}`;
+  if (email) url += `&prefilled_email=${encodeURIComponent(email)}`;
+  window.location.href = url;
 }
 
 const CATEGORY_OPTIONS = [

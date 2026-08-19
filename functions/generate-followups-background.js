@@ -41,9 +41,31 @@ Antwoord ALLEEN met geldige JSON: {"stop": true/false, "categorie": "suicide|gew
   }
 }
 
-exports.handler = async (event) => {
+async function sendAdminFollowupsFailureAlert(sessionId, errorMessage) {
+  if (!process.env.RESEND_API_KEY) return;
   try {
-    const { sessionId } = JSON.parse(event.body || '{}');
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
+        to: 'middlepoint@zohomail.eu',
+        subject: `Vervolgvragen genereren mislukt, sessie ${sessionId}`,
+        html: `<p>Sessie: ${sessionId}</p><p>Fout: ${errorMessage}</p>`,
+      }),
+    });
+  } catch (err) {
+    console.error('Kon admin-alertmail (vervolgvragen) niet versturen:', err);
+  }
+}
+
+exports.handler = async (event) => {
+  let sessionId;
+  try {
+    ({ sessionId } = JSON.parse(event.body || '{}'));
     const supabase = getSupabase();
 
     const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single();
@@ -131,6 +153,18 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {
     console.error(err);
+    if (sessionId) {
+      try {
+        const supabase = getSupabase();
+        await supabase
+          .from('sessions')
+          .update({ status: 'vervolgvragen_mislukt', updated_at: new Date().toISOString() })
+          .eq('id', sessionId);
+      } catch (updateErr) {
+        console.error('Kon sessiestatus niet terugzetten na fout:', updateErr);
+      }
+      sendAdminFollowupsFailureAlert(sessionId, err.message);
+    }
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };

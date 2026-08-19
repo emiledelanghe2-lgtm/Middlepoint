@@ -1087,6 +1087,11 @@ function render(data) {
       <h1>Er ging iets mis</h1>
       <div class="error-box">Het opstellen van jullie document is helaas mislukt. Dit is aan onze kant, niet aan iets dat jij verkeerd deed. We zijn hiervan automatisch verwittigd. Neem gerust contact op via <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a> als je hier snel bij geholpen wil worden.</div>
       <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
+  } else if (session.status === 'vervolgvragen_mislukt') {
+    app.innerHTML = `<span class="label">${session.category}</span>
+      <h1>Er ging iets mis</h1>
+      <div class="error-box">Het voorbereiden van jullie vervolgvragen is helaas mislukt. Dit is aan onze kant, niet aan iets dat jij verkeerd deed. We zijn hiervan automatisch verwittigd. Neem gerust contact op via <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a> als je hier snel bij geholpen wil worden.</div>
+      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
   } else if (session.status === 'klaar') {
     app.innerHTML = `<span class="label">${session.category}</span>
       <h1>Jullie document is klaar</h1>
@@ -1122,6 +1127,8 @@ function statusLabel(status) {
     verhalen_klaar_vervolgvragen_genereren: 'wordt voorbereid',
     wachten_op_vervolgvragen: 'wachten op de vervolgvragen',
     document_genereren: 'document wordt opgesteld',
+    document_mislukt: 'er ging iets mis, neem contact op',
+    vervolgvragen_mislukt: 'er ging iets mis, neem contact op',
     klaar: 'klaar',
     veiligheid_gestopt: 'gestopt om veiligheidsredenen',
   };

@@ -12,11 +12,14 @@ exports.handler = async (event) => {
     const supabase = getSupabase();
     const { data: reflection } = await supabase
       .from('reflections')
-      .select('id')
+      .select('id, self_help_paid')
       .eq('access_token', token)
       .single();
     if (!reflection) {
       return { statusCode: 404, body: JSON.stringify({ error: 'Reflectie niet gevonden.' }) };
+    }
+    if (!reflection.self_help_paid) {
+      return { statusCode: 402, body: JSON.stringify({ error: 'Deze toevoeging is nog niet betaald.' }) };
     }
 
     await supabase.from('reflections').update({
