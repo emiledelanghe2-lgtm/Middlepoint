@@ -9,3 +9,7 @@ create table if not exists admin_login_attempts (
   locked_until timestamptz,
   updated_at timestamptz not null default now()
 );
+-- Enkel de service-role (gebruikt door de Netlify functions) mag hierbij, dus
+-- RLS aan zonder policies: dat sluit anon/authenticated volledig buiten, en de
+-- service-role omzeilt RLS sowieso altijd.
+alter table admin_login_attempts enable row level security;
