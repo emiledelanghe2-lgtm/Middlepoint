@@ -66,6 +66,26 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   transition: border-color .15s ease, color .15s ease;
 }
 .hint-chip:hover{ border-color:var(--clay); color:var(--clay); }
+.avatar-badge{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  width:34px;
+  height:34px;
+  min-width:34px;
+  border-radius:50%;
+  background:var(--clay);
+  color:#fff;
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600;
+  font-size:.95rem;
+  line-height:1;
+  text-decoration:none;
+  transition: transform .15s ease;
+}
+.avatar-badge span{ display:block; }
+.avatar-badge:hover{ transform:scale(1.07); }
 .icon-btn{
   display:inline-flex;
   align-items:center;
@@ -424,8 +444,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .nav-links.open{ display:flex; }
   .nav-links a{ width:100%; padding:12px 10px; border-radius:8px; font-size:.95rem; }
   .nav-links a:hover, .nav-links a.current{ background:var(--clay-soft); }
-  .nav-actions{ flex-shrink:0; }
+  .nav-actions{ flex-shrink:0; gap:8px; }
   .nav-actions .btn{ padding:9px 16px; font-size:.85rem; }
+  .avatar-badge{ width:30px; height:30px; min-width:30px; font-size:.85rem; }
+  .hint-chip{ padding:7px 10px; font-size:.78rem; }
 
   .session-card-header{ flex-direction:column; align-items:flex-start; gap:6px; }
   .session-card-actions{ flex-direction:column; }

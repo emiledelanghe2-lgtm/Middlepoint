@@ -16,11 +16,16 @@
 <meta name="description" content="Begin gratis met Middlepoint. Betaalde plannen vanaf €2,99.">
 <meta property="og:title" content="Prijzen | Middlepoint - Start gratis">
 <meta property="og:description" content="Begin gratis, betaal pas als het werkt voor jou.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://middlepoint.net/pricing.html">
 <meta property="og:locale" content="nl_BE">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://middlepoint.net/pricing.html">
 <link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .pricing-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:32px; }
 @media (max-width:900px){ .pricing-grid{ grid-template-columns:repeat(2, 1fr); } }
@@ -51,6 +56,7 @@
     <a href="/login.html">Mijn gesprekken</a>
   </div>
   <div class="nav-actions">
+    <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
     <a href="/new.html" class="btn">Start een gesprek</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
@@ -74,11 +80,33 @@
     });
   })();
 </script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
 
 <section class="section">
   <div class="section-head">
     <span class="label">Prijzen</span>
-    <h2>Begin gratis, betaal pas als het werkt voor jou</h2>
+    <h1>Begin gratis, betaal pas als het werkt voor jou</h1>
   </div>
   <p style="text-align:center;margin-top:-12px;margin-bottom:8px">
     <a href="/voorbeeld-document.html" style="font-weight:600">Nieuwsgierig wat je precies krijgt? Bekijk een voorbeelddocument</a>

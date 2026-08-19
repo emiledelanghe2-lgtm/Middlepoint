@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Mijn gesprekken, Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,6 +20,7 @@
     <a href="/login.html" class="current" aria-current="page">Mijn gesprekken</a>
   </div>
   <div class="nav-actions">
+    <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
 <a href="/new.html" class="btn">Start een gesprek</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
@@ -41,6 +43,28 @@
       });
     });
   })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
 </script>
 
 <div class="app-wrap" id="app">

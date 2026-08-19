@@ -26,6 +26,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://middlepoint.net/faq.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/voor-professionals.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://middlepoint.net/voorbeeld-document.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

@@ -11,6 +11,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>Inloggen | Middlepoint</title>
 <link rel="stylesheet" href="/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -132,6 +133,16 @@ try {
     document.getElementById('error').textContent = 'De inlogfunctie is momenteel niet beschikbaar. Neem contact op als dit blijft duren.';
     document.getElementById('error').style.display = 'block';
   });
+}
+if (supabaseClient) {
+  (async () => {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        redirectAfterAuth();
+      }
+    } catch (e) { /* stil falen, gewoon het inlogformulier tonen */ }
+  })();
 }
 const loginTabBtn = document.getElementById('loginTabBtn');
 const registerTabBtn = document.getElementById('registerTabBtn');
