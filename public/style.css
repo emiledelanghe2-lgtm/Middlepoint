@@ -6,8 +6,9 @@
   --ink-soft: #6B6358;
   --navy: #3A4A5C;
   --clay: #C9714B;
+  --clay-btn: #A85A3A;
   --clay-soft: #F1DCC9;
-  --sage: #94A88A;
+  --sage: #567357;
   --line: #E9DFD0;
   --white: #FFFEFB;
   --radius: 16px;
@@ -138,7 +139,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 .btn{
   display:inline-block;
-  background:var(--clay);
+  background:var(--clay-btn);
   color:var(--white);
   padding:11px 22px;
   border-radius:var(--radius);
@@ -151,7 +152,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(201,113,75,.25); }
 .btn:active{ transform:translateY(0); }
-.btn.clay{ background:var(--clay); }
+.btn.clay{ background:var(--clay-btn); }
 .btn.outline{ background:transparent; color:var(--navy); border:1.5px solid var(--line); }
 .btn.outline:hover{ border-color:var(--navy); box-shadow:none; }
 .btn.whatsapp{ background:#3FA34D; color:var(--white); }

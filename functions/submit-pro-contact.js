@@ -1,3 +1,7 @@
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
@@ -7,6 +11,9 @@ exports.handler = async (event) => {
     if (!name || !email || !orgType || !orgName) {
       return { statusCode: 400, body: JSON.stringify({ error: 'Naam, e-mailadres, type en naam van de organisatie zijn verplicht.' }) };
     }
+    if (!email.includes('@')) {
+      return { statusCode: 400, body: JSON.stringify({ error: 'Vul een geldig e-mailadres in.' }) };
+    }
     if (!process.env.RESEND_API_KEY) {
       return { statusCode: 503, body: JSON.stringify({ error: 'E-mailverzending is nog niet ingesteld.' }) };
     }
@@ -14,12 +21,12 @@ exports.handler = async (event) => {
     const html = `
       <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
         <h2 style="color:#3A4A5C">Nieuwe Pro-aanvraag</h2>
-        <p><strong>Naam:</strong> ${name}</p>
-        <p><strong>E-mailadres:</strong> ${email}</p>
-<p><strong>Type organisatie:</strong> ${orgType}</p>
-        <p><strong>Naam organisatie:</strong> ${orgName}</p>
-        <p><strong>Geschat aantal gesprekken per maand:</strong> ${volume || 'niet opgegeven'}</p>
-        ${message ? `<p><strong>Bericht:</strong><br>${message}</p>` : ''}
+        <p><strong>Naam:</strong> ${escHtml(name)}</p>
+        <p><strong>E-mailadres:</strong> ${escHtml(email)}</p>
+<p><strong>Type organisatie:</strong> ${escHtml(orgType)}</p>
+        <p><strong>Naam organisatie:</strong> ${escHtml(orgName)}</p>
+        <p><strong>Geschat aantal gesprekken per maand:</strong> ${escHtml(volume) || 'niet opgegeven'}</p>
+        ${message ? `<p><strong>Bericht:</strong><br>${escHtml(message)}</p>` : ''}
       </div>`;
 
     const res = await fetch('https://api.resend.com/emails', {

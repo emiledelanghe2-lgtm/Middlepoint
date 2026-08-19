@@ -45,6 +45,14 @@ exports.handler = async (event) => {
     if (stripeEvent.type === 'checkout.session.completed') {
       const session = stripeEvent.data.object;
 
+      // Bij uitgestelde betaalmethodes (bv. SEPA-overschrijving) vuurt dit
+      // event al vóór het geld effectief binnen is; payment_status is dan
+      // 'unpaid'. Toegang pas toekennen als de betaling echt bevestigd is.
+      if (session.payment_status !== 'paid') {
+        console.log(`checkout.session.completed met payment_status=${session.payment_status}, nog geen toegang toegekend.`);
+        return { statusCode: 200, body: JSON.stringify({ received: true }) };
+      }
+
       // Betaling voor de €2,99 zelfhulp-toevoeging op een reflectie: geen
       // gesprek-plan, gewoon de bijbehorende reflectie als betaald markeren.
       const clientReferenceId = session.client_reference_id || '';

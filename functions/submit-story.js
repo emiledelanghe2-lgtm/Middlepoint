@@ -160,19 +160,27 @@ exports.handler = async (event) => {
     }
 
     if (everyoneSubmitted) {
-      await supabase
+      // Compare-and-swap op de status: als twee gelijktijdige indieningen allebei
+      // hier terechtkomen, wint enkel wie de status effectief nog van
+      // 'wachten_op_verhalen' naar 'document_genereren' kan zetten. De ander
+      // krijgt 0 rijen terug en triggert de achtergrondgeneratie dan niet nog eens.
+      const { data: claimedRows } = await supabase
         .from('sessions')
         .update({ status: 'document_genereren', updated_at: new Date().toISOString() })
-        .eq('id', participant.session_id);
+        .eq('id', participant.session_id)
+        .eq('status', 'wachten_op_verhalen')
+        .select('id');
 
-      try {
-        await fetch(`${siteUrl}/.netlify/functions/generate-document-background`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: participant.session_id }),
-        });
-      } catch (e) {
-        console.error('Kon document-background niet triggeren:', e);
+      if (claimedRows && claimedRows.length > 0) {
+        try {
+          await fetch(`${siteUrl}/.netlify/functions/generate-document-background`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: participant.session_id }),
+          });
+        } catch (e) {
+          console.error('Kon document-background niet triggeren:', e);
+        }
       }
     }
 

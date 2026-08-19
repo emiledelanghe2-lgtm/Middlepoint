@@ -685,19 +685,26 @@ await checkEmail(organizerEmail);
       email: emailInputs[i] ? emailInputs[i].value.trim() : '',
       message: messageInputs[i] ? messageInputs[i].value.trim() : '',
     }))
-    .filter(row => row.name);
+    .filter(row => row.name || row.email);
   const participantNames = participantRows.map(r => r.name);
   const participantEmails = participantRows.map(r => r.email);
   const participantMessages = participantRows.map(r => r.message);
 
-  if (!organizerName || participantNames.length === 0) {
+  if (!organizerName || participantRows.length === 0) {
     errorBox.textContent = 'Vul je naam en minstens één deelnemer in.';
     errorBox.style.display = 'block';
     return;
   }
 
-  if (isThirdParty && participantNames.length < 2) {
+  if (isThirdParty && participantRows.length < 2) {
     errorBox.textContent = 'Omdat je zelf niet deelneemt, zijn er minstens 2 deelnemers nodig voor een gesprek.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const missingNameIndex = participantRows.findIndex(r => !r.name);
+  if (missingNameIndex !== -1) {
+    errorBox.textContent = `Vul een naam in voor de deelnemer met e-mailadres "${participantRows[missingNameIndex].email}".`;
     errorBox.style.display = 'block';
     return;
   }
@@ -768,6 +775,8 @@ async function createSession({ category, organizerName, organizerEmail, organize
     const list = document.getElementById('linksList');
     list.innerHTML = '';
     const inviteMessages = [];
+    const organizerForInvite = data.participants.find(p => p.isOrganizer);
+    const organizerTokenForInvite = organizerForInvite ? new URLSearchParams(organizerForInvite.accessLink.split('?')[1]).get('token') : null;
 
     if (reflectionPrefillText) {
       const organizer = data.participants.find(p => p.isOrganizer);
@@ -806,14 +815,13 @@ async function createSession({ category, organizerName, organizerEmail, organize
       block.querySelector('button').addEventListener('click', ev => copyLink(ev.currentTarget, fullLink));
 
       if (sendInvites && !p.isOrganizer) {
-        const email = matchedEmail;
         const customMessage = matchedMessage;
-        if (email) {
+        if (matchedEmail && organizerTokenForInvite) {
           try {
             const inviteRes = await fetch('/.netlify/functions/send-invite', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ toEmail: email, fromName: organizerName, toName: p.name, accessLink: fullLink, category, customMessage }),
+              body: JSON.stringify({ organizerToken: organizerTokenForInvite, participantId: p.id, category, customMessage }),
             });
             const inviteData = await inviteRes.json();
             inviteMessages.push(inviteRes.ok ? `Mail verstuurd naar ${p.name}.` : `Mail naar ${p.name} mislukt: ${inviteData.error}`);
@@ -911,5 +919,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 </script>
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">De plek om elkaar terug te vinden.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Vragen? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/login.html">Mijn gesprekken</a>
+    &nbsp;·&nbsp; <a href="/privacy.html">Privacybeleid</a>
+  </p>
+</footer>
 </body>
 </html>

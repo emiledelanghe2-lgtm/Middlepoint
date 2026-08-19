@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Wachtwoord herstellen | Middlepoint</title>
+<link rel="stylesheet" href="/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Hoofdnavigatie">
+  <a href="/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/">Home</a>
+    <a href="/why.html">Waarom Middlepoint</a>
+    <a href="/pricing.html">Prijzen</a>
+    <a href="/testimonials.html">Getuigenissen</a>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+  })();
+</script>
+
+<div class="app-wrap" style="max-width:480px">
+  <span class="label">Mijn gesprekken</span>
+  <h1>Nieuw wachtwoord instellen</h1>
+  <p style="color:var(--ink-soft);margin-bottom:24px" id="introText">Even geduld, we controleren je herstellink...</p>
+
+  <div id="error" class="error-box" style="display:none"></div>
+  <div id="success" style="display:none" class="status-box"></div>
+
+  <form id="resetForm" style="display:none">
+    <div class="field" style="position:relative">
+      <label for="newPassword">Nieuw wachtwoord</label>
+      <input type="password" id="newPassword" required placeholder="Minstens 6 tekens" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="newPassword" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+    <div class="field" style="position:relative">
+      <label for="newPasswordConfirm">Herhaal nieuw wachtwoord</label>
+      <input type="password" id="newPasswordConfirm" required placeholder="Herhaal je wachtwoord" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="newPasswordConfirm" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="resetSubmitBtn">Wachtwoord opslaan</button>
+  </form>
+
+  <p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)"><a href="/login.html">Terug naar inloggen</a></p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+
+let supabaseClient = null;
+try {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig:', e);
+}
+
+const introText = document.getElementById('introText');
+const errorBox = document.getElementById('error');
+const successBox = document.getElementById('success');
+const resetForm = document.getElementById('resetForm');
+
+function showRecoveryReadyState() {
+  introText.textContent = 'Kies hieronder een nieuw wachtwoord voor je account.';
+  resetForm.style.display = 'block';
+}
+
+function showInvalidLinkState() {
+  introText.textContent = '';
+  errorBox.textContent = 'Deze herstellink is ongeldig of verlopen. Vraag op de loginpagina een nieuwe aan via "Wachtwoord vergeten?".';
+  errorBox.style.display = 'block';
+}
+
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      showRecoveryReadyState();
+    }
+  });
+  // Als de sessie al hersteld is tegen de tijd dat dit script draait
+  // (race met onAuthStateChange), toon het formulier ook dan.
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data && data.session && resetForm.style.display === 'none' && errorBox.style.display === 'none') {
+      showRecoveryReadyState();
+    }
+  });
+  setTimeout(() => {
+    if (resetForm.style.display === 'none' && errorBox.style.display === 'none') {
+      showInvalidLinkState();
+    }
+  }, 4000);
+} else {
+  introText.textContent = '';
+  errorBox.textContent = 'Wachtwoord herstellen is momenteel niet beschikbaar. Neem contact op via middlepoint@zohomail.eu.';
+  errorBox.style.display = 'block';
+}
+
+resetForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.style.display = 'none';
+  const password = document.getElementById('newPassword').value;
+  const passwordConfirm = document.getElementById('newPasswordConfirm').value;
+  if (password !== passwordConfirm) {
+    errorBox.textContent = 'De twee wachtwoorden komen niet overeen.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errorBox.textContent = 'Je wachtwoord moet minstens 6 tekens lang zijn.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('resetSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Even geduld...';
+  try {
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if (error) throw error;
+    resetForm.style.display = 'none';
+    introText.textContent = '';
+    successBox.innerHTML = '<p style="margin:0;color:var(--sage)">Je wachtwoord is aangepast. Je bent nu ingelogd.</p>';
+    successBox.style.display = 'block';
+    setTimeout(() => { window.location.href = '/mijn-gesprekken.html'; }, 1500);
+  } catch (err) {
+    errorBox.textContent = 'Er ging iets mis bij het opslaan van je nieuwe wachtwoord. Probeer het nog eens, of vraag een nieuwe herstellink aan.';
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Wachtwoord opslaan';
+  }
+});
+
+document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+  });
+});
+</script>
+</body>
+</html>

@@ -79,6 +79,7 @@
       <label for="rememberMeCheckbox">Ingelogd blijven op dit toestel</label>
     </div>
     <button type="submit" class="btn clay" style="width:100%;padding:14px" id="loginSubmitBtn">Inloggen</button>
+    <button type="button" id="forgotPasswordBtn" style="background:none;border:none;color:var(--ink-soft);font-size:.82rem;margin-top:12px;cursor:pointer;text-decoration:underline;padding:0">Wachtwoord vergeten?</button>
   </form>
 
   <form id="registerForm" style="display:none">
@@ -211,6 +212,36 @@ if (err.message === 'Invalid login credentials') {
   }
 });
 
+document.getElementById('forgotPasswordBtn').addEventListener('click', async () => {
+  errorBox.style.display = 'none';
+  successBox.style.display = 'none';
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) {
+    errorBox.textContent = 'Vul eerst je e-mailadres in het veld hierboven in, dan sturen we je een herstellink.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('forgotPasswordBtn');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Bezig met versturen...';
+  try {
+    if (!supabaseClient) throw new Error('supabaseUrl');
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/wachtwoord-herstellen.html',
+    });
+    if (error) throw error;
+    successBox.innerHTML = '<p style="margin:0;color:var(--sage)">Als dit e-mailadres bij ons gekend is, ontvang je binnen enkele minuten een link om een nieuw wachtwoord in te stellen.</p>';
+    successBox.style.display = 'block';
+  } catch (err) {
+    errorBox.textContent = 'Er ging iets mis bij het versturen van de herstellink. Probeer het nog eens, of neem contact op via middlepoint@zohomail.eu.';
+    errorBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
 registerForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   errorBox.style.display = 'none';
@@ -279,5 +310,13 @@ registerForm.addEventListener('submit', async (e) => {
   });
 });
 </script>
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">De plek om elkaar terug te vinden.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Vragen? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/faq.html">Veelgestelde vragen</a>
+    &nbsp;·&nbsp; <a href="/privacy.html">Privacybeleid</a>
+  </p>
+</footer>
 </body>
 </html>

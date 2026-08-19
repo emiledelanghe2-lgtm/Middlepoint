@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+const { checkAdminAuth } = require('./_admin-auth');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -6,8 +7,9 @@ exports.handler = async (event) => {
   }
   try {
     const { password } = JSON.parse(event.body || '{}');
-    if (!process.env.ADMIN_PASSWORD || password !== process.env.ADMIN_PASSWORD) {
-      return { statusCode: 401, body: JSON.stringify({ error: 'Verkeerd wachtwoord.' }) };
+    const authCheck = await checkAdminAuth(event, password);
+    if (!authCheck.ok) {
+      return { statusCode: authCheck.statusCode, body: JSON.stringify({ error: authCheck.error }) };
     }
     const supabase = getSupabase();
 

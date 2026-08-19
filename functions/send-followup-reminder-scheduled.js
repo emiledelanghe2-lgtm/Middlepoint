@@ -39,7 +39,7 @@ exports.handler = async () => {
     // geen herinnering verstuurd is.
     const { data: candidates } = await supabase
       .from('sessions')
-      .select('id, plan, followup_reminder_sent, documents(created_at)')
+      .select('id, plan, followup_reminder_sent, documents(created_at, version)')
       .eq('status', 'klaar')
       .eq('followup_reminder_sent', false)
       .neq('plan', 'gratis');
@@ -54,6 +54,8 @@ exports.handler = async () => {
     for (const session of candidates) {
       const docs = session.documents || [];
       if (!docs.length) continue;
+      const maxVersion = Math.max(...docs.map(d => d.version || 1));
+      if (maxVersion >= 2) continue; // het ene toegestane vervolg is al gebeurd
       const oldestDoc = docs.reduce((a, b) => (a.created_at < b.created_at ? a : b));
       if (oldestDoc.created_at > sevenDaysAgo) continue;
 

@@ -277,6 +277,7 @@ async function load() {
     }
 
     const isPaidPlan = data.plan && data.plan !== 'gratis';
+    const hasSubscription = data.plan && !['gratis', 'los'].includes(data.plan);
     const hasSessions = data.sessions && data.sessions.length > 0;
     const hasReflections = data.reflections && data.reflections.length > 0;
 
@@ -303,7 +304,7 @@ async function load() {
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
-        ${isPaidPlan ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
+        ${hasSubscription ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Abonnement beheren of opzeggen</a>` : ''}
       </div>
       <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:20px">${countLine}</p>
 

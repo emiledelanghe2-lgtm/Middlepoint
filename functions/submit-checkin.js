@@ -152,18 +152,25 @@ exports.handler = async (event) => {
     }
 
     if (everyoneSubmitted) {
-      await supabase
+      // Compare-and-swap: zie submit-story.js voor de reden. De huidige status
+      // is dynamisch (bv. 'nieuwe_ronde_3'), dus we vergrendelen op exact die waarde.
+      const { data: claimedRows } = await supabase
         .from('sessions')
         .update({ status: 'document_genereren', updated_at: new Date().toISOString() })
-        .eq('id', participant.session_id);
-      try {
-        await fetch(`${siteUrl}/.netlify/functions/generate-document-background`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: participant.session_id }),
-        });
-      } catch (e) {
-        console.error('Kon document-background niet triggeren:', e);
+        .eq('id', participant.session_id)
+        .eq('status', participant.sessions.status)
+        .select('id');
+
+      if (claimedRows && claimedRows.length > 0) {
+        try {
+          await fetch(`${siteUrl}/.netlify/functions/generate-document-background`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: participant.session_id }),
+          });
+        } catch (e) {
+          console.error('Kon document-background niet triggeren:', e);
+        }
       }
     }
     return { statusCode: 200, body: JSON.stringify({ ok: true, everyoneSubmitted }) };
