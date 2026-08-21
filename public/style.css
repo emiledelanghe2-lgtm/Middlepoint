@@ -14,6 +14,9 @@
   --radius: 16px;
 }
 
+.stars-display{ letter-spacing:2px; color:var(--clay); font-size:.95rem; margin-bottom:6px; }
+.stars-display .empty{ color:#D9D2C5; }
+
 *{ box-sizing: border-box; }
 html{ scroll-behavior: smooth; }
 

@@ -4,7 +4,7 @@ exports.handler = async () => {
     const supabase = getSupabase();
     const { data, error } = await supabase
       .from('testimonials')
-      .select('display_name, is_anonymous, content, created_at')
+      .select('display_name, is_anonymous, content, rating, created_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
     if (error) throw error;

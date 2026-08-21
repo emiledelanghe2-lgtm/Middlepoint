@@ -12,6 +12,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <title>Getuigenissen | Middlepoint</title>
 <meta name="description" content="Lees hoe Middlepoint mensen hielp om elkaar weer te begrijpen. Echte verhalen van koppels, families en collega's die elkaar terugvonden.">
 <meta property="og:title" content="Getuigenissen | Middlepoint">
@@ -103,6 +107,23 @@
         <label for="displayName">Jouw naam (optioneel)</label>
         <input type="text" id="displayName" placeholder="bv. Sarah, of laat leeg">
       </div>
+      <div class="field">
+        <label>Jouw score</label>
+        <div id="starPicker" class="star-picker" role="radiogroup" aria-label="Geef een score van 1 tot 5 sterren">
+          <button type="button" class="star-btn" data-value="1" role="radio" aria-checked="false" aria-label="1 ster">★</button>
+          <button type="button" class="star-btn" data-value="2" role="radio" aria-checked="false" aria-label="2 sterren">★</button>
+          <button type="button" class="star-btn" data-value="3" role="radio" aria-checked="false" aria-label="3 sterren">★</button>
+          <button type="button" class="star-btn" data-value="4" role="radio" aria-checked="false" aria-label="4 sterren">★</button>
+          <button type="button" class="star-btn" data-value="5" role="radio" aria-checked="false" aria-label="5 sterren">★</button>
+        </div>
+        <input type="hidden" id="rating" value="">
+      </div>
+      <style>
+        .star-picker{ display:flex; gap:6px; }
+        .star-btn{ background:none; border:none; cursor:pointer; font-size:1.7rem; line-height:1; color:#D9D2C5; padding:2px; transition:color .15s, transform .1s; }
+        .star-btn:hover{ transform:scale(1.1); }
+        .star-btn.filled{ color:var(--clay); }
+      </style>
       <script>
         (function() {
           const prefillName = new URLSearchParams(window.location.search).get('name');
@@ -150,24 +171,85 @@ async function loadTestimonials() {
     }
     list.innerHTML = data.testimonials.map(t => `
       <div class="testimonial-card">
+        ${renderStars(t.rating)}
         <p class="quote">"${t.content}"</p>
         <div class="author">${t.is_anonymous || !t.display_name ? 'Anoniem' : t.display_name}</div>
       </div>`).join('');
+    injectReviewSchema(data.testimonials);
   } catch (err) {
     list.innerHTML = '<p style="color:var(--ink-soft)">Kon getuigenissen niet laden.</p>';
   }
 }
+
+function renderStars(rating) {
+  const r = Number(rating) || 0;
+  let html = '<div class="stars-display" aria-label="' + r + ' van 5 sterren">';
+  for (let i = 1; i <= 5; i++) {
+    html += i <= r ? '★' : '<span class="empty">★</span>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function injectReviewSchema(testimonials) {
+  if (!testimonials || testimonials.length === 0) return;
+  const rated = testimonials.filter(t => t.rating);
+  if (rated.length === 0) return;
+  const avg = rated.reduce((sum, t) => sum + Number(t.rating), 0) / rated.length;
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Middlepoint',
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: avg.toFixed(1),
+      reviewCount: rated.length,
+    },
+    review: rated.slice(0, 20).map(t => ({
+      '@type': 'Review',
+      reviewRating: { '@type': 'Rating', ratingValue: String(t.rating) },
+      author: { '@type': 'Person', name: (t.is_anonymous || !t.display_name) ? 'Anoniem' : t.display_name },
+      reviewBody: t.content,
+    })),
+  };
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(schema);
+  document.head.appendChild(script);
+}
+
+(function() {
+  const picker = document.getElementById('starPicker');
+  const ratingInput = document.getElementById('rating');
+  const buttons = Array.from(picker.querySelectorAll('.star-btn'));
+  function setRating(value) {
+    ratingInput.value = value;
+    buttons.forEach(b => {
+      const active = Number(b.dataset.value) <= value;
+      b.classList.toggle('filled', active);
+      b.setAttribute('aria-checked', active ? 'true' : 'false');
+    });
+  }
+  buttons.forEach(b => b.addEventListener('click', () => setRating(Number(b.dataset.value))));
+})();
 
 document.getElementById('testimonialForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const content = document.getElementById('content').value.trim();
   const displayName = document.getElementById('displayName').value.trim();
   const isAnonymous = document.getElementById('isAnonymous').checked;
+  const rating = document.getElementById('rating').value;
   const msgBox = document.getElementById('formMsg');
+  if (!rating) {
+    msgBox.style.display = 'block';
+    msgBox.style.color = '#8A4222';
+    msgBox.textContent = 'Kies eerst een score van 1 tot 5 sterren.';
+    return;
+  }
   try {
     const res = await fetch('/.netlify/functions/submit-testimonial', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, displayName, isAnonymous }),
+      body: JSON.stringify({ content, displayName, isAnonymous, rating: Number(rating) }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);

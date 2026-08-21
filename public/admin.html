@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <title>Beheer | Middlepoint</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="stylesheet" href="/style.css">
@@ -124,6 +128,7 @@ function testimonialCard(t, showActions) {
   const statusColor = t.status === 'approved' ? 'var(--sage)' : t.status === 'rejected' ? '#8A4222' : 'var(--clay)';
   return `
     <div class="card" style="margin-bottom:14px">
+      <div class="stars-display" aria-label="${Number(t.rating) || 0} van 5 sterren">${[1,2,3,4,5].map(i => i <= Number(t.rating) ? '★' : '<span class="empty">★</span>').join('')}</div>
       <p style="margin:0 0 8px;font-style:italic">"${t.content}"</p>
       <p style="margin:0 0 8px;font-size:.85rem;color:var(--ink-soft)">${t.is_anonymous || !t.display_name ? 'Anoniem' : t.display_name} · <span style="color:${statusColor};font-weight:600">${t.status}</span></p>
       ${showActions ? `

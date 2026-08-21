@@ -12,6 +12,10 @@
   <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <title>Middlepoint | Begrijp eindelijk hoe de ander denkt en voelt</title>
 <meta name="description" content="Start met een gratis, persoonlijke reflectie, en ontdek of een gesprek met de ander zinvol is. Middlepoint helpt jullie elkaar eerlijk te begrijpen.">
 <meta property="og:title" content="Middlepoint | Begrijp eindelijk hoe de ander denkt en voelt">
@@ -22,7 +26,7 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://middlepoint.net/">
 <meta property="og:locale" content="nl_BE">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://middlepoint.net/">
 <link rel="stylesheet" href="/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -41,6 +45,18 @@
   "name": "Middlepoint",
   "url": "https://middlepoint.net",
   "description": "Online conflictbemiddeling: begin met een gratis, persoonlijke reflectie, en start desgewenst een gedeeld gesprek met een eerlijk, neutraal document."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Middlepoint",
+  "url": "https://middlepoint.net",
+  "logo": "https://middlepoint.net/android-chrome-512x512.png",
+  "description": "Middlepoint helpt mensen conflicten tussen partners, familieleden, vrienden, collega's of buren op een neutrale manier te analyseren en op te lossen.",
+  "email": "middlepoint@zohomail.eu",
+  "areaServed": "BE"
 }
 </script>
 </head>
@@ -348,6 +364,7 @@ if (session && session.user) {
         const top = data.testimonials.slice(0, 3);
         document.getElementById('testimonialsPreviewGrid').innerHTML = top.map(t => `
           <div class="card">
+            <div class="stars-display" aria-label="${Number(t.rating) || 0} van 5 sterren">${[1,2,3,4,5].map(i => i <= Number(t.rating) ? '★' : '<span class="empty">★</span>').join('')}</div>
             <p style="font-family:'Fraunces',serif;font-style:italic;margin:0 0 12px">"${t.content}"</p>
             <div style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)">${t.is_anonymous || !t.display_name ? 'Anoniem' : t.display_name}</div>
           </div>`).join('');
