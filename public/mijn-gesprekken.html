@@ -21,9 +21,11 @@
     <a href="/why.html">Waarom Middlepoint</a>
     <a href="/pricing.html">Prijzen</a>
     <a href="/testimonials.html">Getuigenissen</a>
+    <a href="/voor-professionals.html">Voor bedrijven</a>
     <a href="/login.html" class="current" aria-current="page">Mijn gesprekken</a>
   </div>
   <div class="nav-actions">
+    <a href="/admin.html" id="adminNavBtn" class="hint-chip" style="display:none;text-decoration:none">Admin pagina</a>
     <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
 <a href="/new.html" class="btn">Start een gesprek</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
@@ -65,6 +67,10 @@
       if (badge) {
         badge.style.display = 'flex';
         document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+      if (session.user.email === 'emile.delanghe2@gmail.com') {
+        const adminBtn = document.getElementById('adminNavBtn');
+        if (adminBtn) adminBtn.style.display = 'inline-block';
       }
     }
   } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
