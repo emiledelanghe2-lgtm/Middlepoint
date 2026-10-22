@@ -44,7 +44,11 @@ def page(slug_en, slug_nl, title, desc, body, jsonld=''):
     nl_url = f'https://middlepoint.net/blog/{slug_nl}' if slug_nl else 'https://middlepoint.net/blog/'
     nl_path = f'/blog/{slug_nl}' if slug_nl else '/blog/'
     t = html.escape(title); d = html.escape(desc, quote=True)
-    h = re.sub(r'(<a href=")[^"]*(" class="lang-switch")', lambda m: m.group(1) + nl_path + m.group(2), hdr)
+    en_path = f'/en/blog/{slug_en}' if slug_en else '/en/blog/'
+    sw = ('<div class="lang-switch" role="group" aria-label="Taal / Language">'
+          f'<a href="{nl_path}" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>'
+          f'<a href="{en_path}" data-lang="en" hreflang="en" lang="en" title="English" aria-current="true">EN</a></div>')
+    h = re.sub(r'<div class="lang-switch".*?</div>', lambda m: sw, hdr, flags=re.S)
     return f"""<!DOCTYPE html>
 <html lang="en">
   {GTAG}

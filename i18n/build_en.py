@@ -52,10 +52,19 @@ def link_js(html):
     pat = r'(?<!\+ )([\'"`])/(' + '|'.join(re.escape(n) for n in PAGE_NAMES) + r')\.html'
     return re.sub(pat, r'\1/en/\2.html', html)
 
+def lang_switch(nl_href, en_href, current):
+    """NL | EN switch with both languages visible, the current one marked."""
+    def a(code, href, name):
+        cur = ' aria-current="true"' if code == current else ''
+        return f'<a href="{href}" data-lang="{code}" hreflang="{code}" lang="{code}" title="{name}"{cur}>{code.upper()}</a>'
+    return ('<div class="lang-switch" role="group" aria-label="Taal / Language">'
+            + a('nl', nl_href, 'Nederlands') + a('en', en_href, 'English') + '</div>')
+
 def strip_lang_markup(s):
     """The Dutch twins carry hreflang links, lang.js and an EN switch (added by patch_nl.py). Remove them so the English page gets its own."""
     s = re.sub(r'<link rel="alternate" hreflang="[^"]*" href="[^"]*">\n', '', s)
     s = s.replace('<script src="/lang.js"></script>\n', '')
+    s = re.sub(r'\n[ ]*<div class="lang-switch".*?</div>', '', s)
     s = re.sub(r'\n[ ]*<a href="[^"]*" class="lang-switch"[^>]*>EN</a>', '', s)
     return s
 
@@ -88,7 +97,7 @@ def build(page, rules):
     s = s.replace('<link rel="stylesheet" href="/style.css">', alt + '<link rel="stylesheet" href="/style.css">\n<script src="/lang.js"></script>', 1)
     # language switch (shows NL)
     nl_href = '/' + rel
-    s = s.replace('<div class="nav-actions">', f'<div class="nav-actions">\n    <a href="{nl_href}" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>', 1)
+    s = s.replace('<div class="nav-actions">', '<div class="nav-actions">\n    ' + lang_switch(nl_href, '/en/' + rel, 'en'), 1)
     open(out_path, 'w', encoding='utf-8').write(s)
     return missing
 

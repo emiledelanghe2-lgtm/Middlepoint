@@ -462,13 +462,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .icon-btn{ width:44px; height:44px; }
 }
 
-/* Language switcher */
-.lang-switch{ display:inline-flex; align-items:center; justify-content:center; align-self:center; min-width:38px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; font-size:.78rem; font-weight:700; letter-spacing:.06em; color:var(--ink-soft); text-decoration:none; background:var(--white); }
-.lang-switch:hover{ border-color:var(--clay); color:var(--clay); }
+/* Language switcher: NL | EN, both visible, current one filled */
+.lang-switch{ display:inline-flex; align-items:center; align-self:center; border:1px solid var(--line); border-radius:999px; background:var(--white); padding:2px; gap:2px; }
+.lang-switch a{ display:inline-flex; align-items:center; justify-content:center; min-width:34px; padding:5px 10px; border-radius:999px; font-size:.78rem; font-weight:700; letter-spacing:.06em; color:var(--ink-soft); text-decoration:none; }
+.lang-switch a:hover{ color:var(--clay); }
+.lang-switch a[aria-current="true"]{ background:var(--clay-btn); color:#fff; cursor:default; }
 @media (max-width:480px){
   /* On phones the header gets crowded with the language switch: the login chip lives in the menu ("Mijn gesprekken") */
   .nav-actions #authNavBtn{ display:none !important; }
-  .lang-switch{ min-width:34px; padding:5px 8px; font-size:.74rem; }
+  .lang-switch a{ min-width:28px; padding:4px 7px; font-size:.72rem; }
+  .nav{ gap:6px; padding:12px 12px; }
+  .nav .brand{ font-size:.95rem; }
+  .nav-actions{ gap:6px; }
+  .nav-actions .btn{ padding:8px 11px; font-size:.78rem; }
+  .nav-toggle{ padding:6px 9px; }
 }
 
 /* Hint on Dutch pages for English-first browsers (see lang.js) */
