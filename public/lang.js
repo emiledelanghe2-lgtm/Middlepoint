@@ -6,7 +6,7 @@
   var isEn = path === '/en' || path.indexOf('/en/') === 0;
   try {
     document.addEventListener('click', function (e) {
-      var a = e.target.closest && e.target.closest('a.lang-switch');
+      var a = e.target.closest && e.target.closest('.lang-switch a');
       if (a) localStorage.setItem('mp_lang', a.getAttribute('data-lang'));
     });
 
@@ -19,7 +19,7 @@
     if (first.indexOf('en') !== 0 || hasDutch) return;
 
     function showHint() {
-      var sw = document.querySelector('a.lang-switch[data-lang="en"]');
+      var sw = document.querySelector('.lang-switch a[data-lang="en"]');
       if (!sw) return;
       var bar = document.createElement('div');
       bar.className = 'lang-hint';
