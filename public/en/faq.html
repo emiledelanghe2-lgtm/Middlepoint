@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Frequently asked questions | Middlepoint</title>
+<meta name="description" content="Answers to the most frequently asked questions about Middlepoint: privacy, how it works, and more.">
+<meta property="og:title" content="Frequently asked questions | Middlepoint">
+<meta property="og:description" content="Answers to the most frequently asked questions about Middlepoint.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/faq.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/faq.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/faq.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/faq.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/faq.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.faq-item{ background:var(--white); border:1px solid var(--line); border-radius:10px; padding:16px 20px; margin-bottom:12px; }
+.faq-item summary{ cursor:pointer; font-weight:600; color:var(--ink); }
+.faq-item p{ margin:12px 0 0; color:var(--ink-soft); }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can the other person read what I fill in?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Your answers stay separate and are never shown directly to each other. Middlepoint combines both answers into a shared, carefully worded overview." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can you read our documents?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. There is no feature that lets us view users' documents. That is not part of how the service works." }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens to my data?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Your data is stored securely and only used to prepare your document and keep you informed. We never sell or share your data with third parties." }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does it take for the document to be ready?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Once everyone has submitted their questionnaire, Middlepoint usually prepares the document within a few minutes, slightly longer with more than two participants. You automatically receive an email as soon as it is ready." }
+    },
+    {
+      "@type": "Question",
+      "name": "What if the other person does not take part?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Without the other participant's answers Middlepoint cannot prepare a joint document. Feel free to remind the other person using the link that was sent when you started." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I organise a conversation without taking part myself?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. As a therapist, HR manager, teacher or other facilitator you can start a conversation between two other people without filling in your own side of the story. Both parties then fill in their own questionnaire, and you receive the joint document as soon as it is ready." }
+    },
+    {
+      "@type": "Question",
+      "name": "Why should I use this instead of simply using an AI chat myself?",
+      "acceptedAnswer": { "@type": "Answer", "text": "An ordinary chat only reflects your side back to you, because it hears only one side of the story. Middlepoint hears both sides separately and only then places them honestly next to each other in one shared document." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is this the same as therapy?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Middlepoint is an accessible first step that helps you understand each other better, not a replacement for professional therapy." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I still change my answers later?",
+      "acceptedAnswer": { "@type": "Answer", "text": "After final submission you can no longer change your answers. You can fill in the follow-up document later to add an up-to-date picture." }
+    },
+    {
+      "@type": "Question",
+      "name": "How exactly does the follow-up document work?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Via 'My conversations' you fill in a follow-up document once per conversation, whenever it suits you. You see the tips, questions and phrases from your first document again, indicate what was used and what changed, and add what is new. As soon as both of you submit it, a new, updated version is created." }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/faq.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+<a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<section class="section" style="max-width:720px">
+  <span class="label">Frequently asked questions</span>
+  <h1 style="font-size:2.2rem;margin-bottom:32px">What people ask us most often</h1>
+
+  <details class="faq-item">
+    <summary>Can the other person read what I fill in?</summary>
+    <p>No. Your answers stay separate and are never shown directly to each other. Middlepoint combines both answers into a shared, carefully worded overview.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Can you read our documents?</summary>
+    <p>No. There is no feature that lets us view users' documents. That is not part of how the service works.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>What happens to my data?</summary>
+    <p>Your data is stored securely and only used to prepare your document and keep you informed. We never sell or share your data with third parties. You can find more details in our <a href="/en/privacy.html">privacy policy</a>.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>How long does it take for the document to be ready?</summary>
+    <p>Once everyone has submitted their questionnaire, Middlepoint usually prepares the document within a few minutes, slightly longer with more than two participants. You automatically receive an email as soon as it is ready.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>What if the other person does not take part?</summary>
+    <p>Without the other participant's answers Middlepoint cannot prepare a joint document. Feel free to remind the other person using the link that was sent when you started.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Can I organise a conversation without taking part myself?</summary>
+    <p>Yes. As a therapist, HR manager, teacher or other facilitator you can start a conversation between two other people without filling in your own side of the story. You indicate that when you start the conversation; both parties then fill in their own questionnaire, and you receive the joint document as soon as it is ready. More about this on the <a href="/en/voor-professionals.html">page for professionals</a>.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Why should I use this instead of simply using an AI chat myself?</summary>
+    <p>An ordinary chat only reflects your side back to you, because it hears only one side of the story. Middlepoint hears both sides separately and only then places them honestly next to each other in one shared document. That makes the difference between advice based on your view of the situation and an overview based on what is really going on on both sides.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Is this the same as therapy?</summary>
+    <p>No. Middlepoint is an accessible first step that helps you understand each other better, not a replacement for professional therapy.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>Can I still change my answers later?</summary>
+    <p>After final submission you can no longer change your answers. You can fill in the follow-up document later to add an up-to-date picture.</p>
+  </details>
+
+  <details class="faq-item">
+    <summary>How exactly does the follow-up document work?</summary>
+    <p>Via 'My conversations' you fill in a follow-up document once per conversation, whenever it suits you. You see the tips, questions and phrases from your first document again, indicate what was used and what changed, and add what is new. As soon as both of you submit it, a new, updated version is created.</p>
+  </details>
+
+  <div style="margin-top:40px;text-align:center">
+    <p style="color:var(--ink-soft);margin-bottom:16px">Another question?</p>
+    <a href="mailto:middlepoint@zohomail.eu" class="btn outline">Send us an email</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+</footer>
+</body>
+</html>

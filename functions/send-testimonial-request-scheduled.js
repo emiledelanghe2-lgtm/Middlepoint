@@ -1,7 +1,8 @@
 const { getSupabase } = require('./_supabase');
 const { emailButtonHtml } = require('./_email-button');
+const { normLang, pre, tr, greeting } = require('./_lang');
 
-async function sendTestimonialRequestEmail(toEmail, toName, link) {
+async function sendTestimonialRequestEmail(toEmail, toName, link, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     await fetch('https://api.resend.com/emails', {
@@ -13,8 +14,15 @@ async function sendTestimonialRequestEmail(toEmail, toName, link) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: 'Hoe ging het?',
-        html: `
+        subject: tr(L, 'Hoe ging het?', 'How did it go?'),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', toName)}</h2>
+            <p>Some time ago you used Middlepoint. We are curious: how did it go?</p>
+            <p>Would you be willing to briefly share how it helped you? One sentence is enough.</p>
+            ${emailButtonHtml(link, 'Briefly share your experience')}
+            <p style="color:#888;font-size:.85rem">This is a one-time email. Prefer not to? No problem, you do not have to do anything.</p>
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Een tijdje geleden gebruikte je Middlepoint. We zijn benieuwd: hoe ging het?</p>
@@ -40,7 +48,7 @@ exports.handler = async () => {
     // van een goede getuigenis), waarvoor nog geen verzoek verstuurd is.
     const { data: candidates } = await supabase
       .from('sessions')
-      .select('id, plan, testimonial_request_sent, documents(created_at)')
+      .select('*, documents(created_at)')
       .eq('status', 'klaar')
       .eq('testimonial_request_sent', false)
       .neq('plan', 'gratis');
@@ -67,8 +75,9 @@ exports.handler = async () => {
         (participants || [])
           .filter(p => p.email)
           .map(p => {
-            const link = `${siteUrl}/testimonials.html?name=${encodeURIComponent(p.display_name || '')}#deelFormulier`;
-            return sendTestimonialRequestEmail(p.email, p.display_name, link);
+            const sl = normLang(session.lang);
+            const link = `${siteUrl}${pre(sl)}/testimonials.html?name=${encodeURIComponent(p.display_name || '')}#deelFormulier`;
+            return sendTestimonialRequestEmail(p.email, p.display_name, link, sl);
           })
       );
 

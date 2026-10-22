@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="robots" content="noindex, nofollow">
+<title>My conversations, Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/mijn-gesprekken.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/mijn-gesprekken.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/mijn-gesprekken.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html" class="current" aria-current="page">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/mijn-gesprekken.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/admin.html" id="adminNavBtn" class="hint-chip" style="display:none;text-decoration:none">Admin pagina</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+<a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+      if (session.user.email === 'emile.delanghe2@gmail.com') {
+        const adminBtn = document.getElementById('adminNavBtn');
+        if (adminBtn) adminBtn.style.display = 'inline-block';
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<div class="app-wrap" id="app">
+  <div class="skeleton skeleton-line short"></div>
+  <div class="skeleton skeleton-line" style="height:32px;width:60%;margin-bottom:20px"></div>
+  <div class="skeleton skeleton-block"></div>
+  <div class="skeleton skeleton-block"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig:', e);
+}
+
+const app = document.getElementById('app');
+const STRIPE_PORTAL = 'https://billing.stripe.com/p/login/28EcN55IM0rig6J1B9aVa00';
+const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
+
+let currentAccessToken = null;
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function firstName(name) { return (name || '').trim().split(/\s+/)[0] || name || ''; }
+const CATEGORY_LABELS_EN = { koppel: 'Couple / relationship', familie: 'Family', vrienden: 'Friends', buren: 'Neighbors', werk: 'Work / coworkers', school: 'School', andere: 'Something else' };
+function catLabel(c) { return CATEGORY_LABELS_EN[c] || c; }
+function langPrefix(l) { return l === 'en' ? '/en' : ''; }
+function goToSelfHelpPayment(reflectionToken, email, lang) {
+  try { localStorage.setItem('mp_pending_selfhelp', reflectionToken); localStorage.setItem('mp_pending_selfhelp_lang', lang || 'nl'); } catch (e) {}
+  const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
+  let url = `${SELF_HELP_STRIPE_LINK}${sep}client_reference_id=${encodeURIComponent('selfhelp:' + reflectionToken)}`;
+  if (email) url += `&prefilled_email=${encodeURIComponent(email)}`;
+  window.location.href = url;
+}
+
+function statusLabel(status) {
+  const labels = {
+    wachten_op_verhalen: 'Waiting for stories',
+    verhalen_klaar_vervolgvragen_genereren: 'Follow-up questions are being prepared',
+    wachten_op_vervolgvragen: 'Waiting for follow-up questions',
+    document_genereren: 'Document is being prepared',
+    klaar: 'Ready',
+    veiligheid_gestopt: 'Stopped for safety reasons',
+    document_mislukt: 'Something went wrong, please contact us',
+    vervolgvragen_mislukt: 'Something went wrong, please contact us',
+  };
+  if ((status || '').startsWith('nieuwe_ronde_')) return 'Follow-up in progress';
+  return labels[status] || status;
+}
+
+function planLabel(plan) {
+  const labels = { gratis: 'Free', los: 'One conversation', starter: 'Starter', plus: 'Plus', pro: 'Pro' };
+  return labels[plan] || plan;
+}
+
+async function logout() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  window.location.href = '/en/login.html';
+}
+
+async function loadSessionLinks(sessionToken, containerId) {
+  const box = document.getElementById(containerId);
+  box.innerHTML = '<p style="color:var(--ink-soft);font-size:.85rem">Loading...</p>';
+  try {
+    const res = await fetch(`/.netlify/functions/get-session-links?token=${sessionToken}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    box.innerHTML = data.links.map(l => `
+      <div style="margin-bottom:10px">
+        <div style="font-size:.82rem;color:var(--ink-soft);margin-bottom:4px">${esc(l.name)}${l.isOrganizer ? ' (you)' : ''} · ${esc(l.email) || 'no email address'}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <input type="text" readonly value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
+          <button onclick="navigator.clipboard.writeText('${window.location.origin}${l.accessLink}')" class="icon-btn" title="Copy">📋</button>
+        </div>
+        ${!l.isOrganizer ? `
+        <div style="font-size:.72rem;color:var(--ink-soft);margin-bottom:4px">Change email address of ${esc(l.name)}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="email" id="emailEdit_${l.id}" placeholder="New email address" value="${esc(l.email) || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:.78rem">
+          <button type="button" class="btn outline" style="padding:6px 10px;font-size:.75rem" onclick="updateParticipantEmail('${sessionToken}', '${l.id}', 'emailEdit_${l.id}', this)">Change email</button>
+        </div>
+        <div id="emailEditMsg_${l.id}" style="font-size:.75rem;margin-top:4px"></div>` : ''}
+      </div>`).join('');
+  } catch (err) {
+    box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${esc(err.message)}</p>`;
+  }
+}
+
+async function updateParticipantEmail(sessionToken, participantId, inputId, btn) {
+  const input = document.getElementById(inputId);
+  const msg = document.getElementById(`emailEditMsg_${participantId}`);
+  const newEmail = input.value.trim();
+  msg.textContent = '';
+  msg.style.color = '';
+  if (!newEmail || !newEmail.includes('@')) {
+    msg.style.color = '#8A4222';
+    msg.textContent = 'Please enter a valid email address.';
+    return;
+  }
+  btn.disabled = true;
+  const oldLabel = btn.textContent;
+  btn.textContent = 'Working...';
+  try {
+    const res = await fetch('/.netlify/functions/update-participant-email', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizerToken: sessionToken, participantId, newEmail }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    msg.style.color = 'var(--sage)';
+    msg.textContent = 'Done. This person received an email with their link at this new address.';
+  } catch (err) {
+    msg.style.color = '#8A4222';
+    msg.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldLabel;
+  }
+}
+
+async function startFollowup(accessLinkAbsolute, btn) {
+  const t = new URLSearchParams(accessLinkAbsolute.split('?')[1]).get('token');
+  btn.disabled = true;
+  btn.textContent = 'One moment...';
+  try {
+    const res = await fetch('/.netlify/functions/start-new-round', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: t }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    window.location.href = accessLinkAbsolute;
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Fill in follow-up document';
+    alert(err.message);
+  }
+}
+
+async function deleteSession(sessionId, btn) {
+  if (!confirm('Are you sure you want to permanently delete this conversation? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Working...';
+  try {
+    const res = await fetch('/.netlify/functions/delete-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentAccessToken}` },
+      body: JSON.stringify({ sessionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    load();
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Delete conversation';
+  }
+}
+
+async function deleteReflection(reflectionId, btn) {
+  if (!confirm('Are you sure you want to permanently delete this reflection? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Working...';
+  try {
+    const res = await fetch('/.netlify/functions/delete-reflection', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentAccessToken}` },
+      body: JSON.stringify({ reflectionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    load();
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+    btn.textContent = 'Delete reflection';
+  }
+}
+
+async function load() {
+  if (!supabaseClient) {
+    app.innerHTML = `<div class="error-box">Something went wrong with the configuration of this page. Please contact us at middlepoint@zohomail.eu if this continues.</div>`;
+    return;
+  }
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    window.location.href = '/en/login.html';
+    return;
+  }
+  currentAccessToken = session.access_token;
+
+  try {
+    const res = await fetch('/.netlify/functions/get-my-sessions', {
+      headers: { 'Authorization': `Bearer ${currentAccessToken}` },
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      app.innerHTML = `
+        <span class="label">Error</span>
+        <h1>Something went wrong</h1>
+        <p style="color:var(--ink-soft)">${esc(data.error)}</p>
+        <a href="/en/login.html" class="btn clay">Log in again</a>`;
+      return;
+    }
+
+    const isPaidPlan = data.plan && data.plan !== 'gratis';
+    const hasSubscription = data.plan && !['gratis', 'los'].includes(data.plan);
+    const hasSessions = data.sessions && data.sessions.length > 0;
+    const hasReflections = data.reflections && data.reflections.length > 0;
+
+    if (!hasSessions && !hasReflections) {
+      app.innerHTML = `
+        <span class="label">My conversations</span>
+        <h1>Nothing found yet</h1>
+        <p style="color:var(--ink-soft)">We found no conversations or reflections linked to ${esc(data.email)}.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <a href="/en/reflectie.html" class="btn clay">Start a free reflection</a>
+          <a href="#" onclick="logout(); return false;" style="color:var(--clay);font-size:.9rem;text-decoration:none;font-weight:600">Log out</a>
+        </div>`;
+      return;
+    }
+
+    const countLine = `${hasSessions ? data.sessions.length : 0} conversation${(data.sessions && data.sessions.length === 1) ? '' : 's'}, ${hasReflections ? data.reflections.length : 0} reflection${(data.reflections && data.reflections.length === 1) ? '' : 's'}`;
+
+    app.innerHTML = `
+      <span class="label">My conversations</span>
+      <h1>Welcome back</h1>
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:#EFF4ED;border-radius:var(--radius)">
+        <span style="font-size:.88rem;color:var(--ink)">Logged in as <strong id="currentEmailDisplay">${esc(firstName(data.name))}</strong></span>
+        <a href="#" id="logoutBtn" style="color:var(--clay);font-size:.85rem;text-decoration:none;font-weight:600">Log out</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;background:var(--clay-soft);color:var(--clay);padding:4px 10px;border-radius:999px">${planLabel(data.plan)}</span>
+        ${hasSubscription ? `<a href="${STRIPE_PORTAL}" target="_blank" class="btn outline" style="padding:7px 14px;font-size:.82rem">Manage or cancel subscription</a>` : ''}
+      </div>
+      <p style="font-size:.82rem;color:var(--ink-soft);margin-bottom:20px">${countLine}</p>
+
+      ${isPaidPlan ? `
+      <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:16px">
+        <p style="margin:0;font-size:.85rem">All your documents can always be found here, including your follow-up documents and the answers you filled in yourself. As soon as your document is ready, you can start a follow-up below at any time, you do not have to wait for that.</p>
+      </div>` : ''}
+${hasReflections ? `
+      <div style="margin-bottom:40px">
+        <span class="label" style="display:block;margin-bottom:16px">My reflections</span>
+        <div id="reflectionsList"></div>
+      </div>` : ''}
+
+      <span class="label" style="display:block;margin-bottom:16px">Conversations with others</span>
+      ${hasSessions ? `<div id="sessionsList"></div>` : `
+      <div class="card" style="margin-bottom:24px">
+        <p style="margin:0;color:var(--ink-soft)">No paid conversation started yet.</p>
+      </div>`}
+
+      <div style="margin-top:32px;display:flex;gap:10px;flex-wrap:wrap">
+        <a href="/en/new.html" class="btn outline">Start a new conversation</a>
+        <a href="/en/reflectie.html" class="btn outline">Create a new reflection</a>
+      </div>`;
+
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    if (hasSessions) {
+      const list = document.getElementById('sessionsList');
+      data.sessions.forEach((s, idx) => {
+        const card = document.createElement('div');
+        card.className = 'session-card';
+
+        const isKlaar = s.status === 'klaar';
+        const isFollowupBezig = (s.status || '').startsWith('nieuwe_ronde_');
+        const statusText = statusLabel(s.status);
+        const linksBoxId = `linksBox_${idx}`;
+        const followupUsed = !!s.followupUsed;
+
+        let followupButton = '';
+        if (isKlaar && s.plan && s.plan !== 'gratis' && !followupUsed) {
+          followupButton = `<button type="button" class="btn outline" onclick="startFollowup('${window.location.origin}${s.accessLink}', this)">Fill in follow-up document</button>`;
+        } else if (isFollowupBezig) {
+          followupButton = `<a href="${s.accessLink}" class="btn outline">Continue with follow-up</a>`;
+        }
+
+        card.innerHTML = `
+          <div class="session-card-header">
+            <div>
+              <div class="who">${esc(catLabel(s.category))}</div>
+              <div class="session-card-meta">
+                Started on ${new Date(s.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}${s.updatedAt ? ` · last updated ${new Date(s.updatedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
+              </div>
+            </div>
+            <span class="session-status-badge" style="background:${isKlaar || isFollowupBezig ? '#EFF4ED' : 'var(--clay-soft)'};color:${isKlaar || isFollowupBezig ? 'var(--sage)' : 'var(--clay)'}">
+              ${statusText}
+            </span>
+          </div>
+          <div class="session-card-actions">
+            <a href="${s.accessLink}" class="btn outline">My story / status</a>
+            <a href="${s.accessLink}&view=antwoorden" class="btn outline">View my answers</a>
+            ${s.documentLink ? `<a href="${s.documentLink}" class="btn clay">View document</a>` : ''}
+            ${followupButton}
+            ${s.isOrganizer ? `<button class="btn outline" onclick="toggleLinks('${s.accessLink.split('token=')[1]}', '${linksBoxId}', this)">View all links</button>` : ''}
+          </div>
+          ${s.isOrganizer ? `<div id="${linksBoxId}" style="display:none;margin-top:8px"></div>` : ''}
+          <div class="session-card-footer">
+            <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteSession('${s.sessionId}', this)">Delete conversation</button>
+          </div>`;
+
+        list.appendChild(card);
+      });
+    }
+
+    if (hasReflections) {
+      const rList = document.getElementById('reflectionsList');
+      const recLabel = { zelf: 'Mostly something for yourself', gesprek: 'Conversation recommended', twijfel: 'Could go either way' };
+      const recColor = { zelf: 'var(--sage)', gesprek: 'var(--clay)', twijfel: 'var(--navy)' };
+      data.reflections.forEach(r => {
+        const rCard = document.createElement('div');
+        rCard.className = 'session-card';
+        const isKlaar = r.status === 'klaar';
+        rCard.innerHTML = `
+          <div class="session-card-header">
+            <div>
+              <div class="who">${esc(catLabel(r.category)) || 'Reflection'}</div>
+              <div class="session-card-meta">${new Date(r.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            </div>
+            ${isKlaar && r.recommendation ? `<span class="session-status-badge" style="background:#EFF4ED;color:${recColor[r.recommendation] || 'var(--ink-soft)'}">${recLabel[r.recommendation] || r.recommendation}</span>` : ''}
+          </div>
+      ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${esc(r.situationSummary)}</p>` : ''}
+        <div class="session-card-actions">
+            <a href="${langPrefix(r.lang)}/reflectie.html?token=${r.token}" class="btn outline">View reflection</a>
+            ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${esc(data.email)}', '${r.lang || 'nl'}')">Get my action plan for €2.99</button>` : ''}
+            <a href="${langPrefix(r.lang)}/new.html?fromReflection=${r.token}" class="btn outline">Turn it into a conversation</a>
+          </div>
+          <div class="session-card-footer">
+            <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteReflection('${r.id}', this)">Delete reflection</button>
+          </div>`;
+        rList.appendChild(rCard);
+      });
+    }
+
+  } catch (err) {
+    app.innerHTML = `<div class="error-box">Something went wrong: ${esc(err.message)}</div>`;
+  }
+}
+
+function toggleLinks(sessionToken, containerId, btn) {
+  const box = document.getElementById(containerId);
+  if (box.style.display === 'none') {
+    box.style.display = 'block';
+    btn.textContent = 'Hide links';
+    loadSessionLinks(sessionToken, containerId);
+  } else {
+    box.style.display = 'none';
+    btn.textContent = 'View all links';
+  }
+}
+
+load();
+</script>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+</footer>
+</body>
+</html>

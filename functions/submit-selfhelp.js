@@ -1,13 +1,15 @@
 const { getSupabase } = require('./_supabase');
+const { reqLang, tr } = require('./_lang');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { token, content } = JSON.parse(event.body || '{}');
+    const { token, content, lang } = JSON.parse(event.body || '{}');
+    const L = reqLang(event, lang);
     if (!token || !content) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'token en content zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'token en content zijn verplicht.', 'token and content are required.') }) };
     }
     const supabase = getSupabase();
     const { data: reflection } = await supabase
@@ -16,10 +18,10 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (!reflection) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Reflectie niet gevonden.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Reflectie niet gevonden.', 'Reflection not found.') }) };
     }
     if (!reflection.self_help_paid) {
-      return { statusCode: 402, body: JSON.stringify({ error: 'Deze toevoeging is nog niet betaald.' }) };
+      return { statusCode: 402, body: JSON.stringify({ error: tr(L, 'Deze toevoeging is nog niet betaald.', 'This addition has not been paid for yet.') }) };
     }
 
     await supabase.from('reflections').update({

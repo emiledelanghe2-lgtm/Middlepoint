@@ -28,7 +28,11 @@
 <meta property="og:locale" content="nl_BE">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://middlepoint.net/">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/">
 <link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .hoe-card{ position:relative; }
@@ -75,6 +79,7 @@
     <a href="/login.html">Mijn gesprekken</a>
   </div>
 <div class="nav-actions">
+    <a href="/en/" class="lang-switch" data-lang="en" hreflang="en" lang="en" title="English">EN</a>
     <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
     <a href="/login.html" class="hint-chip" id="authNavBtn" style="text-decoration:none;align-self:center">Inloggen / Registreren</a>
     <a href="/new.html" class="btn">Start een gesprek</a>

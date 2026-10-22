@@ -9,7 +9,11 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="robots" content="noindex, nofollow">
 <title>Mijn gesprekken, Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/mijn-gesprekken.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/mijn-gesprekken.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/mijn-gesprekken.html">
 <link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -25,6 +29,7 @@
     <a href="/login.html" class="current" aria-current="page">Mijn gesprekken</a>
   </div>
   <div class="nav-actions">
+    <a href="/en/mijn-gesprekken.html" class="lang-switch" data-lang="en" hreflang="en" lang="en" title="English">EN</a>
     <a href="/admin.html" id="adminNavBtn" class="hint-chip" style="display:none;text-decoration:none">Admin pagina</a>
     <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
 <a href="/new.html" class="btn">Start een gesprek</a>
@@ -107,8 +112,9 @@ let currentAccessToken = null;
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function firstName(name) { return (name || '').trim().split(/\s+/)[0] || name || ''; }
-function goToSelfHelpPayment(reflectionToken, email) {
-  try { localStorage.setItem('mp_pending_selfhelp', reflectionToken); } catch (e) {}
+function langPrefix(l) { return l === 'en' ? '/en' : ''; }
+function goToSelfHelpPayment(reflectionToken, email, lang) {
+  try { localStorage.setItem('mp_pending_selfhelp', reflectionToken); localStorage.setItem('mp_pending_selfhelp_lang', lang || 'nl'); } catch (e) {}
   const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
   let url = `${SELF_HELP_STRIPE_LINK}${sep}client_reference_id=${encodeURIComponent('selfhelp:' + reflectionToken)}`;
   if (email) url += `&prefilled_email=${encodeURIComponent(email)}`;
@@ -406,9 +412,9 @@ ${hasReflections ? `
           </div>
       ${r.situationSummary ? `<p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:12px">${esc(r.situationSummary)}</p>` : ''}
         <div class="session-card-actions">
-            <a href="/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
-            ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${esc(data.email)}')">Ontvang mijn actieplan – €2,99</button>` : ''}
-            <a href="/new.html?fromReflection=${r.token}" class="btn outline">Maak er een gesprek van</a>
+            <a href="${langPrefix(r.lang)}/reflectie.html?token=${r.token}" class="btn outline">Bekijk reflectie</a>
+            ${r.selfHelpStatus !== 'klaar' ? `<button type="button" class="btn clay" onclick="goToSelfHelpPayment('${r.token}', '${esc(data.email)}', '${r.lang || 'nl'}')">Ontvang mijn actieplan – €2,99</button>` : ''}
+            <a href="${langPrefix(r.lang)}/new.html?fromReflection=${r.token}" class="btn outline">Maak er een gesprek van</a>
           </div>
           <div class="session-card-footer">
             <button type="button" class="btn outline" style="padding:8px 14px;font-size:.8rem;color:#8A4222;border-color:#8A4222" onclick="deleteReflection('${r.id}', this)">Verwijder reflectie</button>

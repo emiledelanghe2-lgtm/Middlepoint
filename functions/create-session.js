@@ -1,4 +1,5 @@
 const { getSupabase } = require('./_supabase');
+const { reqLang, pre, tr } = require('./_lang');
 
 const PLAN_LIMITS = {
   gratis: 1,
@@ -14,6 +15,7 @@ exports.handler = async (event) => {
   }
   try {
     const body = JSON.parse(event.body || '{}');
+    const L = reqLang(event, body.lang);
     const {
       category,
       organizerName,
@@ -31,7 +33,7 @@ exports.handler = async (event) => {
     } = body;
 
     if (!category || !organizerName || !organizerEmail || !Array.isArray(participantNames) || participantNames.length < 1) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'category, organizerName, organizerEmail en minstens 1 participantNames zijn verplicht.', 'category, organizerName, organizerEmail and at least 1 participantNames are required.') }) };
     }
 
     const participates = organizerParticipates !== false;
@@ -42,8 +44,8 @@ exports.handler = async (event) => {
         statusCode: 400,
         body: JSON.stringify({
           error: participates
-            ? 'Er is minstens 1 andere deelnemer naast jezelf nodig.'
-            : 'Als derde persoon (je doet zelf niet mee) zijn er minstens 2 deelnemers nodig voor een gesprek.',
+            ? tr(L, 'Er is minstens 1 andere deelnemer naast jezelf nodig.', 'At least 1 other participant besides yourself is needed.')
+            : tr(L, 'Als derde persoon (je doet zelf niet mee) zijn er minstens 2 deelnemers nodig voor een gesprek.', 'As a third party (you are not taking part yourself) at least 2 participants are needed for a conversation.'),
         }),
       };
     }
@@ -54,7 +56,7 @@ exports.handler = async (event) => {
     if (missingEmailIndex !== -1) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: `E-mailadres ontbreekt voor deelnemer "${participantNames[missingEmailIndex]}". Een e-mailadres is verplicht voor elke deelnemer.` }),
+        body: JSON.stringify({ error: tr(L, `E-mailadres ontbreekt voor deelnemer "${participantNames[missingEmailIndex]}". Een e-mailadres is verplicht voor elke deelnemer.`, `Email address is missing for participant "${participantNames[missingEmailIndex]}". An email address is required for every participant.`) }),
       };
     }
 
@@ -71,14 +73,14 @@ exports.handler = async (event) => {
         .eq('id', organizationId)
         .maybeSingle();
       if (!org) {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Ongeldige organisatie.' }) };
+        return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Ongeldige organisatie.', 'Invalid organization.') }) };
       }
       const used = org.sessions_used_this_period || 0;
       if (used >= (org.session_limit || 0)) {
         return {
           statusCode: 403,
           body: JSON.stringify({
-            error: `Jullie hebben de limiet van ${org.session_limit} gesprekken voor ${org.name} bereikt voor deze periode.`,
+            error: tr(L, `Jullie hebben de limiet van ${org.session_limit} gesprekken voor ${org.name} bereikt voor deze periode.`, `You have reached the limit of ${org.session_limit} conversations for ${org.name} for this period.`),
             limitReached: true,
           }),
         };
@@ -107,7 +109,7 @@ exports.handler = async (event) => {
           return {
             statusCode: 403,
             body: JSON.stringify({
-              error: 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.',
+              error: tr(L, 'Je hebt de gratis proefversie al gebruikt. Kies een betaald plan om verder te gaan.', 'You have already used the free trial. Choose a paid plan to continue.'),
               limitReached: true,
             }),
           };
@@ -120,7 +122,7 @@ exports.handler = async (event) => {
             return {
               statusCode: 403,
               body: JSON.stringify({
-                error: `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`,
+                error: tr(L, `Je hebt je limiet bereikt voor het ${planLabels[customerPlan] || customerPlan}-plan (${limit} gesprekken per maand). Je limiet wordt volgende maand automatisch opnieuw ingesteld.`, `You have reached your limit for the ${planLabels[customerPlan] || customerPlan} plan (${limit} conversations per month). Your limit is automatically reset next month.`),
                 limitReached: true,
               }),
             };
@@ -142,6 +144,8 @@ exports.handler = async (event) => {
         include_followups: includeFollowups !== false,
         pro_extra_questions: proExtraQuestions || [],
         organization_id: organizationId || null,
+        // Only written for English sessions, so Dutch sessions work even before migration 009 ran.
+        ...(L === 'en' ? { lang: 'en' } : {}),
       })
       .select()
       .single();
@@ -222,7 +226,7 @@ exports.handler = async (event) => {
           id: p.id,
           name: p.display_name,
           isOrganizer: p.is_organizer,
-          accessLink: `/story.html?token=${p.access_token}`,
+          accessLink: `${pre(L)}/story.html?token=${p.access_token}`,
         })),
       }),
     };

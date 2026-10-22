@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Middlepoint for business | Conflict mediation for teams and HR</title>
+<meta name="description" content="Middlepoint for companies, HR teams, therapists, schools and lawyers. Start conflict mediation between others, with professional insights included.">
+<meta property="og:title" content="Middlepoint for business | Conflict mediation for teams and HR">
+<meta property="og:description" content="Start conversations between others, with an objective overview and professional insights included.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/voor-professionals.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/voor-professionals.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/voor-professionals.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/voor-professionals.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/voor-professionals.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html" class="current" aria-current="page">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/voor-professionals.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+    <a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<section class="section" style="max-width:760px">
+  <span class="label">For business &amp; professionals</span>
+  <h1 style="font-size:2.2rem;margin-bottom:16px">Conflict mediation on an objective basis, not guesswork</h1>
+<p style="color:var(--ink-soft);font-size:1.05rem;margin-bottom:32px">For companies, HR teams, therapists, teachers and lawyers who want to start a conversation between two (or more) other people, without being a party themselves.</p>
+
+  <div class="card" style="background:var(--clay-soft);border:none;padding:24px;margin-bottom:32px">
+    <p style="margin:0 0 12px;font-weight:600">Why this makes your work easier</p>
+    <p style="margin:0;color:var(--ink-soft)">Today you often start a mediation with two sides of the same story that you first have to hear out separately, often in separate meetings. Middlepoint does that for you: both parties share their side separately and in complete calm, and you get an objective overview ready before your first session begins. That saves time, and you start the conversation with facts instead of guesswork.</p>
+  </div>
+  <div class="grid-3" style="margin-bottom:40px">
+    <div class="card">
+      <span class="icon" aria-hidden="true">✎</span>
+      <h3>Schools</h3>
+      <p>Mediate between students based on what each of them said separately, aimed at understanding rather than punishment.</p>
+    </div>
+    <div class="card">
+      <span class="icon" aria-hidden="true">▣</span>
+      <h3>Companies &amp; HR</h3>
+      <p>Start a conversation between two colleagues, or between an employee and a manager, with an objective overview as the starting point for your conversation.</p>
+    </div>
+    <div class="card">
+      <span class="icon" aria-hidden="true">◇</span>
+      <h3>Therapists &amp; lawyers</h3>
+      <p>Let clients share their side separately in advance. Begin the session with the full picture already on the table.</p>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <span class="label">What you get extra</span>
+    <h2>More than an ordinary conversation</h2>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <h3>Professional insight</h3>
+    <p style="color:var(--ink-soft)">In addition to the regular shared document, as a facilitator you receive an extra, professionally worded insight, never visible to the participants themselves.</p>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <h3>Full choice over who sees what</h3>
+    <p style="color:var(--ink-soft)">You decide whether the participants get to see the document, or only you. Nothing happens automatically.</p>
+  </div>
+ <div class="card" style="margin-bottom:40px">
+    <h3>Custom pricing</h3>
+    <p style="color:var(--ink-soft)">No fixed package, we look together at what fits your situation and volume.</p>
+  </div>
+
+  <div class="card" style="background:#EFF4ED;border:none;padding:20px;margin-bottom:40px">
+    <p style="margin:0;font-size:.9rem"><strong>About privacy:</strong> you decide who sees the document. Data of minors or clients is handled with the same care as in any other conversation. More details in our <a href="/en/privacy.html">privacy policy</a>.</p>
+  </div>
+
+<div class="card" style="background:#EFF4ED;border:none;padding:20px;margin-bottom:32px">
+    <p style="margin:0;font-size:.9rem"><strong>Already a customer?</strong> You do not need a separate account. Log in via <a href="/en/login.html">My conversations</a> with the same email address and start a new conversation there. We recognise you automatically.</p>
+  </div>
+
+  <div class="section-head">
+    <span class="label">Not a customer yet?</span>
+    <h2>Tell us briefly about your situation</h2>
+  </div>
+
+  <div id="formMsg" style="display:none;margin-bottom:16px"></div>
+  <form id="proContactForm">
+    <div class="field">
+      <label for="pName">Your name *</label>
+      <input type="text" id="pName" required>
+    </div>
+    <div class="field">
+      <label for="pEmail">Your email address *</label>
+      <input type="email" id="pEmail" required>
+    </div>
+<div class="field">
+      <label for="pOrgType">Type of organisation *</label>
+      <select id="pOrgType" required>
+        <option value="">Choose...</option>
+        <option value="School">School</option>
+        <option value="Therapeutenpraktijk">Therapy practice</option>
+        <option value="HR-afdeling">HR department</option>
+        <option value="Advocatenkantoor">Law firm</option>
+        <option value="Andere">Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="pOrgName">Name of the organisation *</label>
+      <input type="text" id="pOrgName" required placeholder="e.g. Riverside Primary School">
+    </div>
+    <div class="field">
+      <label for="pVolume">Estimated number of conversations per month (optional)</label>
+      <input type="text" id="pVolume" placeholder="e.g. 10 to 20">
+    </div>
+    <div class="field">
+      <label for="pMessage">Briefly tell us what you would like to use Middlepoint for (optional)</label>
+      <textarea id="pMessage"></textarea>
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="pSubmitBtn">Send request</button>
+  </form>
+</section>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+</footer>
+
+<script>
+document.getElementById('proContactForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('pSubmitBtn');
+  const msg = document.getElementById('formMsg');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    const res = await fetch('/.netlify/functions/submit-pro-contact', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+        name: document.getElementById('pName').value.trim(),
+        email: document.getElementById('pEmail').value.trim(),
+        orgType: document.getElementById('pOrgType').value,
+        orgName: document.getElementById('pOrgName').value.trim(),
+        volume: document.getElementById('pVolume').value.trim(),
+        message: document.getElementById('pMessage').value.trim(),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    document.getElementById('proContactForm').style.display = 'none';
+    msg.style.display = 'block';
+    msg.style.color = 'var(--sage)';
+    msg.textContent = 'Thank you! We will get in touch with you personally as soon as possible.';
+  } catch (err) {
+    msg.style.display = 'block';
+    msg.style.color = '#8A4222';
+    msg.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Send request';
+  }
+});
+</script>
+</body>
+</html>

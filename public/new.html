@@ -28,7 +28,11 @@
 <meta property="og:locale" content="nl_BE">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://middlepoint.net/new.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/new.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/new.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/new.html">
 <link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
 <script src="/pricing-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -105,6 +109,7 @@
     <a href="/login.html">Mijn gesprekken</a>
   </div>
   <div class="nav-actions">
+    <a href="/en/new.html" class="lang-switch" data-lang="en" hreflang="en" lang="en" title="English">EN</a>
     <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
   </div>
@@ -859,6 +864,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   const fromReflectionParam = urlParams.get('fromReflection');
   const planParam = urlParams.get('plan');
   const pending = loadPending();
+
+  // Back from Stripe on the Dutch URL while the draft was started in English: continue on the English page.
+  if (isPaid && pending && pending.lang === 'en' && window.location.pathname.indexOf('/en/') !== 0) {
+    window.location.replace('/en/new.html' + window.location.search);
+    return;
+  }
 
   if (isPaid || fromReflectionParam || planParam || pending) {
     showFormView(false);

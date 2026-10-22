@@ -1,12 +1,14 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, reqLang, tr } = require('./_lang');
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { token, content, isAnonymous } = JSON.parse(event.body || '{}');
+    const { token, content, isAnonymous, lang } = JSON.parse(event.body || '{}');
+    let L = reqLang(event, lang);
     if (!token || !content) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'token en content zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'token en content zijn verplicht.', 'token and content are required.') }) };
     }
     const supabase = getSupabase();
     const { data: participant } = await supabase
@@ -15,10 +17,11 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (!participant) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Ongeldige link.', 'Invalid link.') }) };
     }
+    L = normLang(participant.sessions.lang);
     if (participant.sessions.status !== 'wachten_op_vervolgvragen') {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Er zijn momenteel geen openstaande vervolgvragen voor deze sessie.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Er zijn momenteel geen openstaande vervolgvragen voor deze sessie.', 'There are currently no open follow-up questions for this session.') }) };
     }
     const { data: existingEntry } = await supabase
       .from('entries')
@@ -28,7 +31,7 @@ exports.handler = async (event) => {
       .eq('round', 2)
       .maybeSingle();
     if (existingEntry) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Je hebt de vervolgvragen al ingevuld.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Je hebt de vervolgvragen al ingevuld.', 'You have already filled in the follow-up questions.') }) };
     }
 
     await supabase.from('entries').insert({

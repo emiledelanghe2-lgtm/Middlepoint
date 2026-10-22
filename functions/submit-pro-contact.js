@@ -1,3 +1,5 @@
+const { reqLang, tr } = require('./_lang');
+
 function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -8,14 +10,15 @@ exports.handler = async (event) => {
   }
   try {
    const { name, email, orgType, orgName, volume, message } = JSON.parse(event.body || '{}');
+    const L = reqLang(event);
     if (!name || !email || !orgType || !orgName) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Naam, e-mailadres, type en naam van de organisatie zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Naam, e-mailadres, type en naam van de organisatie zijn verplicht.', 'Name, email address, type and name of the organization are required.') }) };
     }
     if (!email.includes('@')) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Vul een geldig e-mailadres in.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Vul een geldig e-mailadres in.', 'Please enter a valid email address.') }) };
     }
     if (!process.env.RESEND_API_KEY) {
-      return { statusCode: 503, body: JSON.stringify({ error: 'E-mailverzending is nog niet ingesteld.' }) };
+      return { statusCode: 503, body: JSON.stringify({ error: tr(L, 'E-mailverzending is nog niet ingesteld.', 'Email sending is not set up yet.') }) };
     }
 
     const html = `

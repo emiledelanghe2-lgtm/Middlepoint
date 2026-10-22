@@ -1,4 +1,6 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, pre, tr, categoryLabel, greeting } = require('./_lang');
+const { SAFETY_REFLECTION_EN, reflectionSystemEn } = require('./_prompts-en');
 const { emailButtonHtml } = require('./_email-button');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
@@ -24,8 +26,8 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-async function checkSafety(text) {
-  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een reflectie-app. Je leest de tekst van iemand die worstelt met een situatie met iemand anders. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst.
+async function checkSafety(text, L) {
+  const systemPrompt = L === 'en' ? SAFETY_REFLECTION_EN : `Je bent een strenge maar terughoudende veiligheidsfilter voor een reflectie-app. Je leest de tekst van iemand die worstelt met een situatie met iemand anders. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst.
 
 Stop enkel bij: actieve suicidale gedachten of plannen, kindermisbruik, seksueel geweld of verkrachting, een poging tot doodslag of moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
 
@@ -46,7 +48,7 @@ function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-async function sendReflectionReadyEmail(toEmail, toName, link) {
+async function sendReflectionReadyEmail(toEmail, toName, link, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     const safeToName = escHtml(toName);
@@ -59,8 +61,14 @@ async function sendReflectionReadyEmail(toEmail, toName, link) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: 'Jouw reflectie staat klaar',
-        html: `
+        subject: tr(L, 'Jouw reflectie staat klaar', 'Your reflection is ready'),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', safeToName)}</h2>
+            <p>Your personal reflection is ready.</p>
+            ${emailButtonHtml(link, 'View my reflection')}
+            <p style="color:#888;font-size:.85rem">Keep this link, it is your personal access.</p>
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
             <p>Je persoonlijke reflectie staat klaar.</p>
@@ -103,8 +111,9 @@ exports.handler = async (event) => {
 
     const { data: reflection } = await supabase.from('reflections').select('*').eq('id', reflectionId).single();
     if (!reflection) return { statusCode: 404, body: JSON.stringify({ error: 'Reflectie niet gevonden.' }) };
+    const L = normLang(reflection.lang);
 
-    const safety = await checkSafety(reflection.raw_content);
+    const safety = await checkSafety(reflection.raw_content, L);
     if (safety.stop) {
       await supabase.from('reflections').update({
         status: 'veiligheid_gestopt',
@@ -113,7 +122,7 @@ exports.handler = async (event) => {
       return { statusCode: 200, body: JSON.stringify({ ok: true, stopped: true }) };
     }
 
-    const systemPrompt = `Je bent een warme, eerlijke reflectiecoach. Iemand deelt een situatie in de categorie "${reflection.category}". Jij helpt die persoon zichzelf beter te begrijpen, VOOR die persoon beslist of een gesprek met de ander nodig is.
+    const systemPrompt = L === 'en' ? reflectionSystemEn(categoryLabel(L, reflection.category)) : `Je bent een warme, eerlijke reflectiecoach. Iemand deelt een situatie in de categorie "${reflection.category}". Jij helpt die persoon zichzelf beter te begrijpen, VOOR die persoon beslist of een gesprek met de ander nodig is.
 
 BELANGRIJK, HOE JE DIT AANPAKT: ga snel naar de kern, geen overbodige omwegen. Zoek naar wat er ONDER het oppervlakkige onderwerp zit, maar enkel als de antwoorden daar aanwijzingen voor geven. Durf eerlijk te zijn, ook als het confronterend is, maar nooit als beschuldiging. Formuleer invoelend: "het lijkt erop dat dit ook ging over..." in plaats van "je zit fout omdat...".
 
@@ -179,7 +188,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
   "recommendation_text": "..."
 }`;
 
-    const userPrompt = `${reflection.raw_content}\n\nGeef je reflectie in het gevraagde JSON-formaat, in het Nederlands.`;
+    const userPrompt = tr(L, `${reflection.raw_content}\n\nGeef je reflectie in het gevraagde JSON-formaat, in het Nederlands.`, `${reflection.raw_content}\n\nGive your reflection in the requested JSON format, in English.`);
 
    const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
@@ -187,11 +196,11 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
 
     const keyPoints = parsed.key_points || [];
     if (parsed.recommendation === 'gesprek') {
-      keyPoints.push('Tip: een gesprek met de ander lijkt aangeraden, zie onderaan deze pagina.');
+      keyPoints.push(tr(L, 'Tip: een gesprek met de ander lijkt aangeraden, zie onderaan deze pagina.', 'Tip: a conversation with the other person seems advisable, see the bottom of this page.'));
     } else if (parsed.recommendation === 'twijfel') {
-      keyPoints.push('Tip: overweeg Reflectie+ of een gesprek met de ander, zie onderaan deze pagina.');
+      keyPoints.push(tr(L, 'Tip: overweeg Reflectie+ of een gesprek met de ander, zie onderaan deze pagina.', 'Tip: consider Reflection+ or a conversation with the other person, see the bottom of this page.'));
     } else {
-      keyPoints.push('Tip: overweeg Reflectie+ voor een concreet actieplan, zie onderaan deze pagina.');
+      keyPoints.push(tr(L, 'Tip: overweeg Reflectie+ voor een concreet actieplan, zie onderaan deze pagina.', 'Tip: consider Reflection+ for a concrete action plan, see the bottom of this page.'));
     }
 
     await supabase.from('reflections').update({
@@ -205,7 +214,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat:
     }).eq('id', reflectionId);
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
-    await sendReflectionReadyEmail(reflection.email, reflection.name, `${siteUrl}/reflectie.html?token=${reflection.access_token}`);
+    await sendReflectionReadyEmail(reflection.email, reflection.name, `${siteUrl}${pre(L)}/reflectie.html?token=${reflection.access_token}`, L);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {

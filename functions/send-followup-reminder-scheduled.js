@@ -1,7 +1,8 @@
 const { getSupabase } = require('./_supabase');
 const { emailButtonHtml } = require('./_email-button');
+const { normLang, pre, tr, greeting } = require('./_lang');
 
-async function sendReminderEmail(toEmail, toName, link) {
+async function sendReminderEmail(toEmail, toName, link, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     await fetch('https://api.resend.com/emails', {
@@ -13,8 +14,15 @@ async function sendReminderEmail(toEmail, toName, link) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: 'Tijd voor een korte opvolging?',
-        html: `
+        subject: tr(L, 'Tijd voor een korte opvolging?', 'Time for a short follow-up?'),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', toName)}</h2>
+            <p>It has now been about a week since your document was ready. Sometimes it helps to look back for a moment: has anything changed yet, and where is there still work to do?</p>
+            <p>You can fill in your follow-up document whenever it suits you, together with the other participant.</p>
+            ${emailButtonHtml(link, 'Fill in your follow-up')}
+            <p style="color:#888;font-size:.85rem">This is a one-time reminder. You can also always start the follow-up yourself via My conversations, at any moment.</p>
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Het is nu ongeveer een week geleden dat jullie document klaar was. Soms helpt het om even terug te blikken: is er al iets veranderd, en waar ligt nog werk?</p>
@@ -39,7 +47,7 @@ exports.handler = async () => {
     // geen herinnering verstuurd is.
     const { data: candidates } = await supabase
       .from('sessions')
-      .select('id, plan, followup_reminder_sent, documents(created_at, version)')
+      .select('*, documents(created_at, version)')
       .eq('status', 'klaar')
       .eq('followup_reminder_sent', false)
       .neq('plan', 'gratis');
@@ -67,7 +75,7 @@ exports.handler = async () => {
       await Promise.all(
         (participants || [])
           .filter(p => p.email)
-          .map(p => sendReminderEmail(p.email, p.display_name, `${siteUrl}/story.html?token=${p.access_token}`))
+          .map(p => sendReminderEmail(p.email, p.display_name, `${siteUrl}${pre(normLang(session.lang))}/story.html?token=${p.access_token}`, normLang(session.lang)))
       );
 
       await supabase

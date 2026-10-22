@@ -1,17 +1,19 @@
 const { getSupabase } = require('./_supabase');
+const { reqLang, tr } = require('./_lang');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-const { email, name, category, content, perspective, thirdPartyContext } = JSON.parse(event.body || '{}');
+const { email, name, category, content, perspective, thirdPartyContext, lang } = JSON.parse(event.body || '{}');
+    const L = reqLang(event, lang);
     if (!email || !category || !content || !content.trim()) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'E-mailadres, categorie en antwoorden zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'E-mailadres, categorie en antwoorden zijn verplicht.', 'Email address, category and answers are required.') }) };
     }
     const normalizedEmail = email.toLowerCase().trim();
     if (!normalizedEmail.includes('@')) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Vul een geldig e-mailadres in.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Vul een geldig e-mailadres in.', 'Please enter a valid email address.') }) };
     }
 
     const supabase = getSupabase();
@@ -25,6 +27,8 @@ const { email, name, category, content, perspective, thirdPartyContext } = JSON.
         perspective: perspective || 'zelf',
         third_party_context: thirdPartyContext || null,
         status: 'bezig',
+        // Only written for English reflections, so Dutch ones work even before migration 009 ran.
+        ...(L === 'en' ? { lang: 'en' } : {}),
       })
       .select()
       .single();

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Why Middlepoint | Honest online conflict mediation</title>
+<meta name="description" content="Middlepoint helps you truly understand each other's perspective and resolve a conflict without escalation. Each of you answers a focused questionnaire separately, safely and without pressure. Discover our approach.">
+<meta property="og:title" content="Why Middlepoint | Honest online conflict mediation">
+<meta property="og:description" content="It is not about being right, but about finding happiness again. Discover how Middlepoint works.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/why.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/why.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/why.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/why.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/why.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html" class="current" aria-current="page">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/why.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+<a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<section class="section" style="max-width:720px">
+  <span class="label">Why Middlepoint</span>
+  <h1 style="font-size:2.4rem;margin-bottom:24px">It is not about being right, but about finding happiness again.</h1>
+
+  <p style="color:var(--ink-soft);font-size:1.05rem;margin-bottom:24px">Both sides of a story deserve an honest middle. Not to be proven right, but to understand each other again. That is why each of you answers the same focused questionnaire separately.</p>
+
+  <p style="color:var(--ink-soft);font-size:1.05rem;margin-bottom:24px">Middlepoint grew out of a simple observation: most conflicts persist because nobody finds the time to truly listen to the other side, not because people do not care about each other. We create that calm before the conversation itself begins.</p>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>You answer your questionnaire individually</h3>
+    <p style="color:var(--ink-soft)">Each of you gets questions about your own experience. Your answers are safe, nobody else reads what you fill in.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Made to truly help</h3>
+    <p style="color:var(--ink-soft)">No blank page. For each type of situation, focused questions that hit exactly what it is about.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>One clarifying insight</h3>
+    <p style="color:var(--ink-soft)">Middlepoint combines both answers into a clear picture of how you each see the other's position, and where you have common ground.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Room to answer calmly</h3>
+    <p style="color:var(--ink-soft)">No direct contact while you answer, so you feel free to tell your side without having to defend yourself right away.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>A document that grows with you</h3>
+    <p style="color:var(--ink-soft)">Every conversation includes one follow-up document. Respond to the tips and questions, let us know what is already going better, and add what is still going on.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:40px">
+    <h3>Step by step towards a solution or reconciliation</h3>
+    <p style="color:var(--ink-soft)">Give each other time to see what is going on for the other, in complete calm. Middlepoint turns that into a clear, neutral overview that you use together as a starting point.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h3>Middlepoint or an in-person therapist?</h3>
+    <p style="color:var(--ink-soft)">The two complement each other. Middlepoint is available 24/7 and quickly gives a reflection on your answers. Some situations are better handled by a therapist.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:48px">
+    <h3>A sober look at what is going on</h3>
+    <p style="color:var(--ink-soft)">Most conflicts do not come from ill will. Everyone experiences the world in their own way. Our ego often makes it hard to open up to what is going on for the other person. A solution is often closer than you would think.</p>
+  </div>
+
+  <blockquote style="border-left:3px solid var(--clay);padding-left:20px;margin:0 0 48px;font-family:'Fraunces',serif;font-style:italic;font-size:1.15rem;color:var(--ink)">
+    "Most people do not listen with the intent to understand; they listen with the intent to reply."
+    <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:.75rem;letter-spacing:.05em;color:var(--ink-soft);text-transform:uppercase">Stephen R. Covey</div>
+  </blockquote>
+
+  <div class="card" style="margin-bottom:24px;text-align:center;padding:32px">
+    <span class="label" style="display:block;margin-bottom:10px">More questions?</span>
+    <h3 style="margin-bottom:12px">Read our frequently asked questions</h3>
+    <p style="color:var(--ink-soft);margin-bottom:20px">Answers to what people ask us most often, about privacy, how it works, and more.</p>
+    <a href="/en/faq.html" class="btn outline">Go to frequently asked questions</a>
+  </div>
+
+</section>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/blog/">Blog</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+  <a href="/en/voor-professionals.html" class="hint-chip" style="text-decoration:none">For business</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Testimonials | Middlepoint</title>
+<meta name="description" content="Read how Middlepoint helped people understand each other again. Real stories from couples, families and colleagues who found their way back to each other.">
+<meta property="og:title" content="Testimonials | Middlepoint">
+<meta property="og:description" content="Stories from people who found each other again thanks to Middlepoint.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/testimonials.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/testimonials.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/testimonials.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/testimonials.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/testimonials.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html" class="current" aria-current="page">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/testimonials.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+<a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<section class="section" style="max-width:720px">
+  <span class="label">Testimonials</span>
+  <h1 style="font-size:2.2rem;margin-bottom:16px">Stories from people who found each other again</h1>
+  <p style="color:var(--ink-soft);margin-bottom:32px">Did Middlepoint help you? Share your story below. You choose whether your name is shown or you stay anonymous. We read every submission before it appears here.</p>
+
+<div id="deelFormulier" class="card" style="margin-bottom:48px">
+  <h3 style="margin-bottom:16px">Share your story</h3>
+    <div id="formMsg" style="display:none;margin-bottom:16px"></div>
+    <form id="testimonialForm">
+      <div class="field">
+        <label for="content">Your testimonial</label>
+        <textarea id="content" required placeholder="How did Middlepoint help you?"></textarea>
+      </div>
+      <div class="field">
+        <label for="displayName">Your name (optional)</label>
+        <input type="text" id="displayName" placeholder="e.g. Sarah, or leave empty">
+      </div>
+      <div class="field">
+        <label>Your rating</label>
+        <div id="starPicker" class="star-picker" role="radiogroup" aria-label="Give a rating from 1 to 5 stars">
+          <button type="button" class="star-btn" data-value="1" role="radio" aria-checked="false" aria-label="1 star">★</button>
+          <button type="button" class="star-btn" data-value="2" role="radio" aria-checked="false" aria-label="2 stars">★</button>
+          <button type="button" class="star-btn" data-value="3" role="radio" aria-checked="false" aria-label="3 stars">★</button>
+          <button type="button" class="star-btn" data-value="4" role="radio" aria-checked="false" aria-label="4 stars">★</button>
+          <button type="button" class="star-btn" data-value="5" role="radio" aria-checked="false" aria-label="5 stars">★</button>
+        </div>
+        <input type="hidden" id="rating" value="">
+      </div>
+      <style>
+        .star-picker{ display:flex; gap:6px; }
+        .star-btn{ background:none; border:none; cursor:pointer; font-size:1.7rem; line-height:1; color:#D9D2C5; padding:2px; transition:color .15s, transform .1s; }
+        .star-btn:hover{ transform:scale(1.1); }
+        .star-btn.filled{ color:var(--clay); }
+      </style>
+      <script>
+        (function() {
+          const prefillName = new URLSearchParams(window.location.search).get('name');
+          if (prefillName) document.getElementById('displayName').value = prefillName;
+        })();
+      </script>
+      <div class="checkbox-row">
+        <input type="checkbox" id="isAnonymous">
+        <label for="isAnonymous">I want to stay anonymous (my name will not be shown)</label>
+      </div>
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Submit for approval</button>
+    </form>
+  </div>
+
+  <span class="label">What others wrote</span>
+  <div id="testimonialsList" style="margin-top:16px">
+    <div class="skeleton skeleton-block"></div>
+    <div class="skeleton skeleton-block"></div>
+    <div class="skeleton skeleton-block"></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+  <a href="/en/voor-professionals.html" class="hint-chip" style="text-decoration:none">For business</a>
+</footer>
+
+<script>
+async function loadTestimonials() {
+  const list = document.getElementById('testimonialsList');
+  try {
+    const res = await fetch('/.netlify/functions/get-testimonials');
+    const data = await res.json();
+ if (!data.testimonials || data.testimonials.length === 0) {
+      list.innerHTML = `
+        <div class="card" style="text-align:center;padding:32px">
+          <p style="margin:0;color:var(--ink-soft)">The first stories will appear here soon. Feel free to be the first to share yours.</p>
+        </div>`;
+      return;
+    }
+    list.innerHTML = data.testimonials.map(t => `
+      <div class="testimonial-card">
+        ${renderStars(t.rating)}
+        <p class="quote">"${t.content}"</p>
+        <div class="author">${t.is_anonymous || !t.display_name ? 'Anonymous' : t.display_name}</div>
+      </div>`).join('');
+    injectReviewSchema(data.testimonials);
+  } catch (err) {
+    list.innerHTML = '<p style="color:var(--ink-soft)">Could not load testimonials.</p>';
+  }
+}
+
+function renderStars(rating) {
+  const r = Number(rating) || 0;
+  let html = '<div class="stars-display" aria-label="' + r + ' out of 5 stars">';
+  for (let i = 1; i <= 5; i++) {
+    html += i <= r ? '★' : '<span class="empty">★</span>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function injectReviewSchema(testimonials) {
+  if (!testimonials || testimonials.length === 0) return;
+  const rated = testimonials.filter(t => t.rating);
+  if (rated.length === 0) return;
+  const avg = rated.reduce((sum, t) => sum + Number(t.rating), 0) / rated.length;
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Middlepoint',
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: avg.toFixed(1),
+      reviewCount: rated.length,
+    },
+    review: rated.slice(0, 20).map(t => ({
+      '@type': 'Review',
+      reviewRating: { '@type': 'Rating', ratingValue: String(t.rating) },
+      author: { '@type': 'Person', name: (t.is_anonymous || !t.display_name) ? 'Anonymous' : t.display_name },
+      reviewBody: t.content,
+    })),
+  };
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(schema);
+  document.head.appendChild(script);
+}
+
+(function() {
+  const picker = document.getElementById('starPicker');
+  const ratingInput = document.getElementById('rating');
+  const buttons = Array.from(picker.querySelectorAll('.star-btn'));
+  function setRating(value) {
+    ratingInput.value = value;
+    buttons.forEach(b => {
+      const active = Number(b.dataset.value) <= value;
+      b.classList.toggle('filled', active);
+      b.setAttribute('aria-checked', active ? 'true' : 'false');
+    });
+  }
+  buttons.forEach(b => b.addEventListener('click', () => setRating(Number(b.dataset.value))));
+})();
+
+document.getElementById('testimonialForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const content = document.getElementById('content').value.trim();
+  const displayName = document.getElementById('displayName').value.trim();
+  const isAnonymous = document.getElementById('isAnonymous').checked;
+  const rating = document.getElementById('rating').value;
+  const msgBox = document.getElementById('formMsg');
+  if (!rating) {
+    msgBox.style.display = 'block';
+    msgBox.style.color = '#8A4222';
+    msgBox.textContent = 'Please choose a rating from 1 to 5 stars first.';
+    return;
+  }
+  try {
+    const res = await fetch('/.netlify/functions/submit-testimonial', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, displayName, isAnonymous, rating: Number(rating) }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    document.getElementById('testimonialForm').style.display = 'none';
+    msgBox.style.display = 'block';
+    msgBox.style.color = 'var(--sage)';
+    msgBox.textContent = 'Thank you! We will read your story and publish it as soon as possible.';
+  } catch (err) {
+    msgBox.style.display = 'block';
+    msgBox.style.color = '#8A4222';
+    msgBox.textContent = err.message;
+  }
+});
+
+loadTestimonials();
+</script>
+</body>
+</html>

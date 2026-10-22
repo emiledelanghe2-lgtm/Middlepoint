@@ -1,10 +1,12 @@
 const { getSupabase } = require('./_supabase');
+const { reqLang, normLang, pre, tr } = require('./_lang');
 
 exports.handler = async (event) => {
   try {
     const token = event.queryStringParameters && event.queryStringParameters.token;
+    let L = reqLang(event);
     if (!token) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'token is verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'token is verplicht.', 'token is required.') }) };
     }
     const supabase = getSupabase();
     const { data: participant, error: pError } = await supabase
@@ -13,10 +15,11 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (pError || !participant) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Ongeldige link.', 'Invalid link.') }) };
     }
+    L = normLang(participant.sessions.lang);
     if (!participant.is_organizer) {
-      return { statusCode: 403, body: JSON.stringify({ error: 'Enkel de organisator kan alle links bekijken.' }) };
+      return { statusCode: 403, body: JSON.stringify({ error: tr(L, 'Enkel de organisator kan alle links bekijken.', 'Only the organizer can view all links.') }) };
     }
     const { data: allParticipants, error: apError } = await supabase
       .from('participants')
@@ -31,7 +34,7 @@ exports.handler = async (event) => {
           name: p.display_name,
           isOrganizer: p.is_organizer,
           email: p.email,
-          accessLink: `/story.html?token=${p.access_token}`,
+          accessLink: `${pre(L)}/story.html?token=${p.access_token}`,
         })),
       }),
     };

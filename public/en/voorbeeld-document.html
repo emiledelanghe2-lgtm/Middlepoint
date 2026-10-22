@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Example document | Middlepoint</title>
+<meta name="description" content="View an extensive, fictional example of a complete Middlepoint document, so you know what you get before you start.">
+<meta property="og:title" content="Example document | Middlepoint">
+<meta property="og:description" content="View an extensive, fictional example of a complete Middlepoint document.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/voorbeeld-document.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/voorbeeld-document.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/voorbeeld-document.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/voorbeeld-document.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/voorbeeld-document.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.doc-quote{ border-left:3px solid var(--clay); padding-left:18px; margin:32px 0; font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; color:var(--ink); }
+</style>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/voorbeeld-document.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+    <a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<div class="app-wrap" style="max-width:760px">
+  <span class="label">Example</span>
+  <h1>This is what a complete document looks like</h1>
+  <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:18px">
+    <p style="margin:0;font-size:.9rem">Entirely fictional, between two invented people, Sarah and Michael. No real names, no real conflict.</p>
+  </div>
+
+  <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:20px">
+    <span class="label" style="display:block;margin-bottom:10px">In brief</span>
+    <ul style="margin:0;padding-left:20px;color:var(--ink);font-weight:500">
+      <li style="margin-bottom:4px">Recurring arguments about household chores</li>
+      <li style="margin-bottom:4px">Both feel unheard by the other</li>
+      <li style="margin-bottom:4px">The love and the will to move forward are still there</li>
+    </ul>
+  </div>
+
+  <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+    <span class="label">⊙ Objective overview</span>
+    <h3>What is going on</h3>
+    <p>Sarah and Michael have been together for six years and have lived together for three. In recent months, small disagreements have escalated into heated arguments almost daily, often about household chores, but the pattern runs deeper than that. Sarah often feels alone with the mental load of the household, while Michael feels that what he does do is rarely noticed. Beneath the surface this also seems to be about a shared feeling of not being seen, each in their own way.</p>
+  </div>
+
+  <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+    <span class="label">♡ Common ground</span>
+    <h3>Where you already agree</h3>
+    <p>Both agree that the division of tasks at home does not feel balanced at the moment. Importantly, both clearly state that the love and the desire to move forward together are still there. Neither is considering a break-up, a hopeful starting point.</p>
+  </div>
+
+  <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+    <span class="label">◐ Perspective</span>
+    <h3>How the other person sees it</h3>
+    <div class="person-block">
+      <div class="who">For Michael: how the other person sees this</div>
+      <p><strong>What is probably going on for Sarah:</strong> Sarah has felt for a while that she is the only one thinking ahead about the household, and that this invisible mental load weighs heavily.</p>
+      <p><strong>What Sarah does well:</strong> Sarah keeps engaging in the conversation time and again instead of giving up.</p>
+      <p><strong>Where Sarah could grow:</strong> Sarah could try to phrase concrete requests instead of general reproaches.</p>
+    </div>
+    <div class="person-block">
+      <div class="who">For Sarah: how the other person sees this</div>
+      <p><strong>What is probably going on for Michael:</strong> Michael feels constantly judged, as if nothing he does is ever enough.</p>
+      <p><strong>What Michael does well:</strong> Michael consciously tries to stay calm during arguments.</p>
+      <p><strong>Where Michael could grow:</strong> Michael could name more concretely when he feels pressured, instead of withdrawing.</p>
+    </div>
+  </div>
+
+  <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+    <span class="label">⊙ Getting to work together</span>
+    <h3>Concrete agreements to try together</h3>
+    <ul class="tip-list">
+      <li>Set aside ten minutes every Sunday evening to divide the tasks for the coming week together.</li>
+      <li>Agree that whoever feels attacked during a conversation may say "time-out" out loud, after which you continue talking within an hour at the latest.</li>
+      <li>Michael deliberately takes on one fixed household task completely this month, without Sarah having to remind him.</li>
+    </ul>
+  </div>
+
+  <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+    <span class="label">✎ Opening the conversation</span>
+    <h3>Questions to ask each other</h3>
+    <div class="person-block">
+      <div class="who">Michael can ask</div>
+      <ul class="tip-list">
+        <li>What would give you the feeling that we carry this together?</li>
+        <li>When do you feel most heard by me?</li>
+      </ul>
+    </div>
+    <div class="person-block">
+      <div class="who">Sarah can ask</div>
+      <ul class="tip-list">
+        <li>What makes you withdraw at times during a conversation?</li>
+        <li>What would you need to not feel constantly judged?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px;background:#EFF4ED;border-radius:var(--radius);padding-top:24px;padding-bottom:24px">
+    <span class="label">✎ Only for you</span>
+    <h3>Your personal section</h3>
+    <p style="color:var(--ink-soft);font-size:.88rem;margin-bottom:16px">In a real document this section is only visible to you, not to the other participant. Below is an example of what Michael would see.</p>
+    <div class="person-block">
+      <div class="who">Tips for yourself</div>
+      <ul class="tip-list">
+        <li>When you notice you are becoming defensive, say so out loud instead of going quiet.</li>
+        <li>Actively ask Sarah what still needs to be done around the house, instead of waiting to be asked.</li>
+      </ul>
+    </div>
+    <div class="person-block">
+      <div class="who">What you could say</div>
+      <ul class="tip-list">
+        <li>"I notice I shut down when I feel attacked. Can we agree on a signal so I can take a breath before we continue?"</li>
+        <li>"I can see you do a lot more of the thinking ahead than I do, and that is not fairly divided. I want us to pick that up better together."</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="doc-quote">"A relationship does not grow by never clashing, but by continuing to choose each other after every clash."</div>
+
+  <div class="doc-section" style="border-top:1px solid var(--line);padding-top:32px">
+    <span class="label">Later, whenever it suits you</span>
+    <h3>This is what your follow-up document looks like</h3>
+    <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:20px">Every conversation comes with one follow-up document. Not a repeat of the first document, but a short, focused progress report, based on what you have experienced since.</p>
+    <div class="person-block">
+      <div class="who">Short summary</div>
+      <p style="margin:0">Sarah and Michael mainly clashed over the division of tasks at home and the feeling of not being heard.</p>
+    </div>
+    <div class="person-block">
+      <div class="who">What is going better</div>
+      <p style="margin:0">Since their first document, Sarah and Michael plan the week together every Sunday, and that feels like a real relief to both. Michael took over the dishwasher structurally without Sarah having to remind him. They have not used the "time-out" signal yet, but both say they want to keep it in reserve.</p>
+    </div>
+  </div>
+
+  <div class="doc-section" style="text-align:center;border-bottom:none">
+    <a href="/en/new.html" class="btn clay" style="padding:14px 28px">Start your own conversation</a>
+  </div>
+</div>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+  <a href="/en/voor-professionals.html" class="hint-chip" style="text-decoration:none">For business</a>
+</footer>
+</body>
+</html>

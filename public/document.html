@@ -9,7 +9,11 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="robots" content="noindex, nofollow">
 <title>Jullie document, Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/document.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/document.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/document.html">
 <link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
 <style>
 @media print {
   .nav-bar, .no-print { display: none !important; }
@@ -38,6 +42,7 @@ const token = new URLSearchParams(window.location.search).get('token');
 const backLink = '/';
 const backLabel = 'Terug naar startpagina';
 const app = document.getElementById('app');
+const PAGE_LANG = 'nl';
 
 function goToMijnGesprekken() {
   window.location.href = '/mijn-gesprekken.html';
@@ -83,6 +88,10 @@ async function load() {
   const res = await fetch(`/.netlify/functions/get-document?token=${token}`);
   const data = await res.json();
   if (!res.ok) { app.innerHTML = `<div class="error-box">${data.error}</div>`; return; }
+  if (data.lang && data.lang !== PAGE_LANG) {
+    window.location.replace((data.lang === 'en' ? '/en' : '') + '/document.html' + window.location.search);
+    return;
+  }
 
   if (!data.documents.length) {
     app.innerHTML = `<div class="status-box">Het document wordt nog opgesteld. Deze pagina herlaadt zelf.</div>`;

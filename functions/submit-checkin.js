@@ -1,4 +1,6 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, reqLang, pre, tr, greeting } = require('./_lang');
+const { SAFETY_CONFLICT_EN } = require('./_prompts-en');
 const { emailButtonHtml } = require('./_email-button');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
@@ -24,8 +26,8 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-async function checkSafety(text) {
-  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van iemand over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
+async function checkSafety(text, L) {
+  const systemPrompt = L === 'en' ? SAFETY_CONFLICT_EN : `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van iemand over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
 
 Stop enkel bij: actieve suicidale gedachten of plannen, kindermisbruik, seksueel geweld of verkrachting, een poging tot doodslag of moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
 
@@ -46,7 +48,7 @@ function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
+async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     const safeToName = escHtml(toName);
@@ -60,8 +62,14 @@ async function sendCheckinSubmittedEmail(toEmail, toName, fromName, siteUrl, acc
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: `${fromName} heeft de opvolging ingevuld`,
-        html: `
+        subject: tr(L, `${fromName} heeft de opvolging ingevuld`, `${fromName} has filled in the follow-up`),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', safeToName)}</h2>
+            <p><strong>${safeFromName}</strong> has just filled in the follow-up at Middlepoint.</p>
+            <p>As soon as you also fill in your follow-up, we prepare an updated version of your document.</p>
+            ${emailButtonHtml(`${siteUrl}${accessLink}`, 'Fill in my follow-up')}
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
             <p><strong>${safeFromName}</strong> heeft zojuist de opvolging ingevuld bij Middlepoint.</p>
@@ -80,7 +88,8 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { token, content, isAnonymous } = JSON.parse(event.body || '{}');
+    const { token, content, isAnonymous, lang } = JSON.parse(event.body || '{}');
+    let L = reqLang(event, lang);
     const supabase = getSupabase();
     const { data: participant } = await supabase
       .from('participants')
@@ -88,15 +97,16 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (!participant) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Ongeldige link.', 'Invalid link.') }) };
     }
+    L = normLang(participant.sessions.lang);
     const match = (participant.sessions.status || '').match(/^nieuwe_ronde_(\d+)$/);
     if (!match) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Er is momenteel geen open check-in ronde voor deze sessie.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'Er is momenteel geen open check-in ronde voor deze sessie.', 'There is currently no open check-in round for this session.') }) };
     }
     const round = parseInt(match[1], 10);
 
-    const safety = await checkSafety(content);
+    const safety = await checkSafety(content, L);
     if (safety.stop) {
       await supabase.from('entries').insert({
         session_id: participant.session_id,
@@ -146,7 +156,7 @@ exports.handler = async (event) => {
       const others = allParticipants.filter(p => pendingIds.includes(p.id) && p.email);
       await Promise.all(
         others.map(p =>
-          sendCheckinSubmittedEmail(p.email, p.display_name, participant.display_name, siteUrl, `/story.html?token=${p.access_token}`)
+          sendCheckinSubmittedEmail(p.email, p.display_name, participant.display_name, siteUrl, `${pre(L)}/story.html?token=${p.access_token}`, L)
         )
       );
     }

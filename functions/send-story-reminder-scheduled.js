@@ -1,7 +1,8 @@
 const { getSupabase } = require('./_supabase');
 const { emailButtonHtml } = require('./_email-button');
+const { normLang, pre, tr, greeting } = require('./_lang');
 
-async function sendReminderEmail(toEmail, toName, fromName, link) {
+async function sendReminderEmail(toEmail, toName, fromName, link, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     await fetch('https://api.resend.com/emails', {
@@ -13,8 +14,15 @@ async function sendReminderEmail(toEmail, toName, fromName, link) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: `Even herinneren, ${fromName} wacht op jouw kant van het verhaal`,
-        html: `
+        subject: tr(L, `Even herinneren, ${fromName} wacht op jouw kant van het verhaal`, `Just a reminder, ${fromName} is waiting for your side of the story`),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', toName)}</h2>
+            <p>A few days ago <strong>${fromName}</strong> started a conversation via Middlepoint, but we notice that your side of the story has not been filled in yet.</p>
+            <p>Without your answers, no joint overview can be created yet. It only takes a few minutes.</p>
+           ${emailButtonHtml(link, 'Share my side of the story')}
+            <p style="color:#888;font-size:.85rem">This is a one-time reminder. If you have already filled this in, you can ignore this email.</p>
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Een paar dagen geleden startte <strong>${fromName}</strong> een gesprek via Middlepoint, maar we merken dat jouw kant van het verhaal nog niet is ingevuld.</p>
@@ -36,7 +44,7 @@ exports.handler = async () => {
 
    const { data: candidates } = await supabase
       .from('sessions')
-      .select('id, organizer_participates, created_at, story_reminder_sent')
+      .select('*')
       .eq('status', 'wachten_op_verhalen')
       .eq('story_reminder_sent', false)
       .lt('created_at', threeDaysAgo);
@@ -70,8 +78,9 @@ const realParticipants = participants.filter(p => !(p.is_organizer && session.or
       if (notSubmitted.length) {
         await Promise.all(
           notSubmitted.map(p => {
-            const link = `${siteUrl}/story.html?token=${p.access_token || ''}`;
-            return sendReminderEmail(p.email, p.display_name, organizer ? organizer.display_name : 'Iemand', link);
+            const sl = normLang(session.lang);
+            const link = `${siteUrl}${pre(sl)}/story.html?token=${p.access_token || ''}`;
+            return sendReminderEmail(p.email, p.display_name, organizer ? organizer.display_name : tr(sl, 'Iemand', 'Someone'), link, sl);
           })
         );
       }

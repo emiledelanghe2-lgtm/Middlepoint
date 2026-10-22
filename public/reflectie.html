@@ -19,7 +19,11 @@
 <title>Gratis reflectie | Middlepoint</title>
 <meta name="description" content="Vertel wat er speelt en krijg meteen een eerlijke reflectie: wat er onder de oppervlakte zit, en of een gesprek met de ander zinvol is.">
 <link rel="canonical" href="https://middlepoint.net/reflectie.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/reflectie.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/reflectie.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/reflectie.html">
 <link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 .q-block{ margin-bottom:26px; }
@@ -59,6 +63,7 @@
     <a href="/login.html">Mijn gesprekken</a>
   </div>
   <div class="nav-actions">
+    <a href="/en/reflectie.html" class="lang-switch" data-lang="en" hreflang="en" lang="en" title="English">EN</a>
     <a href="/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="Mijn gesprekken"><span id="authInitial"></span></a>
     <a href="/new.html" class="btn">Start een gesprek</a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu openen" aria-expanded="false">☰</button>
@@ -118,6 +123,8 @@ const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
 const existingToken = new URLSearchParams(window.location.search).get('token');
 const selfhelpReturn = new URLSearchParams(window.location.search).get('selfhelp') === 'true';
 const app = document.getElementById('app');
+const PAGE_LANG = 'nl';
+const LANG_PREFIX = PAGE_LANG === 'en' ? '/en' : '';
 
 // TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
 const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
@@ -181,7 +188,7 @@ function shareReflectionEmail() {
 }
 
 function goToSelfHelpPayment(token, email) {
-  try { localStorage.setItem('mp_pending_selfhelp', token); } catch (e) {}
+  try { localStorage.setItem('mp_pending_selfhelp', token); localStorage.setItem('mp_pending_selfhelp_lang', PAGE_LANG); } catch (e) {}
   const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
   let url = `${SELF_HELP_STRIPE_LINK}${sep}client_reference_id=${encodeURIComponent('selfhelp:' + token)}`;
   if (email) url += `&prefilled_email=${encodeURIComponent(email)}`;
@@ -481,7 +488,7 @@ function renderForm() {
     try {
       const res = await fetch('/.netlify/functions/create-reflection', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, category, content, perspective: perspectief, thirdPartyContext: tussenWie }),
+        body: JSON.stringify({ email, name, category, content, perspective: perspectief, thirdPartyContext: tussenWie, lang: PAGE_LANG }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -671,6 +678,10 @@ async function pollResult(token) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
     const r = data.reflection;
+    if (r.lang && r.lang !== PAGE_LANG) {
+      window.location.replace((r.lang === 'en' ? '/en' : '') + '/reflectie.html' + window.location.search);
+      return;
+    }
 
     if (r.status === 'bezig') {
       app.innerHTML = `<div class="status-box">Het opmaken van je reflectie duurt ongeveer een minuut...</div>`;
@@ -847,6 +858,12 @@ async function pollResult(token) {
 
 (async () => {
   if (selfhelpReturn) {
+    let pendingLang = null;
+    try { pendingLang = localStorage.getItem('mp_pending_selfhelp_lang'); } catch (e) {}
+    if (pendingLang && pendingLang !== PAGE_LANG) {
+      window.location.replace((pendingLang === 'en' ? '/en' : '') + '/reflectie.html' + window.location.search);
+      return;
+    }
     let pendingToken = null;
     try { pendingToken = localStorage.getItem('mp_pending_selfhelp'); } catch (e) {}
     if (pendingToken) {
