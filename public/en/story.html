@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="robots" content="noindex, nofollow">
+<title>Your story, Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/story.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/story.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/story.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<style>
+.q-block{ margin-bottom:26px; }
+.q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
+.q-note{ font-size:.82rem; color:var(--ink-soft); font-style:italic; margin-top:6px; }
+.mc-group{ display:flex; flex-direction:column; gap:8px; }
+.mc-option{ display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:8px; cursor:pointer; font-size:.92rem; background:var(--white); }
+.mc-option input{ margin-top:3px; }
+.other-input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-family:'Karla',sans-serif; margin-top:6px; }
+.scale-row{ display:flex; gap:8px; }
+.scale-option{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border:1px solid var(--line); border-radius:8px; cursor:pointer; background:var(--white); }
+.scale-labels{ display:flex; justify-content:space-between; font-size:.78rem; color:var(--ink-soft); margin-top:8px; font-weight:600; }
+.branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
+.q-textarea{ width:100%; min-height:150px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
+.q-invalid{ outline:2px solid #8A4222; border-radius:10px; }
+.who-started{ background:#EFF4ED; border:none; border-radius:var(--radius); padding:14px 18px; margin-bottom:20px; font-size:.9rem; }
+.followup-item{ background:var(--white); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px; }
+.followup-item-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--clay); font-weight:700; margin-bottom:6px; display:block; }
+.followup-item-text{ font-weight:600; margin-bottom:12px; color:var(--ink); }
+.followup-note{ width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:15px; margin-top:8px; resize:vertical; min-height:50px; }
+.confidential-box{ background:#EFF4ED; border:1px solid var(--sage); border-radius:8px; padding:14px 16px; margin-bottom:10px; font-size:.85rem; }
+</style>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+</nav>
+</header>
+
+<div class="app-wrap" id="app">
+  <div class="status-box">Loading...</div>
+</div>
+
+<script>
+const token = new URLSearchParams(window.location.search).get('token');
+const viewMode = new URLSearchParams(window.location.search).get('view');
+const backLink = '/';
+const backLabel = 'Back to home page';
+const app = document.getElementById('app');
+const PAGE_LANG = 'en';
+let currentPlan = 'gratis';
+let pendingSubmitContent = '';
+
+function docLinkWithReturn(tok) {
+  return `/en/document.html?token=${tok}`;
+}
+
+function goToMijnGesprekken() {
+  window.location.href = '/en/mijn-gesprekken.html';
+}
+
+function draftKey(suffix) { return `mp_draft_${suffix}_${token}`; }
+function saveDraft(suffix, value) { try { localStorage.setItem(draftKey(suffix), value); } catch (e) {} }
+function loadDraft(suffix) { try { return localStorage.getItem(draftKey(suffix)) || ''; } catch (e) { return ''; } }
+function clearDraft(suffix) { try { localStorage.removeItem(draftKey(suffix)); } catch (e) {} }
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(v) { return String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"'); }
+
+const CATEGORY_OPTIONS = [
+  { value: 'koppel', label: 'Couple / relationship' },
+  { value: 'familie', label: 'Family' },
+  { value: 'vrienden', label: 'Friends' },
+  { value: 'buren', label: 'Neighbors' },
+  { value: 'werk', label: 'Work / coworkers' },
+  { value: 'school', label: 'School' },
+];
+
+const CATEGORY_LABELS = { koppel: 'Couple / relationship', familie: 'Family', vrienden: 'Friends', buren: 'Neighbors', werk: 'Work / coworkers', school: 'School', andere: 'Something else' };
+function catLabel(c) { return CATEGORY_LABELS[c] || c; }
+
+const CONFIDENTIAL_NOTE = 'This answer is never shown to the other participant, not even in another form or wording. It only helps us to paint a more honest and accurate picture of your situation.';
+
+const QUESTIONNAIRES = {
+  koppel: {
+    freeIds: ['duur_samen','woonsituatie','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'duur_samen', type:'single', label:'How long have you been together?', options:[
+        {value:'minder dan 1 jaar', label:'Less than 1 year'},
+        {value:'1 to 3 years', label:'1 to 3 years'},
+        {value:'3 to 10 years', label:'3 to 10 years'},
+        {value:'meer dan 10 jaar', label:'More than 10 years'},
+      ]},
+      { id:'woonsituatie', type:'single', allowOther:true, label:'What is your living situation?', options:[
+        {value:'samenwonend zonder kinderen', label:'Living together, without children'},
+        {value:'samenwonend met kinderen', label:'Living together, with children'},
+        {value:'niet samenwonend', label:'Not living together'},
+        {value:'gedeeltelijk samenwonend of co-ouderschap', label:'Partly living together or co-parenting'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'How long has this specific problem been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'meer dan een jaar', label:'More than a year'},
+        {value:'onze volledige relatie', label:'Our entire relationship'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'What is the conflict mainly about?', options:[
+        {value:'communicatie', label:'Communication'},
+        {value:'huishouden', label:'Household and division of tasks'},
+        {value:'financien', label:'Finances'},
+        {value:'intimiteit', label:'Intimacy and closeness'},
+        {value:'jaloezie', label:'Jealousy or trust'},
+        {value:'opvoeding', label:'Raising the children'},
+        {value:'schoonfamilie', label:'Your partner\'s family'},
+        {value:'toekomst', label:'Plans for the future'},
+        {value:'vrije_tijd', label:'Free time and social plans'},
+      ]},
+{ id:'frequentie', type:'single', allowOther:true, label:'How often does this turn into a conflict?', options:[
+      {value:'bijna dagelijks', label:'Almost daily'},
+        {value:'enkele keren per week', label:'A few times a week'},
+        {value:'enkele keren per maand', label:'A few times a month'},
+        {value:'af en toe, maar weegt zwaar door', label:'Now and then, but it weighs heavily'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Who usually brings this up?', options:[
+        {value:'meestal ik', label:'Usually me'},
+        {value:'meestal partner', label:'Usually my partner'},
+        {value:'ongeveer evenveel', label:'About equally, both of us'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you', placeholder:'Forget the boxes above for a moment. What, in your words, is the real problem between you?' },
+      { id:'vorm_conflict', type:'multi', allowOther:true, label:'What does a conflict usually look like between you?', options:[
+        {value:'schreeuwen', label:'There is shouting'},
+        {value:'terugtrekken', label:'One of us withdraws and goes silent'},
+        {value:'weglopen', label:'One of us walks away'},
+        {value:'escaleert', label:'It escalates into accusations about other things'},
+        {value:'koud', label:'It becomes cold and distant, without a fight'},
+      ]},
+      { id:'anderen_erbij', type:'yesno', label:'Does this also happen when others are present, such as children, family or friends?',
+        branch:{ ja:{ id:'wie_erbij', type:'multi', allowOther:true, label:'Who is usually there?', options:[
+          {value:'kinderen', label:'Our children'},
+          {value:'familie', label:'Family'},
+          {value:'vrienden', label:'Friends'},
+          {value:'openbaar', label:'It happens in public'},
+        ]}}
+      },
+      { id:'al_geprobeerd', type:'yesno', label:'Have you tried to tackle this together before?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'What have you already tried, and did it help?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'What made it difficult to tackle this so far?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this conflict occurred', placeholder:'Choose a moment that stayed with you. What exactly happened, what was said, and how did it end?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'How do you feel at this moment in your relationship?', options:[
+        {value:'gefrustreerd', label:'Frustrated'},
+        {value:'verdrietig', label:'Sad'},
+        {value:'eenzaam', label:'Lonely, even though we are together'},
+        {value:'boos', label:'Angry'},
+        {value:'onbegrepen', label:'Misunderstood'},
+        {value:'bang', label:'Afraid of losing it'},
+        {value:'hoopvol', label:'Hopeful that it can get better'},
+        {value:'moe', label:'Tired, worn out by the repetition'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gevoel_partner', type:'multi', allowOther:true, label:'What do you think your partner is feeling right now?', options:[
+        {value:'gefrustreerd', label:'Frustrated'},
+        {value:'verdrietig', label:'Sad'},
+        {value:'eenzaam', label:'Lonely, even though we are together'},
+        {value:'boos', label:'Angry'},
+        {value:'onbegrepen', label:'Misunderstood'},
+        {value:'bang', label:'Afraid of losing it'},
+        {value:'hoopvol', label:'Hopeful that it can get better'},
+        {value:'moe', label:'Tired, worn out by the repetition'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gehoord', type:'single', allowOther:true, label:'Do you feel heard by your partner when you bring this up?', options:[
+        {value:'ja meestal', label:'Yes, usually'},
+        {value:'soms', label:'Sometimes yes, sometimes no'},
+        {value:'nee', label:'No, I do not feel heard'},
+        {value:'hoort maar verandert niets', label:'They say yes, but nothing changes'},
+        {value:'durf niet', label:'I actually do not dare to bring it up'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Are there other things playing a role that make it harder?', options:[
+        {value:'werkstress', label:'Work stress'},
+        {value:'financieel', label:'Financial worries'},
+        {value:'gezondheid', label:'Health, yours or your partner\'s'},
+        {value:'verandering', label:'A move or a big change'},
+        {value:'weinig_tijd', label:'Little time for each other'},
+        {value:'geen', label:'No, it is really about this one problem'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'What would a good outcome be for you?', options:[
+        {value:'begrip', label:'That my partner understands better how I feel'},
+        {value:'verontschuldiging', label:'A sincere apology'},
+        {value:'afspraken', label:'That we make concrete agreements together'},
+        {value:'gedragsverandering', label:'That something changes structurally in behavior'},
+        {value:'normaal_praten', label:'Simply that we can talk to each other normally again'},
+        {value:'weet_niet', label:'I do not know yet, I first want to be heard'},
+      ]},
+      { id:'dringendheid', type:'scale', label:'How important is it to you that this is tackled now?', lowLabel:'Can wait', highLabel:'Very urgent' },
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh on you right now?', lowLabel:'Bearable', highLabel:'Overwhelming' },
+      { id:'partner_beseft_niet', type:'yesno', label:'Is there something you think your partner does not know or realize?',
+        branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'What would you like them to know?' } }
+      },
+      { id:'al_hulp_gezocht', type:'yesno', label:'Have you already sought professional help for this, such as a therapist or relationship mediator?',
+        branch:{ ja:{ id:'hulp_ervaring', type:'text', label:'How did that go, and what are you taking from it?' } }
+      },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell your partner directly, but that would help to understand your behavior better? (optional)', placeholder:'e.g. Actually I feel very insecure, but I want to come across as strong to my partner.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that your partner could use? (optional)', placeholder:'e.g. It would be nice if he started by saying he wants to do his part too.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+
+  familie: {
+    freeIds: ['familielid','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'familielid', type:'single', allowOther:true, label:'Which family member is this mainly about?', options:[
+        {value:'ouder', label:'A parent'},
+        {value:'kind', label:'My child'},
+        {value:'broer_zus', label:'Brother or sister'},
+        {value:'schoonfamilie', label:'In-laws'},
+        {value:'grootouder', label:'Grandparent'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'How long has this been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'meer dan een jaar', label:'More than a year'},
+        {value:'ons hele leven', label:'Our whole lives'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'What is the conflict mainly about?', options:[
+        {value:'erfenis_geld', label:'Inheritance or money'},
+        {value:'opvoeding', label:'Upbringing or raising children'},
+        {value:'betrokkenheid', label:'Involvement in the family'},
+        {value:'oude_gebeurtenissen', label:'Old events that were never talked about'},
+        {value:'levenskeuzes', label:'Differences in life choices'},
+        {value:'zorg_ouder', label:'Caring for an elderly family member'},
+      ]},
+{ id:'frequentie', type:'single', allowOther:true, label:'How often does this conflict come up?', options:[
+      {value:'elke bijeenkomst', label:'At every family gathering'},
+        {value:'af en toe', label:'Now and then'},
+        {value:'nu altijd', label:'It is always there now'},
+        {value:'onopgelost', label:'It is a big conflict that was never resolved'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Who usually brings this up?', options:[
+        {value:'meestal ik', label:'Usually me'},
+        {value:'meestal familielid', label:'Usually this family member'},
+        {value:'ongeveer evenveel', label:'About equally, both of us'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you', placeholder:'What, in your words, is the real problem?' },
+      { id:'vorm_conflict', type:'multi', allowOther:true, label:'How does the conflict usually show itself?', options:[
+        {value:'ruzie', label:'There are arguments'},
+        {value:'mijden', label:'People avoid each other'},
+        {value:'zwijgen', label:'The subject is not talked about'},
+        {value:'via_anderen', label:'It is discussed through other family members'},
+      ]},
+      { id:'anderen_betrokken', type:'yesno', label:'Are other family members involved or taking sides?',
+        branch:{ ja:{ id:'wie_partij', type:'text', label:'Who takes sides, and how does that show?' } }
+      },
+      { id:'al_geprobeerd', type:'yesno', label:'Have you tried to tackle this before?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'What have you tried, and did it help?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'What made it difficult to tackle this?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this conflict occurred', placeholder:'What exactly happened, and how did it end?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'How do you feel right now towards this family member?', options:[
+        {value:'boos', label:'Angry'},
+        {value:'verdrietig', label:'Sad'},
+        {value:'buitengesloten', label:'Excluded'},
+        {value:'schuldig', label:'Guilty'},
+        {value:'onbegrepen', label:'Misunderstood'},
+        {value:'moe', label:'Tired, worn out by the repetition'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gevoel_ander', type:'multi', allowOther:true, label:'What do you think this family member is feeling right now?', options:[
+        {value:'boos', label:'Angry'},
+        {value:'verdrietig', label:'Sad'},
+        {value:'buitengesloten', label:'Excluded'},
+        {value:'schuldig', label:'Guilty'},
+        {value:'onbegrepen', label:'Misunderstood'},
+        {value:'moe', label:'Tired, worn out by the repetition'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gehoord', type:'single', allowOther:true, label:'Do you feel heard when you bring this up within the family?', options:[
+        {value:'ja meestal', label:'Yes, usually'},
+        {value:'soms', label:'Sometimes yes, sometimes no'},
+        {value:'nee', label:'No, I do not feel heard'},
+        {value:'hoort maar verandert niets', label:'They say yes, but nothing changes'},
+        {value:'durf niet', label:'I actually do not dare to bring it up'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Are there other things playing a role that make it harder?', options:[
+        {value:'gezondheid', label:'Health'},
+        {value:'geld', label:'Money'},
+        {value:'sterfgeval', label:'A death or illness'},
+        {value:'nieuwe_partner', label:'A new partner in the family'},
+        {value:'afstand', label:'Distance in location'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'What would a good outcome be for you?', options:[
+        {value:'begrip', label:'That the other person understands better how I feel'},
+        {value:'verontschuldiging', label:'A sincere apology'},
+        {value:'afspraken', label:'That we make agreements together'},
+        {value:'normaal_contact', label:'Simply normal contact again'},
+        {value:'weet_niet', label:'I do not know yet'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh on you right now?', lowLabel:'Bearable', highLabel:'Overwhelming' },
+      { id:'ander_beseft_niet', type:'yesno', label:'Is there something you think this family member does not know or realize?',
+        branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'What would you like them to know?' } }
+      },
+      { id:'al_hulp_gezocht', type:'yesno', label:'Have you already sought professional help for this, such as a family mediator or therapist?',
+        branch:{ ja:{ id:'hulp_ervaring', type:'text', label:'How did that go, and what are you taking from it?' } }
+      },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell this family member directly, but that would help to understand your behavior better? (optional)', placeholder:'e.g. I actually feel very alone in the family, but I do not want to come across as weak.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that this family member could use? (optional)', placeholder:'e.g. It would be nice if they simply admitted that it has dragged on for a long time.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+
+  vrienden: {
+    freeIds: ['duur_kennen','duur_probleem','onderwerp','contact_nu','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'duur_kennen', type:'single', label:'How long have you known each other?', options:[
+        {value:'minder dan 1 jaar', label:'Less than 1 year'},
+        {value:'een paar jaar', label:'A few years'},
+        {value:'meer dan 10 jaar', label:'More than 10 years'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'How long has this specific problem been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'meer dan een jaar', label:'More than a year'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'What is the conflict mainly about?', options:[
+        {value:'gezegd_gedaan', label:'Something that was said or done'},
+        {value:'afstand', label:'A feeling of distance or neglect'},
+        {value:'jaloezie', label:'Jealousy or comparison'},
+        {value:'meningsverschil', label:'A disagreement that escalated'},
+        {value:'geheim_leugen', label:'A secret or lie'},
+      ]},
+      { id:'contact_nu', type:'single', label:'How often do you still speak to each other?', options:[
+        {value:'even vaak', label:'Still as often as before'},
+        {value:'veel minder', label:'Much less than before'},
+        {value:'vermijden', label:'We avoid each other now'},
+        {value:'geen contact', label:'We have no contact at all anymore'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Who usually brings this up?', options:[
+        {value:'meestal ik', label:'Usually me'},
+        {value:'meestal ander', label:'Usually this friend'},
+        {value:'ongeveer evenveel', label:'About equally, both of us'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you', placeholder:'What, in your words, is the real problem between you?' },
+      { id:'vorm_conflict', type:'multi', allowOther:true, label:'How does the conflict usually show itself?', options:[
+        {value:'ruzie', label:'Arguing'},
+        {value:'stilzwijgen', label:'Silence'},
+        {value:'afstand_nemen', label:'Passively keeping distance'},
+        {value:'via_andere_vrienden', label:'It is discussed with other friends involved'},
+      ]},
+      { id:'andere_vrienden_betrokken', type:'yesno', label:'Are other mutual friends involved?',
+        branch:{ ja:{ id:'hoe_betrokken', type:'text', label:'How are they involved?' } }
+      },
+      { id:'al_geprobeerd', type:'yesno', label:'Have you tried to tackle this before?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'What have you tried, and did it help?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'What made it difficult to tackle this?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this conflict occurred', placeholder:'What exactly happened, and how did it end?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'How do you feel right now about this friendship?', options:[
+        {value:'verdrietig', label:'Sad'},
+        {value:'boos', label:'Angry'},
+        {value:'teleurgesteld', label:'Disappointed'},
+        {value:'gemist', label:'I miss the friendship'},
+        {value:'onzeker', label:'Unsure about where we stand'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gevoel_ander', type:'multi', allowOther:true, label:'What do you think your friend is feeling right now?', options:[
+        {value:'verdrietig', label:'Sad'},
+        {value:'boos', label:'Angry'},
+        {value:'teleurgesteld', label:'Disappointed'},
+        {value:'onverschillig', label:'Indifferent'},
+        {value:'onzeker', label:'Unsure about where we stand'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gehoord', type:'single', allowOther:true, label:'Do you feel heard when you bring this up?', options:[
+        {value:'ja meestal', label:'Yes, usually'},
+        {value:'soms', label:'Sometimes yes, sometimes no'},
+        {value:'nee', label:'No, I do not feel heard'},
+        {value:'hoort maar verandert niets', label:'They say yes, but nothing changes'},
+        {value:'durf niet', label:'I actually do not dare to bring it up'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Is there something else playing a role that makes it harder?', options:[
+        {value:'levensfase', label:'A different stage of life'},
+        {value:'nieuwe_partner', label:'A new partner'},
+        {value:'minder_tijd', label:'Less time because of work or family'},
+        {value:'al_langer', label:'Something that had been bothering for a while'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'What would a good outcome be for you?', options:[
+        {value:'normaal_contact', label:'That we can be normal together again'},
+        {value:'verontschuldiging', label:'A sincere apology'},
+        {value:'begrip', label:'That the other person understands better how I felt'},
+        {value:'weet_niet', label:'I do not know yet'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh on you right now?', lowLabel:'Bearable', highLabel:'Overwhelming' },
+      { id:'ander_beseft_niet', type:'yesno', label:'Is there something you think your friend does not know or realize?',
+        branch:{ ja:{ id:'wat_beseft_niet', type:'text', label:'What would you like them to know?' } }
+      },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell your friend directly, but that would help to understand your behavior better? (optional)', placeholder:'e.g. I am actually jealous of your other friends, but I do not want to come across as clingy.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that your friend could use? (optional)', placeholder:'e.g. It would be nice if they simply said honestly what was going on.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+
+  buren: {
+    freeIds: ['duur_buren','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_oplossing','wat_toevoegen'],
+    questions: [
+      { id:'duur_buren', type:'single', label:'How long have you lived next to or near each other?', options:[
+        {value:'minder dan 1 jaar', label:'Less than 1 year'},
+        {value:'een paar jaar', label:'A few years'},
+        {value:'meer dan 10 jaar', label:'More than 10 years'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'How long has this problem been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'al jaren', label:'For years'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'What is the conflict mainly about?', options:[
+        {value:'geluidsoverlast', label:'Noise nuisance'},
+        {value:'grenzen', label:'Boundaries or property'},
+        {value:'gedeelde_ruimtes', label:'Shared spaces'},
+        {value:'huisdieren', label:'Pets'},
+        {value:'parkeren', label:'Parking'},
+        {value:'netheid', label:'Cleanliness or maintenance'},
+      ]},
+{ id:'frequentie', type:'single', allowOther:true, label:'How often does this happen?', options:[
+      {value:'bijna dagelijks', label:'Almost daily'},
+        {value:'wekelijks', label:'Weekly'},
+        {value:'af en toe maar zwaar', label:'Now and then, but it weighs heavily'},
+        {value:'een incident', label:'It was a one-time, serious incident'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you', placeholder:'What, in your words, is the real problem?' },
+      { id:'al_gesproken', type:'yesno', label:'Have you already talked to the neighbor about this directly?',
+        branch:{
+          ja:{ id:'hoe_verliep', type:'text', label:'How did that conversation go?' },
+          nee:{ id:'waarom_niet_gesproken', type:'text', label:'What made it difficult to bring this up?' },
+        }
+      },
+      { id:'derde_partij', type:'yesno', label:'Has a third party already been involved, such as police, building management or the city?',
+        branch:{ ja:{ id:'wat_gebeurde_derde', type:'text', label:'What happened then?' } }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this problem occurred', placeholder:'What exactly happened?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'How do you feel right now about this situation?', options:[
+        {value:'geirriteerd', label:'Irritated'},
+        {value:'machteloos', label:'Powerless'},
+        {value:'onveilig', label:'Unsafe'},
+        {value:'boos', label:'Angry'},
+        {value:'moe', label:'Tired of the repetition'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'buur_beseft', type:'single', allowOther:true, label:'What do you think the neighbor currently thinks or realizes about it?', options:[
+        {value:'beseft niet', label:'They probably do not realize it'},
+        {value:'expres', label:'They probably do it on purpose'},
+        {value:'weet niet', label:'I do not know'},
+      ]},
+      { id:'invloed_leven', type:'yesno', label:'Does this already affect your daily life or enjoyment of your home?',
+        branch:{ ja:{ id:'hoe_invloed', type:'text', label:'How does that influence show itself?' } }
+      },
+      { id:'gewenste_oplossing', type:'multi', allowOther:true, label:'What would be an acceptable solution for you?', options:[
+        {value:'afspraken', label:'Making clear agreements'},
+        {value:'verontschuldiging', label:'An apology'},
+        {value:'stoppen', label:'That the behavior simply stops'},
+        {value:'compromis', label:'A compromise about the space or situation'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh on you right now?', lowLabel:'Bearable', highLabel:'Takes over everything' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell the neighbor directly, but that would help to understand your side better? (optional)', placeholder:'e.g. I am actually very stressed by other things, which makes this feel extra heavy.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that the neighbor could use? (optional)', placeholder:'e.g. It would be nice if they simply said that they did not realize.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+
+  werk: {
+    freeIds: ['relatie','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'relatie', type:'single', allowOther:true, label:'What is your relationship to each other?', options:[
+        {value:'collegas', label:"Direct coworkers"},
+        {value:'leiding_medewerker', label:'Manager and employee'},
+        {value:'verschillende_afdelingen', label:'Different departments'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'How long has this problem been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'meer dan een jaar', label:'More than a year'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'What is the conflict mainly about?', options:[
+        {value:'communicatie', label:'Communication or tone'},
+        {value:'taakverdeling', label:'Distribution of tasks or workload'},
+        {value:'erkenning', label:'Recognition or appreciation'},
+        {value:'leiderschapsstijl', label:'Management style'},
+        {value:'incident', label:'A specific incident'},
+        {value:'grensoverschrijdend', label:'Boundary-crossing behavior'},
+      ]},
+      { id:'frequentie', type:'single', allowOther:true, label:'How often does this happen?', options:[
+        {value:'bijna dagelijks', label:'Almost daily'},
+        {value:'wekelijks', label:'Weekly'},
+        {value:'af en toe maar zwaar', label:'Now and then, but it weighs heavily'},
+        {value:'een incident', label:'It was a one-time, serious incident'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Who usually brings this up?', options:[
+        {value:'meestal ik', label:'Usually me'},
+        {value:'meestal collega', label:'Usually this coworker'},
+        {value:'ongeveer evenveel', label:'About equally, both of us'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you', placeholder:'What, in your words, is the real problem?' },
+      { id:'al_besproken', type:'yesno', label:'Has this already been discussed with a manager, HR or someone else within the company?',
+        branch:{
+          ja:{ id:'wat_gebeurde_bespreking', type:'text', label:'What happened then?' },
+          nee:{ id:'waarom_niet_besproken', type:'text', label:'What made it difficult to discuss this?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this occurred', placeholder:'What exactly happened?' },
+      { id:'invloed_functioneren', type:'yesno', label:'Does this affect your performance, well-being or motivation at work?',
+        branch:{ ja:{ id:'hoe_invloed_werk', type:'text', label:'How does that influence show itself?' } }
+      },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'How do you feel right now in the workplace?', options:[
+        {value:'gefrustreerd', label:'Frustrated'},
+        {value:'onder_druk', label:'Under pressure'},
+        {value:'niet_gerespecteerd', label:'Not respected'},
+        {value:'onzeker', label:'Insecure'},
+        {value:'gedemotiveerd', label:'Demotivated'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gevoel_ander', type:'text', label:'What do you think the other person is currently feeling or thinking?', placeholder:'Describe as well as you can how the other person is probably looking at this.' },
+      { id:'gehoord', type:'single', allowOther:true, label:'Do you feel heard when you try to bring this up?', options:[
+        {value:'ja meestal', label:'Yes, usually'},
+        {value:'soms', label:'Sometimes yes, sometimes no'},
+        {value:'nee', label:'No, I do not feel heard'},
+        {value:'hoort maar verandert niets', label:'They say yes, but nothing changes'},
+        {value:'durf niet', label:'I actually do not dare to bring it up'},
+      ]},
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'What would a good outcome be for you?', options:[
+        {value:'afspraken', label:'Clear agreements about working together'},
+        {value:'begeleid_gesprek', label:'A guided conversation'},
+        {value:'structurele_verandering', label:'That the behavior changes structurally'},
+        {value:'erkenning', label:'Just recognition of what happened'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh on you right now?', lowLabel:'Bearable', highLabel:'Takes over work' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell this coworker directly, but that would help to understand your side better? (optional)', placeholder:'e.g. I feel insecure in my role, and that makes me more easily irritated.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that this coworker could use? (optional)', placeholder:'e.g. It would be nice if they simply admitted that the workload was high.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+
+  school: {
+    freeIds: ['leeftijd_leerjaar','betrokkenen','duur_probleem','onderwerp','frequentie','kern_open','gevoel_betrokkene','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'leeftijd_leerjaar', type:'text', label:'What is the age or school grade of the child involved?', placeholder:'e.g. 9 years old, 4th grade' },
+      { id:'betrokkenen', type:'single', allowOther:true, label:'Who is involved?', options:[
+        {value:'twee_leerlingen', label:'Two students'},
+        {value:'leerling_leerkracht', label:'Student and teacher'},
+        {value:'leerkracht_ouder', label:'Teacher and parent'},
+      ]},
+      { id:'duur_probleem', type:'single', label:'How long has this been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'meer dan een jaar', label:'More than a year'},
+      ]},
+      { id:'onderwerp', type:'multi', allowOther:true, label:'What is the conflict mainly about?', options:[
+        {value:'pesten', label:'Bullying or exclusion'},
+        {value:'meningsverschil', label:'A disagreement that escalated'},
+        {value:'communicatie_school_ouder', label:'Communication between school and parent'},
+        {value:'prestaties', label:'Performance or approach'},
+        {value:'incident', label:'A specific incident'},
+      ]},
+   { id:'frequentie', type:'single', allowOther:true, label:'How often does this happen?', options:[
+        {value:'bijna dagelijks', label:'Almost daily'},
+        {value:'wekelijks', label:'Weekly'},
+        {value:'af en toe maar zwaar', label:'Now and then, but it weighs heavily'},
+        {value:'een incident', label:'It was a one-time, serious incident'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you or your child', placeholder:'What, in your words, is the real problem?' },
+      { id:'al_gemeld', type:'yesno', label:'Has this already been reported to a teacher, student counselor or principal?',
+        branch:{
+          ja:{ id:'wat_gebeurde_melding', type:'text', label:'What happened then?' },
+          nee:{ id:'waarom_niet_gemeld', type:'text', label:'What made it difficult to report this?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this occurred', placeholder:'What exactly happened?' },
+      { id:'invloed_welbevinden', type:'yesno', label:'Does this affect well-being or performance at school?',
+        branch:{ ja:{ id:'hoe_invloed_school', type:'text', label:'How does that influence show itself?' } }
+      },
+      { id:'gevoel_betrokkene', type:'multi', allowOther:true, label:'How does the person involved feel right now?', options:[
+        {value:'angstig', label:'Anxious'},
+        {value:'boos', label:'Angry'},
+        {value:'alleen', label:'Alone'},
+        {value:'onbegrepen', label:'Misunderstood'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'gevoel_ander', type:'text', label:'What do you think the other party is currently feeling or thinking?', placeholder:'Describe as well as you can how the other person is probably looking at this.' },
+      { id:'gewenste_uitkomst', type:'multi', allowOther:true, label:'What would a good outcome be for you?', options:[
+        {value:'stoppen', label:'That the behavior stops'},
+        {value:'begeleiding', label:'More guidance or follow-up from the school'},
+        {value:'gesprek_alle', label:'A conversation between everyone involved'},
+        {value:'erkenning', label:'Just recognition of what happened'},
+      ]},
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh right now?', lowLabel:'Bearable', highLabel:'Takes over school' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell the other party directly, but that would help to understand your side better? (optional)', placeholder:'e.g. I actually feel very insecure at school, and that makes this extra heavy.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that the other party could use? (optional)', placeholder:'e.g. It would be nice if they simply acknowledged what happened.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+
+  andere: {
+    freeIds: ['relatie_tot_ander','duur_probleem','onderwerp','frequentie','kern_open','gevoel_zelf','gewenste_uitkomst','wat_toevoegen'],
+    questions: [
+      { id:'relatie_tot_ander', type:'text', label:'How would you describe your relationship to each other?', placeholder:'e.g. housemates, distant family, an acquaintance from the sports club...' },
+      { id:'duur_probleem', type:'single', label:'How long has this been going on?', options:[
+        {value:'enkele dagen', label:'A few days'},
+        {value:'enkele weken', label:'A few weeks'},
+        {value:'enkele maanden', label:'A few months'},
+        {value:'meer dan een jaar', label:'More than a year'},
+      ]},
+      { id:'onderwerp', type:'text', label:'What is the conflict mainly about?', placeholder:'Briefly describe what it is about.' },
+     { id:'frequentie', type:'single', allowOther:true, label:'How often does this happen?', options:[
+        {value:'bijna dagelijks', label:'Almost daily'},
+        {value:'wekelijks', label:'Weekly'},
+        {value:'af en toe maar zwaar', label:'Now and then, but it weighs heavily'},
+        {value:'een incident', label:'It was a one-time, serious incident'},
+      ]},
+      { id:'wie_kaart_aan', type:'single', allowOther:true, label:'Who usually brings this up?', options:[
+        {value:'meestal ik', label:'Usually me'},
+        {value:'meestal de ander', label:'Usually the other person'},
+        {value:'ongeveer evenveel', label:'About equally, both of us'},
+      ]},
+      { id:'kern_open', type:'text', label:'Describe in your own words what this is really about for you', placeholder:'What, in your words, is the real problem?' },
+      { id:'al_geprobeerd', type:'yesno', label:'Have you tried to tackle this before?',
+        branch:{
+          ja:{ id:'wat_geprobeerd', type:'text', label:'What have you tried, and did it help?' },
+          nee:{ id:'waarom_niet_geprobeerd', type:'text', label:'What made it difficult to tackle this?' },
+        }
+      },
+      { id:'specifiek_moment', type:'text', label:'Describe a specific moment when this occurred', placeholder:'What exactly happened?' },
+      { id:'gevoel_zelf', type:'multi', allowOther:true, label:'How do you feel right now?', options:[
+        {value:'gefrustreerd', label:'Frustrated'},
+        {value:'verdrietig', label:'Sad'},
+        {value:'boos', label:'Angry'},
+        {value:'onbegrepen', label:'Misunderstood'},
+        {value:'machteloos', label:'Powerless'},
+        {value:'moe', label:'Tired of the repetition'},
+        {value:'neutraal', label:'Neutral, no pronounced feeling'},
+      ]},
+      { id:'andere_factoren', type:'multi', allowOther:true, label:'Are there other things playing a role that make it harder?', options:[
+        {value:'stress', label:'Stress or busyness in life'},
+        {value:'gezondheid', label:'Health'},
+        {value:'geld', label:'Money'},
+        {value:'verandering', label:'A big change or transition'},
+        {value:'geen', label:'No, it is really about this one problem'},
+      ]},
+      { id:'gevoel_ander', type:'text', label:'What do you think the other party is feeling right now?', placeholder:'Describe as well as you can how the other person is probably looking at this.' },
+      { id:'gewenste_uitkomst', type:'text', label:'What would a good outcome be for you?', placeholder:'Describe what a good solution would be for you.' },
+      { id:'zwaarte', type:'scale', label:'How heavily does this weigh on you right now?', lowLabel:'Bearable', highLabel:'Overwhelming' },
+      { id:'vertrouwelijke_context', type:'text', optional:true, note:CONFIDENTIAL_NOTE, label:'Is there something you feel or experience yourself, that you would rather not tell the other person directly, but that would help to understand your side better? (optional)', placeholder:'e.g. Something else is going on in my life that makes this extra heavy.' },
+      { id:'eigen_tip_voorstel', type:'text', optional:true, label:'Would you like to suggest a tip or opening sentence that the other person could use? (optional)', placeholder:'e.g. It would be nice if they simply acknowledged this.' },
+      { id:'wat_toevoegen', type:'text', optional:true, isFinal:true, label:'Is there anything important you want to share that did not come up in the questions above?' },
+    ]
+  },
+};
+
+function getQuestionnaire(category) {
+  return QUESTIONNAIRES[category] || QUESTIONNAIRES.andere;
+}
+
+function renderInput(q) {
+  if (q.type === 'single') {
+    let opts = q.options.map(o => `
+      <label class="mc-option">
+        <input type="radio" name="${esc(q.id)}" value="${esc(o.value)}">
+        <span>${esc(o.label)}</span>
+      </label>`).join('');
+    if (q.allowOther) {
+      opts += `
+        <label class="mc-option">
+          <input type="radio" name="${esc(q.id)}" value="__andere__" class="other-toggle-radio" data-other-target="other_${esc(q.id)}">
+          <span>None of these, I will explain it myself</span>
+        </label>
+        <input type="text" id="other_${esc(q.id)}" class="other-input" style="display:none" placeholder="Add here">`;
+    }
+    return `<div class="mc-group" data-name="${esc(q.id)}">${opts}</div>`;
+  }
+  if (q.type === 'multi') {
+    let opts = q.options.map(o => `
+      <label class="mc-option">
+        <input type="checkbox" name="${esc(q.id)}" value="${esc(o.value)}">
+        <span>${esc(o.label)}</span>
+      </label>`).join('');
+    if (q.allowOther) {
+      opts += `
+        <label class="mc-option">
+          <input type="checkbox" name="${esc(q.id)}" value="__andere__" class="other-toggle" data-other-target="other_${esc(q.id)}">
+          <span>None of these, I will explain it myself</span>
+        </label>
+        <input type="text" id="other_${esc(q.id)}" class="other-input" style="display:none" placeholder="Add here">`;
+    }
+    return `<div class="mc-group" data-name="${esc(q.id)}">${opts}</div>`;
+  }
+  if (q.type === 'scale') {
+    const opts = [1,2,3,4,5].map(n => `
+      <label class="scale-option">
+        <input type="radio" name="${esc(q.id)}" value="${n}">
+        <span>${n}</span>
+      </label>`).join('');
+    return `<div class="scale-group" data-name="${esc(q.id)}" data-low="${escAttr(q.lowLabel || '')}" data-high="${escAttr(q.highLabel || '')}">
+      <div class="scale-row">${opts}</div>
+      <div class="scale-labels"><span>${esc(q.lowLabel || '')}</span><span>${esc(q.highLabel || '')}</span></div>
+    </div>`;
+  }
+  if (q.type === 'yesno') {
+    let branchHtml = '';
+    if (q.branch) {
+      if (q.branch.ja) branchHtml += `<div class="branch-box" id="branch_${esc(q.id)}_ja" style="display:none">${renderQuestion(q.branch.ja)}</div>`;
+      if (q.branch.nee) branchHtml += `<div class="branch-box" id="branch_${esc(q.id)}_nee" style="display:none">${renderQuestion(q.branch.nee)}</div>`;
+    }
+    return `<div class="mc-group" data-name="${esc(q.id)}">
+      <label class="mc-option"><input type="radio" name="${esc(q.id)}" value="ja" class="yesno-input" data-parent="${esc(q.id)}"><span>Yes</span></label>
+      <label class="mc-option"><input type="radio" name="${esc(q.id)}" value="nee" class="yesno-input" data-parent="${esc(q.id)}"><span>No</span></label>
+    </div>${branchHtml}`;
+  }
+  if (q.type === 'text') {
+    const maxChars = q.isFinal
+      ? (currentPlan === 'gratis' ? 1000 : 12000)
+      : (currentPlan === 'gratis' ? 800 : 8000);
+    const noteHtml = q.note ? `<div class="q-note">${esc(q.note)}</div>` : '';
+    return `<textarea class="q-textarea" data-qid="${esc(q.id)}" maxlength="${maxChars}" placeholder="${escAttr(q.placeholder || '')}"></textarea>
+      <div class="help char-counter" data-for="${esc(q.id)}">0 / ${maxChars.toLocaleString('en-US')} characters</div>
+      ${noteHtml}`;
+  }
+  return '';
+}
+
+function renderQuestion(q) {
+  return `<div class="q-block" data-qid="${esc(q.id)}" data-required="${q.optional ? 'false' : 'true'}">
+    <label class="q-label">${esc(q.label)}${q.optional ? '' : ' <span style="color:var(--clay)">*</span>'}</label>
+    ${renderInput(q)}
+  </div>`;
+}
+
+function handleSurveyChange(e) {
+  const t = e.target;
+  if (t.type === 'radio') {
+    const group = t.closest('.mc-group');
+    if (group) {
+      const otherInput = group.querySelector('.other-input');
+      if (otherInput) {
+        otherInput.style.display = (t.classList.contains('other-toggle-radio') && t.checked) ? 'block' : 'none';
+      }
+    }
+  }
+  if (t.classList && t.classList.contains('other-toggle')) {
+    const target = document.getElementById(t.dataset.otherTarget);
+    if (target) target.style.display = t.checked ? 'block' : 'none';
+  }
+  if (t.classList && t.classList.contains('yesno-input')) {
+    const parent = t.dataset.parent;
+    const jaBox = document.getElementById(`branch_${parent}_ja`);
+    const neeBox = document.getElementById(`branch_${parent}_nee`);
+    if (jaBox) jaBox.style.display = (t.value === 'ja') ? 'block' : 'none';
+    if (neeBox) neeBox.style.display = (t.value === 'nee') ? 'block' : 'none';
+  }
+}
+
+function handleSurveyInput(e) {
+  const t = e.target;
+  if (t.classList && t.classList.contains('q-textarea')) {
+    const container = e.currentTarget;
+    const counter = container.querySelector(`.char-counter[data-for="${t.dataset.qid}"]`);
+    if (counter) {
+      const max = t.getAttribute('maxlength');
+      counter.textContent = `${t.value.length} / ${Number(max).toLocaleString('en-US')} characters`;
+    }
+  }
+  if (t.classList && t.classList.contains('other-input') && t.id) {
+    const toggle = document.querySelector(`[data-other-target="${t.id}"]`);
+    if (toggle && !toggle.checked && t.value.trim()) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+}
+
+function cssAttrEscape(v) {
+  return String(v).replace(/["\\]/g, '\\$&');
+}
+
+function collectAnswers(container) {
+  const blocks = Array.from(container.querySelectorAll('.q-block[data-qid]'));
+  const results = [];
+  for (const block of blocks) {
+    if (block.offsetParent === null) continue;
+    const qid = block.dataset.qid;
+    const required = block.dataset.required === 'true';
+    const label = block.querySelector('.q-label').textContent;
+    let answer = '';
+    const group = block.querySelector(`.mc-group[data-name="${cssAttrEscape(qid)}"]`);
+    const scaleGroup = block.querySelector(`.scale-group[data-name="${cssAttrEscape(qid)}"]`);
+    const textarea = block.querySelector(`textarea.q-textarea[data-qid="${cssAttrEscape(qid)}"]`);
+    if (group) {
+      const checked = Array.from(group.querySelectorAll('input:checked'));
+      const isMulti = group.querySelectorAll('input[type=checkbox]').length > 0;
+      if (isMulti) {
+        const labels = checked.filter(c => c.value !== '__andere__').map(c => c.closest('label').querySelector('span').textContent);
+        const otherChecked = checked.find(c => c.value === '__andere__');
+        if (otherChecked) {
+          const otherInput = document.getElementById(`other_${qid}`);
+          if (otherInput && otherInput.value.trim()) labels.push(otherInput.value.trim());
+        }
+        answer = labels.join(', ');
+      } else if (checked.length) {
+        if (checked[0].value === '__andere__') {
+          const otherInput = document.getElementById(`other_${qid}`);
+          answer = otherInput ? otherInput.value.trim() : '';
+        } else {
+          answer = checked[0].closest('label').querySelector('span').textContent;
+        }
+      }
+    } else if (scaleGroup) {
+      const checked = scaleGroup.querySelector('input:checked');
+      if (checked) {
+        const val = parseInt(checked.value, 10);
+        const low = scaleGroup.dataset.low || 'lighter';
+        const high = scaleGroup.dataset.high || 'heavier';
+        if (val <= 2) answer = `Closer to: ${low}`;
+        else if (val >= 4) answer = `Closer to: ${high}`;
+        else answer = 'Somewhere in the middle';
+      }
+    } else if (textarea) {
+      answer = textarea.value.trim();
+    }
+    results.push({ qid, label, answer, required });
+  }
+  return results;
+}
+
+function validateAndBuildContent(container) {
+  const answers = collectAnswers(container);
+  const missing = answers.find(a => a.required && !a.answer);
+  if (missing) {
+    const block = container.querySelector(`.q-block[data-qid="${cssAttrEscape(missing.qid)}"]`);
+    if (block) {
+      block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      block.classList.add('q-invalid');
+      setTimeout(() => block.classList.remove('q-invalid'), 2500);
+    }
+    return null;
+  }
+const lines = answers.filter(a => a.answer).map(a => {
+    if (a.qid === 'vertrouwelijke_context') {
+      return `Question: [CONFIDENTIAL, NEVER SHOW TO THE OTHER] ${a.label}\nAnswer: ${a.answer}`;
+    }
+    return `Question: ${a.label}\nAnswer: ${a.answer}`;
+  });
+  const proExtraLines = Array.from(document.querySelectorAll('.pro-extra-answer'))
+    .filter(t => t.value.trim())
+    .map(t => `Question: ${t.dataset.question}\nAnswer: ${t.value.trim()}`);
+  return [...lines, ...proExtraLines].join('\n\n');
+}
+
+function serializeFormState(container) {
+  const state = { radios: {}, checkboxes: {}, textareas: {}, others: {} };
+  container.querySelectorAll('input[type=radio]:checked').forEach(r => { state.radios[r.name] = r.value; });
+  container.querySelectorAll('input[type=checkbox]:checked').forEach(c => {
+    state.checkboxes[c.name] = state.checkboxes[c.name] || [];
+    state.checkboxes[c.name].push(c.value);
+  });
+  container.querySelectorAll('textarea.q-textarea').forEach(t => { state.textareas[t.dataset.qid] = t.value; });
+  container.querySelectorAll('.other-input').forEach(o => { state.others[o.id] = o.value; });
+  return state;
+}
+
+function restoreFormState(state, container) {
+  if (!state) return;
+  Object.entries(state.radios || {}).forEach(([name, val]) => {
+    const el = container.querySelector(`input[type=radio][name="${cssAttrEscape(name)}"][value="${cssAttrEscape(val)}"]`);
+    if (el) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+  });
+  Object.entries(state.checkboxes || {}).forEach(([name, vals]) => {
+    vals.forEach(val => {
+      const el = container.querySelector(`input[type=checkbox][name="${cssAttrEscape(name)}"][value="${cssAttrEscape(val)}"]`);
+      if (el) { el.checked = true; el.dispatchEvent(new Event('change', { bubbles: true })); }
+    });
+  });
+  Object.entries(state.textareas || {}).forEach(([qid, val]) => {
+    const el = container.querySelector(`textarea.q-textarea[data-qid="${cssAttrEscape(qid)}"]`);
+    if (el) { el.value = val; el.dispatchEvent(new Event('input', { bubbles: true })); }
+  });
+  Object.entries(state.others || {}).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+async function load() {
+  if (!token) { app.innerHTML = '<div class="error-box">Invalid link. Ask the organizer to send the link again, or <a href="/en/login.html">view your conversations via My conversations</a>.</div>'; return; }
+  const res = await fetch(`/.netlify/functions/get-session?token=${token}`);
+  const data = await res.json();
+  if (!res.ok) { app.innerHTML = `<div class="error-box">${data.error}</div>`; return; }
+  if (data.session && data.session.lang && data.session.lang !== PAGE_LANG) {
+    window.location.replace((data.session.lang === 'en' ? '/en' : '') + '/story.html' + window.location.search);
+    return;
+  }
+  render(data);
+}
+
+function otherNames(data) {
+  return (data.allParticipants || [])
+    .filter(p => !p.is_organizer && p.id !== data.participant.id)
+    .map(p => p.display_name)
+    .join(' and ');
+}
+
+function organizerName(data) {
+  const organizer = (data.allParticipants || []).find(p => p.is_organizer);
+  return organizer ? organizer.display_name : null;
+}
+
+function whoStartedBanner(data) {
+  if (data.participant.isOrganizer) return '';
+  const orgName = organizerName(data);
+  if (!orgName) return '';
+  return `<div class="who-started">This conversation was started by <strong>${orgName}</strong>.</div>`;
+}
+
+function attachLinksButton(tok) {
+  const btn = document.getElementById('showLinksBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const box = document.getElementById('linksBox');
+    box.innerHTML = '<p style="color:var(--ink-soft);font-size:.85rem">Even laden...</p>';
+    try {
+      const res = await fetch(`/.netlify/functions/get-session-links?token=${tok}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+     box.innerHTML = data.links.map((l, i) => `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <span style="font-size:.82rem;color:var(--ink-soft);min-width:90px">${l.name}${l.isOrganizer ? ' (you)' : ''}</span>
+          <input type="text" readonly id="linkInput_${i}" value="${window.location.origin}${l.accessLink}" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:.75rem">
+          <button type="button" class="icon-btn copy-link-btn" data-target="linkInput_${i}" title="Copy link" style="flex-shrink:0">📋</button>
+        </div>`).join('');
+      box.querySelectorAll('.copy-link-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = document.getElementById(btn.dataset.target);
+          navigator.clipboard.writeText(input.value).then(() => {
+            const old = btn.textContent;
+            btn.textContent = '✓';
+            setTimeout(() => { btn.textContent = old; }, 1500);
+          });
+        });
+      });
+    } catch (err) {
+      box.innerHTML = `<p style="color:#8A4222;font-size:.85rem">${err.message}</p>`;
+    }
+  });
+}
+
+function categoryEditorHTML(currentCategory) {
+  const isKnown = CATEGORY_OPTIONS.some(o => o.value === currentCategory);
+  const options = CATEGORY_OPTIONS.map(o =>
+    `<option value="${o.value}" ${o.value === currentCategory ? 'selected' : ''}>${o.label}</option>`
+  ).join('');
+  return `
+    <div class="field" style="margin-bottom:24px">
+      <label for="categoryEdit">Type of situation</label>
+      <select id="categoryEdit">
+        ${options}
+        <option value="__andere__" ${!isKnown ? 'selected' : ''}>Something else, namely...</option>
+      </select>
+      <div class="field" id="categoryEditOtherField" style="display:${!isKnown ? 'block' : 'none'};margin-top:10px">
+        <input type="text" id="categoryEditOther" placeholder="Briefly describe your situation" value="${!isKnown ? currentCategory : ''}">
+      </div>
+      <div class="help" id="categorySavedMsg" style="display:none;color:var(--sage)">Saved. The questionnaire below has been adapted to your new choice.</div>
+    </div>`;
+}
+
+function attachCategoryEditor(session, onCategoryChanged) {
+  const select = document.getElementById('categoryEdit');
+  if (!select) return;
+  const otherField = document.getElementById('categoryEditOtherField');
+  const otherInput = document.getElementById('categoryEditOther');
+  const savedMsg = document.getElementById('categorySavedMsg');
+
+  async function saveCategory() {
+    let value = select.value;
+    if (value === '__andere__') {
+      value = otherInput.value.trim();
+      if (!value) return;
+    }
+    if (value === session.category) return;
+    try {
+      const res = await fetch('/.netlify/functions/update-session-category', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, category: value }),
+      });
+      if (res.ok) {
+        session.category = value;
+        savedMsg.style.display = 'block';
+        setTimeout(() => { savedMsg.style.display = 'none'; onCategoryChanged(); }, 1200);
+      }
+    } catch (e) { /* fail silently, not critical */ }
+  }
+
+  select.addEventListener('change', () => {
+    otherField.style.display = select.value === '__andere__' ? 'block' : 'none';
+    if (select.value !== '__andere__') saveCategory();
+  });
+  otherInput.addEventListener('blur', saveCategory);
+}
+
+function render(data) {
+  const { participant, session, myEntries, myFollowups } = data;
+  const round1Done = myEntries.some(e => e.round === 1);
+  const round2Done = myEntries.some(e => e.round === 2);
+  const isPureThirdParty = participant.isOrganizer && session.organizer_participates === false;
+
+  if (isPureThirdParty) {
+    const statusList = (data.participantsStatus || []).map(p => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 0">
+        <span style="color:${p.submitted ? 'var(--sage)' : 'var(--ink-soft)'};font-weight:700">${p.submitted ? '✓' : '○'}</span>
+        <span>${p.name}${p.submitted ? ' has filled in' : ' has not filled in yet'}</span>
+      </div>`).join('');
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Hello ${participant.name}</h1>
+      <p style="color:var(--ink-soft)">You are the organizer of this conversation. You do not have to fill in a story yourself. Status: <strong>${statusLabel(session.status)}</strong>.</p>
+      ${statusList ? `<div class="card" style="margin-bottom:20px">${statusList}</div>` : ''}
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="${docLinkWithReturn(token)}" class="btn clay">Go to the document</a>
+        <a href="${backLink}" class="btn outline">${backLabel}</a>
+      </div>
+      <div style="margin-top:16px"><button id="showLinksBtn" class="btn outline" style="padding:8px 16px;font-size:.85rem">View all links again</button><div id="linksBox" style="margin-top:14px"></div></div>
+      <p style="margin-top:20px;font-size:.85rem;color:var(--ink-soft)">Save this page (or your email with this link) to come back later.</p>`;
+    attachLinksButton(token);
+    return;
+  }
+
+  if (viewMode === 'antwoorden') {
+    renderMyAnswersView(data.participant, data.myEntries);
+    return;
+  }
+
+  if (!round1Done) {
+    renderStoryForm(participant.name, session, data);
+  } else if (session.status === 'veiligheid_gestopt') {
+    renderCrisisMessage();
+ } else if (session.status === 'wachten_op_verhalen') {
+    const wie = otherNames(data) || 'the other participant(s)';
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Thank you, ${participant.name}</h1>
+      ${whoStartedBanner(data)}
+      <div class="status-box">Your answers have been submitted. We are now waiting for <strong>${wie}</strong>. As soon as everyone is done, the document is prepared automatically. You will get an email as soon as it is ready. Feel free to close this page.</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">
+        <a href="?token=${token}&view=antwoorden" class="btn outline" style="padding:9px 16px;font-size:.85rem;text-align:center">View my submitted answers</a>
+        ${participant.isOrganizer ? `<button id="showLinksBtn" class="btn outline" style="padding:9px 16px;font-size:.85rem">View all links again</button>` : `<a href="/en/" class="btn outline" style="padding:9px 16px;font-size:.85rem;text-align:center">Back to home page</a>`}
+        <button type="button" class="btn clay" style="padding:9px 16px;font-size:.85rem" onclick="goToMijnGesprekken()">Go to My conversations</button>
+        ${participant.isOrganizer ? `<a href="/en/" class="btn outline" style="padding:9px 16px;font-size:.85rem;text-align:center">Back to home page</a>` : ''}
+      </div>
+      ${participant.isOrganizer ? `<div id="linksBox" style="margin-top:14px"></div>` : ''}`;
+    setTimeout(load, 10000);
+    if (participant.isOrganizer) attachLinksButton(token);
+  } else if (session.status === 'verhalen_klaar_vervolgvragen_genereren') {
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Thank you, ${participant.name}</h1>
+      <div class="status-box">We are looking at your answers. You do not have to wait: you can always find this conversation via <a href="/en/login.html">My conversations</a>, and you will get an email as soon as there is news. This page reloads by itself.</div>`;
+    setTimeout(load, 8000);
+  } else if (session.status === 'wachten_op_vervolgvragen' && myFollowups && !round2Done) {
+    renderFollowupForm(myFollowups, participant.name);
+  } else if (session.status === 'wachten_op_vervolgvragen' && !myFollowups) {
+    app.innerHTML = `<div class="status-box">One moment.</div>`;
+    setTimeout(load, 5000);
+  } else if (round2Done && session.status === 'wachten_op_vervolgvragen') {
+    const wie = otherNames(data) || 'the other participant(s)';
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Thank you, ${participant.name}</h1>
+      <div class="status-box">We are now waiting for <strong>${wie}</strong>. This page reloads by itself.</div>`;
+    setTimeout(load, 8000);
+ } else if (session.status === 'document_genereren') {
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Your document is being created</h1>
+      <div class="status-box">Your document is being processed and will be ready shortly. This can take a few minutes, and a little longer if there are more than two participants. You do not have to wait: you can always find this conversation via <a href="/en/login.html">My conversations</a>, and you automatically get an email as soon as the document is ready.</div>`;
+    setTimeout(load, 8000);
+  } else if (session.status === 'document_mislukt') {
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Something went wrong</h1>
+      <div class="error-box">Preparing your document unfortunately failed. This is on our side, not something you did wrong. We have been notified automatically. Feel free to contact us at <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a> if you want help quickly.</div>
+      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
+  } else if (session.status === 'vervolgvragen_mislukt') {
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Something went wrong</h1>
+      <div class="error-box">Preparing your follow-up questions unfortunately failed. This is on our side, not something you did wrong. We have been notified automatically. Feel free to contact us at <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a> if you want help quickly.</div>
+      <div style="margin-top:20px"><a href="${backLink}" class="btn outline">${backLabel}</a></div>`;
+  } else if (session.status === 'klaar') {
+    app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+      <h1>Your document is ready</h1>
+      ${whoStartedBanner(data)}
+      <p style="color:var(--ink-soft)">The honest, neutral report is ready to view.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a href="${docLinkWithReturn(token)}" class="btn clay">View document</a>
+        <a href="?token=${token}&view=antwoorden" class="btn outline">View my submitted answers</a>
+        <a href="${backLink}" class="btn outline">${backLabel}</a>
+      </div>`;
+ } else if ((session.status || '').startsWith('nieuwe_ronde_')) {
+    const round = parseInt(session.status.split('_').pop(), 10);
+    const alreadyDone = myEntries.some(e => e.round === round);
+    if (alreadyDone) {
+      const wie = otherNames(data) || 'the other participant(s)';
+      app.innerHTML = `<span class="label">${catLabel(session.category)}</span>
+        <h1>Thank you for your addition</h1>
+        <div class="status-box">We are now waiting for the addition from <strong>${wie}</strong>. As soon as it is there, we prepare your <strong>follow-up document</strong>: an updated version of your document.</div>
+        <div style="margin-top:16px"><a href="${docLinkWithReturn(token)}" class="btn outline">View your current document</a></div>`;
+      setTimeout(load, 8000);
+    } else {
+      renderFollowupSurvey(round, participant.name, session);
+    }
+  } else {
+    app.innerHTML = `<div class="status-box">Working...</div>`;
+    setTimeout(load, 6000);
+  }
+}
+
+function statusLabel(status) {
+  const labels = {
+    wachten_op_verhalen: 'waiting for the answers',
+    verhalen_klaar_vervolgvragen_genereren: 'being prepared',
+    wachten_op_vervolgvragen: 'waiting for the follow-up questions',
+    document_genereren: 'document is being prepared',
+    document_mislukt: 'something went wrong, please contact us',
+    vervolgvragen_mislukt: 'something went wrong, please contact us',
+    klaar: 'ready',
+    veiligheid_gestopt: 'stopped for safety reasons',
+  };
+  if (labels[status]) return labels[status];
+  if ((status || '').startsWith('nieuwe_ronde_')) return 'follow-up in progress';
+  return status;
+}
+
+function parseAnswerBlocks(content) {
+  return content.split('\n\n').map(block => {
+    const lines = block.split('\n');
+    const qLine = lines.find(l => l.startsWith('Question:')) || '';
+    const aLine = lines.find(l => l.startsWith('Answer:')) || '';
+    let question = qLine.replace('Question:', '').trim();
+    const answer = aLine.replace('Answer:', '').trim();
+    let confidential = false;
+    if (question.includes('[CONFIDENTIAL, NEVER SHOW TO THE OTHER]')) {
+      confidential = true;
+      question = question.replace('[CONFIDENTIAL, NEVER SHOW TO THE OTHER]', '').trim();
+    }
+    return { question, answer, confidential };
+  }).filter(b => b.question || b.answer);
+}
+
+function renderMyAnswersView(participant, myEntries) {
+  const sorted = [...myEntries].sort((a, b) => a.round - b.round);
+  if (!sorted.length) {
+    app.innerHTML = `<span class="label">My answers</span>
+      <h1>Nothing filled in yet</h1>
+      <p style="color:var(--ink-soft)">You have not submitted any answers for this conversation yet.</p>
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+        <a href="?token=${token}" class="btn clay">Fill in my document</a>
+        <a href="${backLink}" class="btn outline">${backLabel}</a>
+      </div>`;
+    return;
+  }
+  const sectionsHTML = sorted.map(entry => {
+    const title = entry.round === 1 ? 'Original document' : `Follow-up (round ${entry.round})`;
+    const blocks = parseAnswerBlocks(entry.content);
+    const blocksHTML = blocks.map(b => `
+      <div class="q-block" style="margin-bottom:20px">
+        <label class="q-label">${esc(b.question)}${b.confidential ? ' <span style="font-size:.75rem;color:var(--clay);font-weight:400">(confidential, not shown to the other)</span>' : ''}</label>
+        <p style="color:var(--ink-soft);white-space:pre-wrap">${esc(b.answer)}</p>
+      </div>`).join('');
+    return `
+      <div class="doc-section" style="margin-bottom:32px">
+        <span class="label">${title}</span>
+        ${blocksHTML}
+      </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <a href="${backLink}" class="btn ghost" style="margin-bottom:16px;display:inline-block">← ${backLabel}</a>
+    <span class="label">My answers</span>
+    <h1>What you filled in</h1>
+    <p style="color:var(--ink-soft);margin-bottom:24px">This is only visible to you. You can read it again here, but no longer change it.</p>
+    ${sectionsHTML}
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <a href="${backLink}" class="btn outline">${backLabel}</a>
+      <a href="/en/login.html" class="btn outline">Go to My conversations</a>
+    </div>`;
+}
+
+function renderCrisisMessage() {  app.innerHTML = `
+    <span class="label">Important</span>
+    <h1>This goes beyond what we can help resolve</h1>
+    <p style="color:var(--ink-soft)">Based on what has been written, we think professional or specialized help is now more important than a document. You are not alone in this.</p>
+    <div class="status-box" style="text-align:left">
+      <p><strong>Suicide and crisis lifeline (US):</strong> call or text 988, <a href="https://988lifeline.org" target="_blank">988lifeline.org</a></p>
+      <p><strong>Domestic violence hotline (US):</strong> 1-800-799-7233, <a href="https://www.thehotline.org" target="_blank">thehotline.org</a></p>
+      <p><strong>Samaritans (UK and Ireland):</strong> 116 123, <a href="https://www.samaritans.org" target="_blank">samaritans.org</a></p>
+      <p><strong>Worldwide overview:</strong> <a href="https://findahelpline.com" target="_blank">findahelpline.com</a></p>
+      <p style="margin-top:16px;color:var(--ink-soft);font-size:.85rem">If you are in immediate danger, call your emergency number (911 in the US, 999 in the UK, 112 in Europe).</p>
+    </div>`;
+}
+
+function renderStoryForm(name, session, data) {
+  const plan = session.plan || 'gratis';
+  currentPlan = plan;
+  const questionnaire = getQuestionnaire(session.category);
+  const questions = plan === 'gratis'
+    ? questionnaire.questions.filter(q => questionnaire.freeIds.includes(q.id))
+    : questionnaire.questions;
+
+  const questionsHTML = questions.map(q => renderQuestion(q)).join('');
+
+  app.innerHTML = `
+    <span class="label">Your side of the story</span>
+    <h1>Tell us what is going on</h1>
+    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:12px;color:var(--ink)">
+      You are filling this in as <strong>${name}</strong>. Is this not your name? Close this page and ask for the right link from whoever started the conversation, or <a href="/en/login.html">view your own conversations</a>.
+    </div>
+    ${whoStartedBanner(data)}
+${data.otherEntriesCount === 0 ? categoryEditorHTML(session.category) : `
+    <div class="field" style="margin-bottom:24px">
+      <label>Type of situation</label>
+      <div class="status-box" style="text-align:left;margin:0">${catLabel(session.category)}</div>
+      <div class="help">The other participant has already submitted, the category can no longer be changed.</div>
+    </div>`}
+
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:18px">
+      <p style="margin:0;font-size:.88rem">What you fill in here is never read directly by the other participants. We combine both answers into a shared, carefully worded overview, with respect for both of you.</p>
+    </div>
+
+    ${plan === 'gratis' ? `<div class="card" style="background:var(--clay-soft);border:none;margin-bottom:20px;padding:16px">
+      <p style="margin:0;font-size:.9rem">You are using the free version, with a more limited questionnaire. For the full, in-depth questionnaire and the complete document, see our <a href="/en/pricing.html" style="font-weight:600">pricing</a>.</p>
+    </div>` : ''}
+
+<p style="color:var(--ink-soft);margin-bottom:8px">Answer the questions below as honestly as possible. Feel free to pause in between and continue later. After final submission you can no longer change your answers.</p>
+    <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:16px"><span style="color:var(--clay)">*</span> = required question</p>
+    <div id="error" class="error-box" style="display:none"></div>
+
+    <form id="storyForm">
+<div id="surveyBody">${questionsHTML}</div>
+    ${session.pro_extra_questions && session.pro_extra_questions.length ? `
+    <div class="form-section" style="margin-top:20px">
+      <span class="form-section-title">Extra questions</span>
+      <p style="color:var(--ink-soft);font-size:.85rem;margin-bottom:16px">These questions come from the organizer of this conversation. Optional to answer.</p>
+      ${session.pro_extra_questions.map((q, i) => `
+        <div class="field">
+          <label for="proQ_${i}">${q}</label>
+          <textarea id="proQ_${i}" class="pro-extra-answer" data-question="${q.replace(/"/g,'&quot;')}"></textarea>
+        </div>`).join('')}
+    </div>` : ''}
+      <div class="checkbox-row">
+        <input type="checkbox" id="anon">
+        <label for="anon">Do not mention my name for this specific story in the document (anonymous)</label>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" id="saveDraftBtn" class="btn outline" style="flex:1;padding:14px">Save as draft</button>
+        <button type="button" id="submitFinalBtn" class="btn clay" style="flex:1;padding:14px">Submit final</button>
+      </div>
+      <div id="draftSavedMsg" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Draft saved on this device. Come back to this link later to continue.</div>
+    </form>
+
+    <div id="confirmSubmitModal" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
+        <h3 style="margin-bottom:12px">Submit final?</h3>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">After submitting you can no longer change your answers. Are you sure you are done?</p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="cancelSubmit" class="btn outline" style="flex:1">Wait a moment</button>
+          <button type="button" id="confirmSubmit" class="btn clay" style="flex:1">Yes, submit</button>
+        </div>
+      </div>
+    </div>`;
+
+  const surveyBody = document.getElementById('surveyBody');
+  surveyBody.addEventListener('change', handleSurveyChange);
+  surveyBody.addEventListener('input', handleSurveyInput);
+if (data.otherEntriesCount === 0) {
+    attachCategoryEditor(session, () => renderStoryForm(name, session, data));
+  }
+
+const draftRaw = loadDraft('story_answers');
+  if (draftRaw) {
+    try { restoreFormState(JSON.parse(draftRaw), surveyBody); } catch (e) {}
+  } else {
+    try {
+      const prefillKey = `mp_prefill_kern_${token}`;
+      const prefillText = localStorage.getItem(prefillKey);
+      if (prefillText) {
+        const kernTextarea = surveyBody.querySelector('textarea.q-textarea[data-qid="kern_open"]');
+        if (kernTextarea) {
+          kernTextarea.value = prefillText;
+          kernTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        localStorage.removeItem(prefillKey);
+      }
+      const confidentialKey = `mp_prefill_confidential_${token}`;
+      const confidentialText = localStorage.getItem(confidentialKey);
+      if (confidentialText) {
+        const confTextarea = surveyBody.querySelector('textarea.q-textarea[data-qid="vertrouwelijke_context"]');
+        if (confTextarea) {
+          confTextarea.value = confidentialText;
+          confTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        localStorage.removeItem(confidentialKey);
+      }
+    } catch (e) {}
+  }
+
+  document.getElementById('saveDraftBtn').addEventListener('click', () => {
+    saveDraft('story_answers', JSON.stringify(serializeFormState(surveyBody)));
+    const msg = document.getElementById('draftSavedMsg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  });
+
+  document.getElementById('submitFinalBtn').addEventListener('click', () => {
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+    const content = validateAndBuildContent(surveyBody);
+    if (content === null) {
+      errorBox.textContent = 'Please answer all required questions (marked in red) before you submit.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    pendingSubmitContent = content;
+    document.getElementById('confirmSubmitModal').style.display = 'flex';
+  });
+
+  document.getElementById('cancelSubmit').addEventListener('click', () => {
+    document.getElementById('confirmSubmitModal').style.display = 'none';
+  });
+
+  document.getElementById('confirmSubmit').addEventListener('click', async () => {
+    const isAnonymous = document.getElementById('anon').checked;
+    const errorBox = document.getElementById('error');
+    document.getElementById('confirmSubmitModal').style.display = 'none';
+    try {
+      const res = await fetch('/.netlify/functions/submit-story', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content: pendingSubmitContent, isAnonymous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      clearDraft('story_answers');
+      load();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+}
+
+function renderFollowupForm(questions, name) {
+  const draftRaw = loadDraft('followup');
+  let draftAnswers = {};
+  try { draftAnswers = draftRaw ? JSON.parse(draftRaw) : {}; } catch (e) {}
+
+  app.innerHTML = `
+    <span class="label">A little deeper</span>
+    <h1>A few follow-up questions</h1>
+    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
+      You are filling this in as <strong>${name}</strong>.
+    </div>
+    ${draftRaw ? '<div class="draft-notice">We found an earlier saved draft and filled it in already.</div>' : ''}
+    <p style="color:var(--ink-soft)">Based on both answers we want to understand a few things better. After submitting you can no longer change your answers.</p>
+    <div id="error" class="error-box" style="display:none"></div>
+    <form id="followupForm">
+      ${questions.map((q, i) => `
+        <div class="field">
+          <label>${q}</label>
+          <textarea data-q="${i}" required>${draftAnswers[i] || ''}</textarea>
+        </div>`).join('')}
+      <div class="checkbox-row">
+        <input type="checkbox" id="anon2">
+        <label for="anon2">Do not mention my name with these answers (anonymous)</label>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" id="saveDraftBtn2" class="btn outline" style="flex:1;padding:14px">Save as draft</button>
+        <button type="button" id="submitFinalBtn2" class="btn clay" style="flex:1;padding:14px">Submit final</button>
+      </div>
+      <div id="draftSavedMsg2" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Draft saved on this device.</div>
+    </form>
+
+    <div id="confirmSubmitModal2" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
+        <h3 style="margin-bottom:12px">Submit final?</h3>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">After submitting you can no longer change these answers. Are you sure you are done?</p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="cancelSubmit2" class="btn outline" style="flex:1">Wait a moment</button>
+          <button type="button" id="confirmSubmit2" class="btn clay" style="flex:1">Yes, submit</button>
+        </div>
+      </div>
+    </div>`;
+
+  function collectDraftAnswers() {
+    const obj = {};
+    document.querySelectorAll('[data-q]').forEach(t => { obj[t.dataset.q] = t.value; });
+    return obj;
+  }
+
+  document.getElementById('saveDraftBtn2').addEventListener('click', () => {
+    saveDraft('followup', JSON.stringify(collectDraftAnswers()));
+    const msg = document.getElementById('draftSavedMsg2');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  });
+
+  function validateAndOpenModal2() {
+    const allFilled = Array.from(document.querySelectorAll('[data-q]')).every(t => t.value.trim());
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+    if (!allFilled) {
+      errorBox.textContent = 'Please answer all questions before you submit.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    document.getElementById('confirmSubmitModal2').style.display = 'flex';
+  }
+
+  document.getElementById('submitFinalBtn2').addEventListener('click', validateAndOpenModal2);
+  document.getElementById('cancelSubmit2').addEventListener('click', () => {
+    document.getElementById('confirmSubmitModal2').style.display = 'none';
+  });
+
+  document.getElementById('confirmSubmit2').addEventListener('click', async () => {
+    const answers = Array.from(document.querySelectorAll('[data-q]'))
+      .map(t => `Question: ${questions[t.dataset.q]}\nAnswer: ${t.value.trim()}`)
+      .join('\n\n');
+    const isAnonymous = document.getElementById('anon2').checked;
+    const errorBox = document.getElementById('error');
+    document.getElementById('confirmSubmitModal2').style.display = 'none';
+    try {
+      const res = await fetch('/.netlify/functions/submit-followups', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content: answers, isAnonymous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      clearDraft('followup');
+      load();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+}
+
+/* ===================== RICH FOLLOW-UP QUESTIONNAIRE ===================== */
+
+const FOLLOWUP_STATUS_OPTIONS = [
+  { value: 'nog niet besproken', label: 'Not discussed yet' },
+  { value: 'besproken, nog geen verandering', label: 'Discussed, but no change yet' },
+  { value: 'duidelijk verbeterd', label: 'This has clearly improved' },
+];
+
+const ACTION_STATUS_OPTIONS = [
+  { value: 'ja', label: 'Yes, we did that' },
+  { value: 'een beetje', label: 'A little' },
+  { value: 'nee', label: 'No, not yet' },
+];
+
+const STRUCTURED_FOLLOWUP_QUESTIONS = [
+  { id:'gevoel_nu', type:'multi', allowOther:true, label:'How do you feel now about the situation?', options:[
+    {value:'gefrustreerd', label:'Frustrated'},
+    {value:'verdrietig', label:'Sad'},
+    {value:'boos', label:'Angry'},
+    {value:'onbegrepen', label:'Misunderstood'},
+    {value:'hoopvol', label:'Hopeful'},
+    {value:'opgelucht', label:'Relieved'},
+    {value:'dankbaar', label:'Grateful'},
+    {value:'neutraal', label:'Neutral, no pronounced feeling'},
+  ]},
+  { id:'zwaarte_nu', type:'scale', label:'How heavily does this weigh on you now?', lowLabel:'Bearable', highLabel:'Overwhelming' },
+];
+
+function renderFollowupItemsForType(items, sectionLabel, statusOptions) {
+  if (!items || !items.length) return '';
+  return items.map((item, i) => `
+    <div class="followup-item" data-followup-item data-item-text="${escAttr(item)}" data-item-section="${escAttr(sectionLabel)}">
+      <span class="followup-item-label">${esc(sectionLabel)}</span>
+      <div class="followup-item-text">${esc(item)}</div>
+      <div class="mc-group">
+        ${statusOptions.map(o => `
+          <label class="mc-option">
+            <input type="radio" name="followup_${cssIdSafe(sectionLabel)}_${i}" value="${esc(o.value)}">
+            <span>${esc(o.label)}</span>
+          </label>`).join('')}
+      </div>
+      <textarea class="followup-note" placeholder="Would you like to explain anything here? (optional)"></textarea>
+    </div>`).join('');
+}
+function renderFollowupChecklist(items, groupId, questionLabel, notePlaceholder) {
+  if (!items || !items.length) return '';
+  const checks = items.map(item => `
+    <label class="mc-option">
+      <input type="checkbox" class="followup-check" data-group="${groupId}" value="${escAttr(item)}">
+      <span>${esc(item)}</span>
+    </label>`).join('');
+  return `
+    <div class="followup-group" data-followup-group="${groupId}">
+      <label class="q-label" style="margin-bottom:8px">${esc(questionLabel)}</label>
+      <div class="mc-group">${checks}</div>
+      <textarea class="followup-note" placeholder="${escAttr(notePlaceholder)}"></textarea>
+    </div>`;
+}
+function cssIdSafe(s) {
+  return String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+async function renderFollowupSurvey(round, name, session) {
+  app.innerHTML = `
+    <span class="label">Follow-up</span>
+    <h1>How are things now?</h1>
+    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
+      You are filling this in as <strong>${name}</strong>.
+    </div>
+    <div class="status-box">One moment, we are retrieving your previous document...</div>`;
+
+  let previousDoc = null;
+  try {
+    const res = await fetch(`/.netlify/functions/get-document?token=${token}`);
+    const data = await res.json();
+    if (res.ok && data.documents && data.documents.length) {
+      previousDoc = data.documents[0];
+    }
+  } catch (e) { /* no problem, we simply show no items then */ }
+
+  const myTips = previousDoc && previousDoc.tips ? (previousDoc.tips[name] || []) : [];
+  const myQuestions = previousDoc && previousDoc.questions_to_ask ? (previousDoc.questions_to_ask[name] || []) : [];
+  const myPhrases = previousDoc && previousDoc.suggested_phrases ? (previousDoc.suggested_phrases[name] || []) : [];
+  const sharedActions = previousDoc && previousDoc.shared_actions ? previousDoc.shared_actions : [];
+
+  const noItemsFound = !myTips.length && !myQuestions.length && !myPhrases.length && !sharedActions.length;
+
+  const structuredHTML = STRUCTURED_FOLLOWUP_QUESTIONS.map(q => renderQuestion(q)).join('');
+
+  app.innerHTML = `
+    <span class="label">Follow-up</span>
+    <h1>How are things now?</h1>
+    <div class="status-box" style="background:var(--clay-soft);border:none;text-align:left;margin-bottom:20px;color:var(--ink)">
+      You are filling this in as <strong>${name}</strong>.
+    </div>
+    <p style="margin-bottom:20px"><a href="${docLinkWithReturn(token)}" style="font-weight:600">First take another look at your previous document</a></p>
+    <p style="color:var(--ink-soft)">Everything below is optional. Fill in what is relevant to you, feel free to skip what does not apply. After submitting you can no longer change this.</p>
+
+    <div id="error" class="error-box" style="display:none"></div>
+
+    <form id="followupSurveyForm">
+
+      <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+        <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">How do you feel now?</span>
+        <div id="structuredFollowupBody">${structuredHTML}</div>
+      </div>
+
+      ${sharedActions.length ? `
+      <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+        <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Concrete agreements from your document</span>
+        ${renderFollowupChecklist(sharedActions, 'acties', 'Which agreements have you tried? (multiple possible)', 'How did that go, or what did not work yet? (optional)')}
+      </div>` : ''}
+
+      ${!noItemsFound ? `
+      <div class="form-section" style="background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px">
+        <span class="form-section-title" style="font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:16px;display:block">Looking back at your document</span>
+        ${renderFollowupChecklist(myTips, 'tips', 'Which tips did you use or discuss? (multiple possible)', 'How did that go? (optional)')}
+        ${renderFollowupChecklist(myQuestions, 'vragen', 'Which questions did you ask? (multiple possible)', 'What came out of it? (optional)')}
+        ${renderFollowupChecklist(myPhrases, 'zinnen', 'Which phrases did you use? (multiple possible)', 'How did the other person react? (optional)')}
+      </div>` : `
+      <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:16px">
+        <p style="margin:0;font-size:.9rem">We could not link specific tips or questions from your previous document to your name. No problem, feel free to add below what is relevant to you.</p>
+      </div>`}
+
+      <div class="q-block">
+        <label class="q-label">Has anything new come up since last time? (optional)</label>
+        <textarea class="q-textarea" id="nieuwePunten" maxlength="3000" placeholder="Feel free to describe it if a new point has come up."></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">What has changed positively that you want to tell the other person? (optional)</label>
+        <textarea class="q-textarea" id="positiefVeranderd" maxlength="3000" placeholder="What went well since last time?"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Where is there still the most work for you? (optional)</label>
+        <textarea class="q-textarea" id="nogWerk" maxlength="3000" placeholder="What still needs attention?"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Would you like to suggest a new tip or opening sentence yourself? (optional)</label>
+        <textarea class="q-textarea" id="eigenTipOpvolging" maxlength="2000" placeholder="e.g. It would be nice if..."></textarea>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="anonFollowup">
+        <label for="anonFollowup">Do not mention my name with this addition (anonymous)</label>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" id="saveDraftFollowupBtn" class="btn outline" style="flex:1;padding:14px">Save as draft</button>
+        <button type="button" id="submitFollowupBtn" class="btn clay" style="flex:1;padding:14px">Submit final</button>
+      </div>
+      <div id="draftSavedFollowupMsg" style="margin-top:10px;color:var(--sage);font-size:.85rem;display:none">Draft saved on this device.</div>
+    </form>
+
+    <div id="confirmFollowupModal" style="display:none;position:fixed;inset:0;background:rgba(43,38,32,.45);z-index:100;align-items:center;justify-content:center;padding:20px">
+      <div style="background:var(--white);border-radius:var(--radius);padding:28px;max-width:420px;width:100%">
+        <h3 style="margin-bottom:12px">Submit final?</h3>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-bottom:20px">After submitting you can no longer change this follow-up.</p>
+        <div style="display:flex;gap:10px">
+          <button type="button" id="cancelFollowupSubmit" class="btn outline" style="flex:1">Wait a moment</button>
+          <button type="button" id="confirmFollowupSubmit" class="btn clay" style="flex:1">Yes, submit</button>
+        </div>
+      </div>
+    </div>`;
+
+  const structuredBody = document.getElementById('structuredFollowupBody');
+  structuredBody.addEventListener('change', handleSurveyChange);
+
+  const draftRaw = loadDraft(`checkin_survey_${round}`);
+  if (draftRaw) {
+    try {
+      const draft = JSON.parse(draftRaw);
+      if (draft.nieuwePunten) document.getElementById('nieuwePunten').value = draft.nieuwePunten;
+      if (draft.positiefVeranderd) document.getElementById('positiefVeranderd').value = draft.positiefVeranderd;
+      if (draft.nogWerk) document.getElementById('nogWerk').value = draft.nogWerk;
+      if (draft.eigenTipOpvolging) document.getElementById('eigenTipOpvolging').value = draft.eigenTipOpvolging;
+    } catch (e) {}
+  }
+
+  function collectFollowupContent() {
+    const lines = [];
+
+    const structuredAnswers = collectAnswers(structuredBody);
+    structuredAnswers.filter(a => a.answer).forEach(a => {
+      lines.push(`Question: ${a.label}\nAnswer: ${a.answer}`);
+    });
+
+    document.querySelectorAll('[data-followup-group]').forEach(groupEl => {
+      const groupId = groupEl.dataset.followupGroup;
+      const checked = Array.from(groupEl.querySelectorAll('.followup-check:checked')).map(c => c.value);
+      const note = groupEl.querySelector('.followup-note').value.trim();
+      if (checked.length || note) {
+        let line = `Question: Response to section "${groupId}"\nAnswer: ${checked.length ? 'Used or discussed: ' + checked.join(' | ') : 'Nothing specific ticked'}`;
+        if (note) line += `. Explanation: ${note}`;
+        lines.push(line);
+      }
+    });
+    const nieuwePunten = document.getElementById('nieuwePunten').value.trim();
+    if (nieuwePunten) lines.push(`Question: Has anything new come up since last time?\nAnswer: ${nieuwePunten}`);
+    const positief = document.getElementById('positiefVeranderd').value.trim();
+    if (positief) lines.push(`Question: What has changed positively that you want to say?\nAnswer: ${positief}`);
+    const nogWerk = document.getElementById('nogWerk').value.trim();
+    if (nogWerk) lines.push(`Question: Where is there still the most work?\nAnswer: ${nogWerk}`);
+    const eigenTip = document.getElementById('eigenTipOpvolging').value.trim();
+    if (eigenTip) lines.push(`Question: Self-suggested tip or opening sentence for the follow-up\nAnswer: ${eigenTip}`);
+    return lines.join('\n\n');
+  }
+
+  document.getElementById('saveDraftFollowupBtn').addEventListener('click', () => {
+    saveDraft(`checkin_survey_${round}`, JSON.stringify({
+      nieuwePunten: document.getElementById('nieuwePunten').value,
+      positiefVeranderd: document.getElementById('positiefVeranderd').value,
+      nogWerk: document.getElementById('nogWerk').value,
+      eigenTipOpvolging: document.getElementById('eigenTipOpvolging').value,
+    }));
+    const msg = document.getElementById('draftSavedFollowupMsg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+  });
+
+  document.getElementById('submitFollowupBtn').addEventListener('click', () => {
+    const content = collectFollowupContent();
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+    if (!content) {
+      errorBox.textContent = 'Please fill in at least something before you submit, not everything is needed, but completely empty is not possible.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    pendingSubmitContent = content;
+    document.getElementById('confirmFollowupModal').style.display = 'flex';
+  });
+
+  document.getElementById('cancelFollowupSubmit').addEventListener('click', () => {
+    document.getElementById('confirmFollowupModal').style.display = 'none';
+  });
+
+  document.getElementById('confirmFollowupSubmit').addEventListener('click', async () => {
+    const isAnonymous = document.getElementById('anonFollowup').checked;
+    const errorBox = document.getElementById('error');
+    document.getElementById('confirmFollowupModal').style.display = 'none';
+    try {
+      const res = await fetch('/.netlify/functions/submit-checkin', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content: pendingSubmitContent, isAnonymous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      clearDraft(`checkin_survey_${round}`);
+      load();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.style.display = 'block';
+    }
+  });
+}
+
+load();
+</script>
+</body>
+</html>

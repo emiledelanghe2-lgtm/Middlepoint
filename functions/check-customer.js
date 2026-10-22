@@ -1,9 +1,11 @@
 const { getSupabase } = require('./_supabase');
+const { reqLang, tr } = require('./_lang');
 
 exports.handler = async (event) => {
   const email = event.queryStringParameters && event.queryStringParameters.email;
+  const L = reqLang(event);
   if (!email) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'email is verplicht.' }) };
+    return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'email is verplicht.', 'email is required.') }) };
   }
   try {
     const supabase = getSupabase();
@@ -59,8 +61,8 @@ exports.handler = async (event) => {
     const used = customer.sessions_used_this_period || 0;
     const remaining = Math.max(0, limit - used);
     const planLabels = {
-      gratis: 'Gratis',
-      los: 'Eén gesprek',
+      gratis: tr(L, 'Gratis', 'Free'),
+      los: tr(L, 'Eén gesprek', 'One conversation'),
       starter: 'Starter',
       plus: 'Plus',
       pro: 'Pro',

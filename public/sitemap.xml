@@ -1,98 +1,258 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://middlepoint.net/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/why.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/why.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/why.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/pricing.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/pricing.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/pricing.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/new.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/new.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/new.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/testimonials.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/testimonials.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/testimonials.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/faq.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/voor-professionals.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/voor-professionals.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/voor-professionals.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/voorbeeld-document.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/voorbeeld-document.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/voorbeeld-document.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/privacy.html"/>
     <lastmod>2026-08-21</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/"/>
     <lastmod>2026-10-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/ruzie-oplossen-met-je-partner.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-oplossen-met-je-partner.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/how-to-resolve-an-argument-with-your-partner.html"/>
     <lastmod>2026-10-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/hoe-praat-je-na-een-ruzie.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/hoe-praat-je-na-een-ruzie.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/how-to-talk-after-an-argument.html"/>
     <lastmod>2026-10-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/ruzie-met-schoonouders.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-met-schoonouders.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-with-in-laws.html"/>
     <lastmod>2026-10-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/ruzie-over-geld-in-een-relatie.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-over-geld-in-een-relatie.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-about-money-in-a-relationship.html"/>
     <lastmod>2026-10-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/ruzie-met-een-vriend-of-vriendin.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-met-een-vriend-of-vriendin.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-with-a-friend.html"/>
     <lastmod>2026-10-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://middlepoint.net/blog/ruzie-met-een-collega.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-met-een-collega.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-with-a-coworker.html"/>
     <lastmod>2026-10-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/arguing-about-money-in-a-relationship.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-over-geld-in-een-relatie.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-about-money-in-a-relationship.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/arguing-with-a-coworker.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-met-een-collega.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-with-a-coworker.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/arguing-with-a-friend.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-met-een-vriend-of-vriendin.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-with-a-friend.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/arguing-with-in-laws.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-met-schoonouders.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/arguing-with-in-laws.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/how-to-resolve-an-argument-with-your-partner.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/ruzie-oplossen-met-je-partner.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/how-to-resolve-an-argument-with-your-partner.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/how-to-talk-after-an-argument.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/hoe-praat-je-na-een-ruzie.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/how-to-talk-after-an-argument.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/blog/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/blog/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/blog/"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/faq.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/faq.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/new.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/new.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/new.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/pricing.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/pricing.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/pricing.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/privacy.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/testimonials.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/testimonials.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/testimonials.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/voor-professionals.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/voor-professionals.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/voor-professionals.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/voorbeeld-document.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/voorbeeld-document.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/voorbeeld-document.html"/>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://middlepoint.net/en/why.html</loc>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://middlepoint.net/why.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://middlepoint.net/en/why.html"/>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

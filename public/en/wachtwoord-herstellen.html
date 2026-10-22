@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="robots" content="noindex, nofollow">
+<title>Reset password | Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/wachtwoord-herstellen.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/wachtwoord-herstellen.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/wachtwoord-herstellen.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/wachtwoord-herstellen.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+  })();
+</script>
+
+<div class="app-wrap" style="max-width:480px">
+  <span class="label">My conversations</span>
+  <h1>Set a new password</h1>
+  <p style="color:var(--ink-soft);margin-bottom:24px" id="introText">One moment, we are checking your reset link...</p>
+
+  <div id="error" class="error-box" style="display:none"></div>
+  <div id="success" style="display:none" class="status-box"></div>
+
+  <form id="resetForm" style="display:none">
+    <div class="field" style="position:relative">
+      <label for="newPassword">New password</label>
+      <input type="password" id="newPassword" required placeholder="At least 6 characters" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="newPassword" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+    <div class="field" style="position:relative">
+      <label for="newPasswordConfirm">Repeat new password</label>
+      <input type="password" id="newPasswordConfirm" required placeholder="Repeat your password" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="newPasswordConfirm" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="resetSubmitBtn">Save password</button>
+  </form>
+
+  <p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)"><a href="/en/login.html">Back to log in</a></p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+
+let supabaseClient = null;
+try {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig:', e);
+}
+
+const introText = document.getElementById('introText');
+const errorBox = document.getElementById('error');
+const successBox = document.getElementById('success');
+const resetForm = document.getElementById('resetForm');
+
+function showRecoveryReadyState() {
+  introText.textContent = 'Choose a new password for your account below.';
+  resetForm.style.display = 'block';
+}
+
+function showInvalidLinkState() {
+  introText.textContent = '';
+  errorBox.textContent = 'This reset link is invalid or has expired. Request a new one on the login page via "Forgot your password?".';
+  errorBox.style.display = 'block';
+}
+
+if (supabaseClient) {
+  supabaseClient.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      showRecoveryReadyState();
+    }
+  });
+  // Als de sessie al hersteld is tegen de tijd dat dit script draait
+  // (race met onAuthStateChange), toon het formulier ook dan.
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if (data && data.session && resetForm.style.display === 'none' && errorBox.style.display === 'none') {
+      showRecoveryReadyState();
+    }
+  });
+  setTimeout(() => {
+    if (resetForm.style.display === 'none' && errorBox.style.display === 'none') {
+      showInvalidLinkState();
+    }
+  }, 4000);
+} else {
+  introText.textContent = '';
+  errorBox.textContent = 'Password reset is currently unavailable. Please contact us at middlepoint@zohomail.eu.';
+  errorBox.style.display = 'block';
+}
+
+resetForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.style.display = 'none';
+  const password = document.getElementById('newPassword').value;
+  const passwordConfirm = document.getElementById('newPasswordConfirm').value;
+  if (password !== passwordConfirm) {
+    errorBox.textContent = 'The two passwords do not match.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errorBox.textContent = 'Your password must be at least 6 characters long.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('resetSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'One moment...';
+  try {
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if (error) throw error;
+    resetForm.style.display = 'none';
+    introText.textContent = '';
+    successBox.innerHTML = '<p style="margin:0;color:var(--sage)">Your password has been changed. You are now logged in.</p>';
+    successBox.style.display = 'block';
+    setTimeout(() => { window.location.href = '/en/mijn-gesprekken.html'; }, 1500);
+  } catch (err) {
+    errorBox.textContent = 'Something went wrong while saving your new password. Please try again, or request a new reset link.';
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Save password';
+  }
+});
+
+document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+  });
+});
+</script>
+</body>
+</html>

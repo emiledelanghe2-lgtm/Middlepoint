@@ -1,9 +1,11 @@
 const { getSupabase } = require('./_supabase');
+const { reqLang, tr } = require('./_lang');
 
 exports.handler = async (event) => {
   const token = event.queryStringParameters && event.queryStringParameters.token;
+  const L = reqLang(event);
   if (!token) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'token ontbreekt.' }) };
+    return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'token ontbreekt.', 'token is missing.') }) };
   }
   try {
     const supabase = getSupabase();
@@ -13,7 +15,7 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (pError || !participant) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige of verlopen link.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Ongeldige of verlopen link.', 'Invalid or expired link.') }) };
     }
     const { data: allParticipants } = await supabase
       .from('participants')

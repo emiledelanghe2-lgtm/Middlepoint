@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Pricing | Middlepoint | Start free</title>
+<meta name="description" content="Start free with Middlepoint. Paid plans from €2.99.">
+<meta property="og:title" content="Pricing | Middlepoint - Start free">
+<meta property="og:description" content="Start free, only pay when it works for you.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/pricing.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/pricing.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/pricing.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/pricing.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/pricing.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.pricing-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; margin-top:32px; }
+@media (max-width:900px){ .pricing-grid{ grid-template-columns:repeat(2, 1fr); } }
+@media (max-width:480px){ .pricing-grid{ grid-template-columns:1fr; } }
+.plan-card{ background:var(--white); border:1px solid var(--line); border-radius:14px; padding:26px; display:flex; flex-direction:column; }
+.plan-card.highlight{ border-color:var(--clay); box-shadow:0 8px 24px rgba(201,113,75,.12); }
+.plan-name{ font-family:'Fraunces',serif; font-size:1.2rem; margin-bottom:6px; }
+.plan-price{ font-size:1.9rem; font-weight:600; margin-bottom:4px; }
+.plan-price span{ font-size:1rem; color:var(--ink-soft); font-weight:400; }
+.plan-period-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--clay); background:var(--clay-soft); border-radius:999px; padding:3px 10px; margin-bottom:12px; }
+.plan-desc{ color:var(--ink-soft); font-size:.88rem; margin-bottom:18px; flex-grow:1; }
+.plan-features{ list-style:none; padding:0; margin:0 0 20px; font-size:.85rem; color:var(--ink); }
+.plan-features li{ padding:5px 0; border-bottom:1px solid var(--line); display:flex; gap:8px; align-items:flex-start; }
+.plan-features li:last-child{ border-bottom:none; }
+.plan-features li .check{ color:var(--sage); font-weight:700; flex-shrink:0; }
+.plan-features li .cross{ color:var(--ink-soft); flex-shrink:0; }
+</style>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html" class="current" aria-current="page">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/pricing.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+    <a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<section class="section">
+  <div class="section-head">
+    <span class="label">Pricing</span>
+    <h1>Start free, only pay when it works for you</h1>
+  </div>
+  <p style="text-align:center;margin-top:-12px;margin-bottom:8px">
+    <a href="/en/voorbeeld-document.html" style="font-weight:600">Curious what you will get? Take a look at an example document</a>
+  </p>
+  <p style="text-align:center;margin-bottom:8px">
+    <a href="/en/voor-professionals.html" style="font-weight:600">Do you work at a company, school or practice? See the business option</a>
+  </p>
+  <div class="pricing-grid" id="pricingGrid">
+
+    <div class="plan-card">
+      <div class="plan-name">Free reflection</div>
+      <div class="plan-price">Free </div>
+      <div style="height:20px"></div>
+      <div class="plan-desc">Tell us what is going on and get an honest reflection: what lies beneath the surface, and whether a conversation with the other person is worthwhile.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Honest analysis of your situation</li>
+        <li><span class="cross">–</span> Concrete action plan with steps and tools</li>
+        <li><span class="cross">–</span> The other person's perspective</li>
+        <li><span class="cross">–</span> Shared document with the other person</li>
+        <li><span class="cross">–</span> Personal tips and phrases</li>
+        <li><span class="cross">–</span> Follow-up document</li>
+      </ul>
+      <a href="/en/reflectie.html" class="btn outline" style="text-align:center">Start a reflection</a>
+    </div>
+
+    <div class="plan-card">
+      <div class="plan-name">Reflection+</div>
+      <div class="plan-price">€2.99 <span>one time</span></div>
+      <div class="plan-period-badge">One time</div>
+      <div class="plan-desc">After your free reflection: a concrete action plan with steps, tools and an exercise.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Honest analysis of your situation</li>
+        <li><span class="check">✓</span> Concrete action plan with steps and tools</li>
+        <li><span class="cross">–</span> The other person's perspective</li>
+        <li><span class="cross">–</span> Shared document with the other person</li>
+        <li><span class="check">✓</span> Personal tips and phrases</li>
+        <li><span class="cross">–</span> Follow-up document</li>
+      </ul>
+      <a href="/en/reflectie.html" class="btn outline" style="text-align:center">Start a reflection</a>
+    </div>
+
+    <div class="plan-card highlight">
+      <div class="plan-name">One conversation</div>
+      <div class="plan-price">€4.99 <span>one time</span></div>
+      <div class="plan-period-badge">One time</div>
+      <div class="plan-desc">The full, in-depth questionnaire, the complete document, and one follow-up document afterwards.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Honest analysis of your situation</li>
+        <li><span class="cross">–</span> Concrete action plan with steps and tools</li>
+        <li><span class="check">✓</span> The other person's perspective</li>
+        <li><span class="check">✓</span> Shared document with the other person</li>
+        <li><span class="check">✓</span> Personal tips and phrases</li>
+        <li><span class="check">✓</span> Follow-up document</li>
+      </ul>
+      <a href="/en/new.html?plan=los" class="btn clay" style="text-align:center">Start a conversation</a>
+    </div>
+
+ <div class="plan-card highlight">
+      <div class="plan-name">For business &amp; professionals</div>
+      <div class="plan-price">Custom </div>
+      <div style="height:20px"></div>
+      <div class="plan-desc">For companies, HR teams, therapists, schools and lawyers who start a conversation between others.</div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Full document with insights and tips</li>
+        <li><span class="check">✓</span> Extra professional insight for you</li>
+        <li><span class="check">✓</span> Questionnaire you can adapt yourself</li>
+        <li><span class="check">✓</span> Pricing tailored to your volume</li>
+      </ul>
+      <a href="/en/voor-professionals.html" class="btn clay" style="text-align:center">Discover the business option</a>
+    </div>
+
+  </div>
+  <p style="margin-top:20px;font-size:.85rem;color:var(--ink-soft);text-align:center">
+    Manage your subscription, switch plans or cancel? You can do that via <a href="/en/login.html" style="font-weight:600">My conversations</a>.
+  </p>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="section-head">
+    <span class="label">What does this mean exactly?</span>
+    <h2>Briefly explained</h2>
+  </div>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Free reflection vs paid</h3>
+      <p>The free reflection first helps you get clear on what is going on. Want to go further, together or alone? That is paid: Reflection+ for yourself, or a conversation with the other person.</p>
+    </div>
+    <div class="card">
+      <h3>Questionnaire and follow-up</h3>
+      <p>For each situation its own set of focused questions, all in one go. Every conversation includes one follow-up document, whenever it suits you.</p>
+    </div>
+    <div class="card">
+      <h3>Anonymity</h3>
+      <p>With every submission you can choose whether your name is visible to the other participants.</p>
+    </div>
+    <div class="card">
+      <h3>Pro: insights for the facilitator</h3>
+      <p>For therapists, HR and lawyers: an extra section with professional insights, only visible to the facilitator.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+  <a href="/en/voor-professionals.html" class="hint-chip" style="text-decoration:none">For business</a>
+</footer>
+
+</body>
+</html>

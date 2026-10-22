@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="robots" content="noindex, nofollow">
+<title>Free reflection | Middlepoint</title>
+<meta name="description" content="Tell us what is going on and get an honest reflection right away: what lies beneath the surface, and whether a conversation with the other person is worthwhile.">
+<link rel="canonical" href="https://middlepoint.net/en/reflectie.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/reflectie.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/reflectie.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/reflectie.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.q-block{ margin-bottom:26px; }
+.q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
+.mc-group{ display:flex; flex-direction:column; gap:8px; }
+.mc-option{ display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border:1px solid var(--line); border-radius:8px; cursor:pointer; font-size:.92rem; background:var(--white); }
+.mc-option input{ margin-top:3px; }
+.other-input{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:16px; font-family:'Karla',sans-serif; margin-top:6px; }
+.scale-row{ display:flex; gap:8px; }
+.scale-option{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; border:1px solid var(--line); border-radius:8px; cursor:pointer; background:var(--white); }
+.scale-labels{ display:flex; justify-content:space-between; font-size:.78rem; color:var(--ink-soft); margin-top:8px; font-weight:600; }
+.branch-box{ margin-top:12px; margin-left:16px; padding-left:14px; border-left:2px solid var(--clay-soft); }
+.q-textarea{ width:100%; min-height:120px; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:16px; resize:vertical; }
+.recommendation-badge{ display:inline-block; padding:8px 18px; border-radius:999px; font-family:'IBM Plex Mono',monospace; font-size:.85rem; font-weight:700; margin-bottom:16px; }
+.recommendation-badge.zelf{ background:var(--sage); color:#ffffff; }
+.recommendation-badge.gesprek{ background:var(--clay); color:#ffffff; }
+.recommendation-badge.twijfel{ background:var(--navy); color:#ffffff; }
+.doc-section{ margin-bottom:20px; padding-bottom:20px; }
+.selfhelp-quote{ border-left:3px solid var(--clay); padding-left:18px; margin:24px 0; font-family:'Fraunces',serif; font-style:italic; font-size:1.05rem; color:var(--ink); }
+.premium-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--clay); background:var(--clay-soft); border-radius:999px; padding:3px 10px; margin-bottom:8px; }
+@media print {
+  .nav-bar, .no-print, .footer { display: none !important; }
+  body { background: white; }
+}
+</style>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/reflectie.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+    <a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<div class="app-wrap" id="app">
+  <div class="skeleton skeleton-line short"></div>
+  <div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div>
+  <div class="skeleton skeleton-block"></div>
+</div>
+
+<script>
+const SELF_HELP_STRIPE_LINK = 'https://buy.stripe.com/9B65kD2wA2zq4o11B9aVa0j';
+
+const existingToken = new URLSearchParams(window.location.search).get('token');
+const selfhelpReturn = new URLSearchParams(window.location.search).get('selfhelp') === 'true';
+const app = document.getElementById('app');
+const PAGE_LANG = 'en';
+const LANG_PREFIX = PAGE_LANG === 'en' ? '/en' : '';
+
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig:', e);
+}
+
+let currentUser = null;
+
+async function checkAuth() {
+  if (!supabaseClient) return false;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    currentUser = {
+      email: session.user.email,
+      name: (session.user.user_metadata && session.user.user_metadata.name) || session.user.email.split('@')[0],
+    };
+    return true;
+  }
+  currentUser = null;
+  return false;
+}
+
+function renderAuthGate() {
+  app.innerHTML = `
+    <span class="label">Free reflection</span>
+    <h1>Quick log in</h1>
+    <div class="card" style="text-align:center;padding:32px">
+      <p style="color:var(--ink-soft);margin-bottom:20px">Log in or sign up to start your reflection. That way you can always find it later, and you only have to fill in your details once.</p>
+      <a href="/en/login.html" class="btn clay" style="padding:12px 28px">Log in or sign up</a>
+    </div>`;
+}
+
+async function logoutFromReflectie() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  window.location.href = '/';
+}
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function firstName(name) { return (name || '').trim().split(/\s+/)[0] || name || ''; }
+function downloadReflectionPDF() { window.print(); }
+function shareReflectionWhatsApp() {
+  const link = window.location.href;
+  const text = `I made a personal reflection via Middlepoint, maybe useful for you too: ${link}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+function shareReflectionEmail() {
+  const link = window.location.href;
+  const subject = encodeURIComponent('My Middlepoint reflection');
+  const body = encodeURIComponent(`Hi,\n\nI made a personal reflection via Middlepoint.\n\nYou can find it here: ${link}`);
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+function goToSelfHelpPayment(token, email) {
+  try { localStorage.setItem('mp_pending_selfhelp', token); localStorage.setItem('mp_pending_selfhelp_lang', PAGE_LANG); } catch (e) {}
+  const sep = SELF_HELP_STRIPE_LINK.includes('?') ? '&' : '?';
+  let url = `${SELF_HELP_STRIPE_LINK}${sep}client_reference_id=${encodeURIComponent('selfhelp:' + token)}`;
+  if (email) url += `&prefilled_email=${encodeURIComponent(email)}`;
+  window.location.href = url;
+}
+
+const CATEGORY_OPTIONS = [
+  { value: 'koppel', label: 'Couple / relationship' },
+  { value: 'familie', label: 'Family' },
+  { value: 'vrienden', label: 'Friends' },
+  { value: 'buren', label: 'Neighbors' },
+  { value: 'werk', label: 'Work / coworkers' },
+  { value: 'school', label: 'School' },
+];
+
+const CATEGORY_OTHER_LABEL = {
+  koppel: 'your partner',
+  familie: 'your family member',
+  vrienden: 'this friend',
+  buren: 'this neighbor',
+  werk: 'this coworker',
+  school: 'this person',
+  andere: 'the other person',
+};
+
+const CATEGORY_THIRDPARTY_EXAMPLE = {
+  koppel: 'e.g. between my sister and her partner',
+  familie: 'e.g. between my mother and my uncle',
+  vrienden: 'e.g. between two friends in my friend group',
+  buren: 'e.g. between two neighbors on my street',
+  werk: 'e.g. between two coworkers on my team',
+  school: 'e.g. between two students in the class',
+  andere: 'e.g. between ... and ...',
+};
+
+const GEVOEL_OPTIONS = [
+  { value: 'boos', label: 'Angry' },
+  { value: 'verdrietig', label: 'Sad' },
+  { value: 'jaloers', label: 'Jealous' },
+  { value: 'onzeker', label: 'Insecure' },
+  { value: 'gemis', label: 'Missing someone or loneliness' },
+  { value: 'gefrustreerd', label: 'Frustrated' },
+  { value: 'teleurgesteld', label: 'Disappointed' },
+  { value: 'neutraal', label: 'Neutral, no pronounced feeling' },
+];
+
+function renderForm() {
+  app.innerHTML = `
+    <span class="label">Free reflection</span>
+    <h1>Tell us what is going on</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding:12px 16px;background:#EFF4ED;border-radius:var(--radius)">
+      <span style="font-size:.88rem;color:var(--ink)">Logged in as <strong>${esc(firstName(currentUser.name))}</strong></span>
+      <a href="#" id="reflectionLogoutLink" style="color:var(--clay);font-size:.85rem;text-decoration:none;font-weight:600">Log out</a>
+    </div>
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:24px;padding:20px">
+      <p style="margin:0 0 10px;font-weight:600">Tell us what is on your mind</p>
+      <p style="margin:0 0 14px;color:var(--ink-soft);font-size:.92rem">Answer the questions below. Afterwards we will let you know: can you resolve this yourself, or is a conversation with the other person worthwhile? Want to go deeper, with a concrete action plan (Reflection+, €2.99)? You can do that right after your reflection. If you choose a conversation, we will start it for you right away, with your story already filled in.</p>
+      <p style="margin:0;font-size:.85rem;border-top:1px solid var(--line);padding-top:12px">Already sure? <a href="/en/new.html" style="font-weight:600">Start a conversation right away</a></p>
+    </div>
+    <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:24px">This is completely free, unlimited to use. <span style="color:var(--clay)">*</span> = required question</p>
+
+    <div id="error" class="error-box" style="display:none"></div>
+
+    <form id="reflectionForm">
+      <div class="q-block">
+        <label class="q-label">What does this relate to? <span style="color:var(--clay)">*</span></label>
+        <select id="categorySelect" required style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px;background:var(--white)">
+          <option value="">Choose a category...</option>
+          ${CATEGORY_OPTIONS.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+          <option value="__andere__">Something else, namely...</option>
+        </select>
+        <div class="field" id="categoryOtherField" style="display:none;margin-top:10px">
+          <input type="text" id="categoryOther" placeholder="Briefly describe the situation">
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Is this directly between you and someone else, or are you more involved in, or a witness to, a situation between others? <span style="color:var(--clay)">*</span></label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="perspectief" value="zelf" id="perspectiefZelf" checked><span>This is directly between me and the other person</span></label>
+          <label class="mc-option"><input type="radio" name="perspectief" value="derde" id="perspectiefDerde"><span>I am on the sidelines, this is between others</span></label>
+        </div>
+        <div class="branch-box" id="perspectiefDerdeBranch" style="display:none">
+          <label class="q-label" style="font-weight:500;font-size:.9rem" id="tussenWieLabel">Who is this between?</label>
+          <input type="text" id="tussenWie" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px" placeholder="">
+        </div>
+      </div>
+
+      <div class="q-block" id="schoolAgeBlock" style="display:none">
+        <label class="q-label">What is the age or school grade of the child involved?</label>
+        <input type="text" id="qSchoolAge" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'Karla',sans-serif;font-size:16px" placeholder="e.g. 9 years old, 4th grade">
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">What exactly happened? <span style="color:var(--clay)">*</span></label>
+        <div class="q-note" style="margin-bottom:8px">Feel free to explain it in detail, the more context, the better we can help you.</div>
+        <textarea class="q-textarea" id="qWat" required placeholder="Describe as concretely as possible what happened: what was said or done, and how did it go?"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">What did you feel at that moment?</label>
+        <div class="q-note" style="margin-bottom:8px">You may tick several feelings.</div>
+        <div class="mc-group" id="gevoelGroup">
+          ${GEVOEL_OPTIONS.map(o => `
+            <label class="mc-option">
+              <input type="checkbox" name="gevoel" value="${o.value}">
+              <span>${o.label}</span>
+            </label>`).join('')}
+          <label class="mc-option">
+            <input type="checkbox" id="gevoelAndereToggle" value="__andere__">
+            <span>A different feeling, I will write it myself</span>
+          </label>
+          <input type="text" id="gevoelAndereInput" class="other-input" style="display:none" placeholder="Which feeling was this?">
+        </div>
+        <div id="qGevoelTekstWrap" style="display:none">
+          <textarea class="q-textarea" id="qGevoelTekst" style="min-height:70px;margin-top:10px" placeholder="Would you like to explain this feeling a bit more? (optional)"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label" id="qNodigLabel">What do you think you actually needed at that moment? *</label>
+        <textarea class="q-textarea" id="qNodig" required style="min-height:80px"></textarea>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Have you experienced this feeling before, in other situations or with other people?</label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="herkenning" value="ja" id="herkenningJa"><span>Yes</span></label>
+          <label class="mc-option"><input type="radio" name="herkenning" value="nee" id="herkenningNee"><span>No</span></label>
+          <label class="mc-option"><input type="radio" name="herkenning" value="weet niet" id="herkenningWeetNiet"><span>I do not know</span></label>
+        </div>
+        <div class="branch-box" id="herkenningBranch" style="display:none">
+          <textarea class="q-textarea" id="qHerkenningTekst" style="min-height:70px" placeholder="Where do you recognize this from, or what makes you unsure?"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Do you think there is more beneath this situation than what is visible at first glance?</label>
+        <div class="mc-group">
+          <label class="mc-option"><input type="radio" name="dieper" value="ja" id="dieperJa"><span>Yes</span></label>
+          <label class="mc-option"><input type="radio" name="dieper" value="nee" id="dieperNee"><span>No</span></label>
+          <label class="mc-option"><input type="radio" name="dieper" value="weet niet" id="dieperWeetNiet"><span>I do not know</span></label>
+        </div>
+        <div class="branch-box" id="dieperBranch" style="display:none">
+          <textarea class="q-textarea" id="qDieperTekst" style="min-height:70px" placeholder="What else do you think could be playing a role?"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">How deeply does this actually affect you?</label>
+        <div class="scale-row" id="scaleRow">
+          ${[1,2,3,4,5].map(n => `
+            <label class="scale-option">
+              <input type="radio" name="diepgang" value="${n}">
+              <span>${n}</span>
+            </label>`).join('')}
+        </div>
+        <div class="scale-labels"><span>Superficially</span><span>Very deeply</span></div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">Anything else you want to share? (optional)</label>
+        <textarea class="q-textarea" id="qExtra" style="min-height:70px"></textarea>
+      </div>
+
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">See my reflection</button>
+    </form>
+  `;
+
+  document.getElementById('reflectionLogoutLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    logoutFromReflectie();
+  });
+
+  document.querySelectorAll('#gevoelGroup input[name=gevoel]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const anyChecked = document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked').length > 0;
+      document.getElementById('qGevoelTekstWrap').style.display = anyChecked ? 'block' : 'none';
+    });
+  });
+  document.getElementById('gevoelAndereToggle').addEventListener('change', (e) => {
+    document.getElementById('gevoelAndereInput').style.display = e.target.checked ? 'block' : 'none';
+    document.getElementById('qGevoelTekstWrap').style.display = 'block';
+  });
+  document.getElementById('gevoelAndereInput').addEventListener('input', (e) => {
+    const toggle = document.getElementById('gevoelAndereToggle');
+    if (e.target.value.trim() && !toggle.checked) {
+      toggle.checked = true;
+      toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+
+  function updateNodigLabel() {
+    const val = categorySelect.value;
+    const isThirdParty = document.getElementById('perspectiefDerde').checked;
+    const label = CATEGORY_OTHER_LABEL[val] || 'the other person';
+    if (isThirdParty) {
+      document.getElementById('qNodigLabel').textContent = 'What do you think would be needed to resolve this between them? *';
+    } else {
+      document.getElementById('qNodigLabel').textContent = `What do you think you actually needed from ${label} at that moment? *`;
+    }
+  }
+
+  const categorySelect = document.getElementById('categorySelect');
+  categorySelect.addEventListener('change', () => {
+    const val = categorySelect.value;
+    document.getElementById('categoryOtherField').style.display = val === '__andere__' ? 'block' : 'none';
+    document.getElementById('schoolAgeBlock').style.display = val === 'school' ? 'block' : 'none';
+    document.getElementById('tussenWie').placeholder = CATEGORY_THIRDPARTY_EXAMPLE[val] || CATEGORY_THIRDPARTY_EXAMPLE.andere;
+    updateNodigLabel();
+  });
+
+  document.querySelectorAll('input[name=perspectief]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('perspectiefDerdeBranch').style.display = e.target.value === 'derde' ? 'block' : 'none';
+      updateNodigLabel();
+    });
+  });
+
+  document.querySelectorAll('input[name=herkenning]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('herkenningBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
+    });
+  });
+  document.querySelectorAll('input[name=dieper]').forEach(r => {
+    r.addEventListener('change', (e) => {
+      document.getElementById('dieperBranch').style.display = e.target.value === 'nee' ? 'none' : 'block';
+    });
+  });
+
+  document.getElementById('reflectionForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('error');
+    errorBox.style.display = 'none';
+
+    const name = currentUser.name;
+    const email = currentUser.email;
+    let category = categorySelect.value;
+    if (!category) {
+      errorBox.textContent = 'Please choose a category first.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    if (category === '__andere__') {
+      category = document.getElementById('categoryOther').value.trim();
+      if (!category) {
+        errorBox.textContent = 'Please briefly describe the situation.';
+        errorBox.style.display = 'block';
+        return;
+      }
+    }
+
+    const perspectief = (document.querySelector('input[name=perspectief]:checked') || {}).value || 'zelf';
+    const tussenWie = document.getElementById('tussenWie').value.trim();
+    const gevoelen = Array.from(document.querySelectorAll('#gevoelGroup input[name=gevoel]:checked')).map(c => c.closest('label').querySelector('span').textContent);
+    const gevoelAndere = document.getElementById('gevoelAndereInput').value.trim();
+    if (document.getElementById('gevoelAndereToggle').checked && gevoelAndere) gevoelen.push(gevoelAndere);
+    const dieperChecked = (document.querySelector('input[name=dieper]:checked') || {}).value;
+    const diepgangChecked = document.querySelector('input[name=diepgang]:checked');
+    const herkenning = (document.querySelector('input[name=herkenning]:checked') || {}).value;
+
+    const lines = [];
+    if (perspectief === 'derde') {
+      lines.push(`Question: Is this directly between you and someone else, or are you on the sidelines?\nAnswer: I am on the sidelines, this is between others${tussenWie ? ': ' + tussenWie : ''}.`);
+    }
+    const schoolAge = document.getElementById('qSchoolAge') ? document.getElementById('qSchoolAge').value.trim() : '';
+    if (categorySelect.value === 'school' && schoolAge) {
+      lines.push(`Question: Age or school grade of the child involved\nAnswer: ${schoolAge}`);
+    }
+    lines.push(`Question: What exactly happened?\nAnswer: ${document.getElementById('qWat').value.trim()}`);
+    if (gevoelen.length) lines.push(`Question: What did you feel at that moment?\nAnswer: ${gevoelen.join(', ')}`);
+    const gevoelTekst = document.getElementById('qGevoelTekst').value.trim();
+    if (gevoelTekst) lines.push(`Question: Addition to the feeling\nAnswer: ${gevoelTekst}`);
+    lines.push(`Question: ${document.getElementById('qNodigLabel').textContent}\nAnswer: ${document.getElementById('qNodig').value.trim()}`);
+    if (herkenning) {
+      const herkenningTekst = document.getElementById('qHerkenningTekst').value.trim();
+      lines.push(`Question: Do you recognize this from before?\nAnswer: ${({ ja: 'yes', nee: 'no', 'weet niet': 'I do not know' })[herkenning] || herkenning}${herkenningTekst ? ', ' + herkenningTekst : ''}`);
+    }
+    if (dieperChecked) {
+      const dieperTekst = document.getElementById('qDieperTekst').value.trim();
+      let answer = ({ ja: 'yes', nee: 'no', 'weet niet': 'I do not know' })[dieperChecked] || dieperChecked;
+      if (dieperTekst) answer += `. Explanation: ${dieperTekst}`;
+      lines.push(`Question: Was this purely about this, or is there more beneath it?\nAnswer: ${answer}`);
+    }
+    if (diepgangChecked) {
+      const val = parseInt(diepgangChecked.value, 10);
+      const answer = val <= 2 ? 'Closer to: superficial' : val >= 4 ? 'Closer to: very deep' : 'Somewhere in the middle';
+      lines.push(`Question: How deeply does this affect you?\nAnswer: ${answer}`);
+    }
+    const extra = document.getElementById('qExtra').value.trim();
+    if (extra) lines.push(`Question: Anything else to add?\nAnswer: ${extra}`);
+
+    const content = lines.join('\n\n');
+
+    app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
+
+    try {
+      const res = await fetch('/.netlify/functions/create-reflection', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, category, content, perspective: perspectief, thirdPartyContext: tussenWie, lang: PAGE_LANG }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.history.replaceState({}, '', `/en/reflectie.html?token=${data.token}`);
+      pollResult(data.token);
+    } catch (err) {
+      renderForm();
+      document.getElementById('error').textContent = err.message;
+      document.getElementById('error').style.display = 'block';
+    }
+  });
+}
+
+const SELFHELP_Q1_OPTIONS = [
+  'More calm within myself',
+  'Stand more firmly in my own shoes',
+  'Be able to let this go',
+  'Be able to explain it better when it happens again',
+  'Know how I can prevent this',
+];
+const SELFHELP_Q2_OPTIONS = [
+  'I do not really know how to approach this further',
+  'I am afraid it will not help in the end',
+  'I have already taken a first step, but it does not feel resolved yet',
+  'I thought it would pass by itself',
+  'Nothing really, I just want concrete help',
+];
+const SELFHELP_Q3_OPTIONS = [
+  'I react more calmly in similar situations',
+  'I dare to bring it up more quickly',
+  'I feel less guilty or insecure about this',
+  'I have simply made peace with it',
+];
+
+async function renderSelfHelpForm(token) {
+  app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
+
+  let earlierQuestions = [];
+  try {
+    const res = await fetch(`/.netlify/functions/get-reflection?token=${token}`);
+    const data = await res.json();
+    if (res.ok && data.reflection && data.reflection.reflection_questions) {
+      earlierQuestions = data.reflection.reflection_questions.slice(0, 2);
+    }
+  } catch (e) {
+    /* no problem, just continue without */
+  }
+
+  app.innerHTML = `
+    <span class="label">Reflection+</span>
+    <h1>A little deeper</h1>
+    <p style="color:var(--ink-soft);margin-bottom:24px">Based on this we prepare a concrete action plan for you: steps, tools and a short exercise.</p>
+
+    <div id="shError" class="error-box" style="display:none"></div>
+
+    <form id="selfHelpForm">
+      <div class="q-block">
+        <label class="q-label">What would you most like to achieve?</label>
+        <div class="q-note" style="margin-bottom:8px">You may tick several options.</div>
+        <div class="mc-group" id="shQ1Group">
+          ${SELFHELP_Q1_OPTIONS.map(o => `
+            <label class="mc-option"><input type="checkbox" name="shq1" value="${o}"><span>${o}</span></label>`).join('')}
+          <label class="mc-option"><input type="checkbox" id="shQ1AndereToggle"><span>Something else, I will write it myself</span></label>
+          <input type="text" id="shQ1AndereInput" class="other-input" style="display:none" placeholder="What would you like to achieve?">
+        </div>
+        <div id="shQ1TekstWrap" style="display:none">
+          <textarea class="q-textarea" id="shQ1Tekst" style="min-height:60px;margin-top:10px" placeholder="Would you like to explain this further? (optional)"></textarea>
+        </div>
+      </div>
+
+    <div class="q-block">
+        <label class="q-label">What makes it still difficult to deal with this now?</label>
+        <div class="q-note" style="margin-bottom:8px">You may tick several options.</div>
+        <div class="mc-group" id="shQ2Group">
+          ${SELFHELP_Q2_OPTIONS.map(o => `
+            <label class="mc-option"><input type="checkbox" name="shq2" value="${o}"><span>${o}</span></label>`).join('')}
+          <label class="mc-option"><input type="checkbox" id="shQ2AndereToggle"><span>Something else, I will write it myself</span></label>
+          <input type="text" id="shQ2AndereInput" class="other-input" style="display:none" placeholder="What still makes it difficult?">
+        </div>
+        <div id="shQ2TekstWrap" style="display:none">
+          <textarea class="q-textarea" id="shQ2Tekst" style="min-height:60px;margin-top:10px" placeholder="Would you like to explain this further? (optional)"></textarea>
+        </div>
+      </div>
+
+      <div class="q-block">
+        <label class="q-label">If you look back in a month, what would you like to see differently?</label>
+        <div class="q-note" style="margin-bottom:8px">You may tick several options.</div>
+        <div class="mc-group" id="shQ3Group">
+          ${SELFHELP_Q3_OPTIONS.map(o => `
+            <label class="mc-option"><input type="checkbox" name="shq3" value="${o}"><span>${o}</span></label>`).join('')}
+          <label class="mc-option"><input type="checkbox" id="shQ3AndereToggle"><span>Something else, I will write it myself</span></label>
+          <input type="text" id="shQ3AndereInput" class="other-input" style="display:none" placeholder="What would you like to see differently?">
+        </div>
+        <div id="shQ3TekstWrap" style="display:none">
+          <textarea class="q-textarea" id="shQ3Tekst" style="min-height:60px;margin-top:10px" placeholder="Would you like to explain this further? (optional)"></textarea>
+        </div>
+      </div>
+
+      ${earlierQuestions.length ? `
+      <div class="q-block">
+        <div class="card" style="background:#EFF4ED;border:none;padding:16px;margin-bottom:16px">
+          <p style="margin:0;font-weight:600;font-size:.92rem">A quick look back (optional)</p>
+          <p style="margin:6px 0 0;color:var(--ink-soft);font-size:.85rem">You already asked yourself this question in your reflection. Would you like to answer it now? That helps us make a sharper action plan.</p>
+        </div>
+        ${earlierQuestions.map(q => `
+          <div style="margin-bottom:14px;padding:14px;border:1px solid var(--line);border-radius:8px;background:var(--white)">
+            <label style="display:block;font-weight:600;font-size:.92rem;margin-bottom:8px;color:var(--ink)">${esc(q)}</label>
+            <textarea class="q-textarea shEarlierAnswer" data-question="${esc(q)}" style="min-height:60px" placeholder="Optional"></textarea>
+          </div>`).join('')}
+      </div>` : ''}
+
+      <button type="submit" class="btn clay" style="width:100%;padding:14px">Get my action plan</button>
+    </form>
+  `;
+
+  ['1','2','3'].forEach(n => {
+    document.getElementById(`shQ${n}AndereToggle`).addEventListener('change', (e) => {
+      document.getElementById(`shQ${n}AndereInput`).style.display = e.target.checked ? 'block' : 'none';
+      document.getElementById(`shQ${n}TekstWrap`).style.display = 'block';
+    });
+    document.querySelectorAll(`#shQ${n}Group input[type=checkbox][name=shq${n}]`).forEach(cb => {
+      cb.addEventListener('change', () => { document.getElementById(`shQ${n}TekstWrap`).style.display = 'block'; });
+    });
+    document.getElementById(`shQ${n}AndereInput`).addEventListener('input', (e) => {
+      const toggle = document.getElementById(`shQ${n}AndereToggle`);
+      if (e.target.value.trim() && !toggle.checked) {
+        toggle.checked = true;
+        toggle.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  });
+
+  document.getElementById('selfHelpForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('shError');
+    errorBox.style.display = 'none';
+
+    function collect(n) {
+      const vals = Array.from(document.querySelectorAll(`#shQ${n}Group input[name=shq${n}]:checked`)).map(c => c.value);
+      const andere = document.getElementById(`shQ${n}AndereInput`).value.trim();
+      if (document.getElementById(`shQ${n}AndereToggle`).checked && andere) vals.push(andere);
+      const tekst = document.getElementById(`shQ${n}Tekst`).value.trim();
+      return { vals, tekst };
+    }
+    const q1 = collect('1');
+    const q2 = collect('2');
+    const q3 = collect('3');
+
+    if (!q1.vals.length && !q2.vals.length && !q3.vals.length) {
+      errorBox.textContent = 'Please fill in something for at least one of the questions.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
+    const lines = [];
+    if (q1.vals.length) lines.push(`Question: What would you most like to achieve?\nAnswer: ${q1.vals.join(', ')}${q1.tekst ? '. Explanation: ' + q1.tekst : ''}`);
+    if (q2.vals.length) lines.push(`Question: What makes it still difficult to deal with this now?\nAnswer: ${q2.vals.join(', ')}${q2.tekst ? '. Explanation: ' + q2.tekst : ''}`);
+    if (q3.vals.length) lines.push(`Question: If you look back in a month, what would you like to see differently?\nAnswer: ${q3.vals.join(', ')}${q3.tekst ? '. Explanation: ' + q3.tekst : ''}`);
+    Array.from(document.querySelectorAll('.shEarlierAnswer')).forEach(t => {
+      const answer = t.value.trim();
+      if (answer) lines.push(`Question: ${t.dataset.question}\nAnswer: ${answer}`);
+    });
+
+    app.innerHTML = `<div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="height:32px;width:70%;margin-bottom:20px"></div><div class="skeleton skeleton-block"></div>`;
+
+    try {
+      const res = await fetch('/.netlify/functions/submit-selfhelp', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, content: lines.join('\n\n') }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      try { localStorage.setItem('mp_justpaid_selfhelp', token); } catch (e) {}
+      window.history.replaceState({}, '', `/en/reflectie.html?token=${token}`);
+      pollResult(token);
+    } catch (err) {
+      renderSelfHelpForm(token);
+      document.getElementById('shError').textContent = err.message;
+      document.getElementById('shError').style.display = 'block';
+    }
+  });
+}
+
+async function pollResult(token) {
+  try {
+    const res = await fetch(`/.netlify/functions/get-reflection?token=${token}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    const r = data.reflection;
+    if (r.lang && r.lang !== PAGE_LANG) {
+      window.location.replace((r.lang === 'en' ? '/en' : '') + '/reflectie.html' + window.location.search);
+      return;
+    }
+
+    if (r.status === 'bezig') {
+      app.innerHTML = `<div class="status-box">Preparing your reflection takes about a minute...</div>`;
+      setTimeout(() => pollResult(token), 3000);
+      return;
+    }
+    if (r.status === 'veiligheid_gestopt') {
+      app.innerHTML = `
+        <span class="label">Important</span>
+        <h1>This goes beyond what we can help resolve</h1>
+        <p style="color:var(--ink-soft)">Based on what has been written, we think professional or specialized help is now more important than a reflection. You are not alone in this.</p>
+        <div class="status-box" style="text-align:left">
+          <p><strong>Suicide and crisis lifeline (US):</strong> call or text 988, <a href="https://988lifeline.org" target="_blank">988lifeline.org</a></p>
+          <p><strong>Domestic violence hotline (US):</strong> 1-800-799-7233, <a href="https://www.thehotline.org" target="_blank">thehotline.org</a></p>
+          <p><strong>Samaritans (UK and Ireland):</strong> 116 123, <a href="https://www.samaritans.org" target="_blank">samaritans.org</a></p>
+          <p><strong>Worldwide overview:</strong> <a href="https://findahelpline.com" target="_blank">findahelpline.com</a></p>
+          <p style="margin-top:16px;color:var(--ink-soft);font-size:.85rem">If you are in immediate danger, call your emergency number (911 in the US, 999 in the UK, 112 in Europe).</p>
+        </div>`;
+      return;
+    }
+    if (r.status === 'mislukt') {
+      app.innerHTML = `<div class="error-box">Something went wrong while preparing your reflection. Feel free to try again.</div>
+        <div style="margin-top:16px"><a href="/en/reflectie.html" class="btn outline">Try again</a></div>`;
+      return;
+    }
+
+    const badgeClass = r.recommendation === 'gesprek' ? 'gesprek' : r.recommendation === 'twijfel' ? 'twijfel' : 'zelf';
+    const badgeText = r.recommendation === 'gesprek' ? 'Probably best to discuss' : r.recommendation === 'twijfel' ? 'Could go either way' : 'Mostly something for yourself';
+
+    let selfHelpSectionHTML = '';
+    if (r.self_help_status === 'klaar') {
+      selfHelpSectionHTML = `
+        ${r.self_help_key_points && r.self_help_key_points.length ? `
+        <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:20px;padding:20px">
+          <span class="premium-badge">Reflection+</span>
+          <span class="label" style="display:block;margin-bottom:10px">Your action plan in brief</span>
+          <ul style="margin:0;padding-left:20px;color:var(--ink);font-weight:500">
+            ${r.self_help_key_points.map(k => `<li style="margin-bottom:4px">${esc(k)}</li>`).join('')}
+          </ul>
+        </div>` : ''}
+        <div class="doc-section" id="actieplanSection" style="border-left:4px solid var(--clay);padding-left:16px">
+          <span class="premium-badge">Reflection+</span>
+          <span class="label" style="display:block">◐ Your action plan</span>
+          <h3>Getting concrete</h3>
+          <p>${esc(r.self_help_deeper_layer)}</p>
+        </div>
+        ${r.self_help_steps && r.self_help_steps.length ? `
+        <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+          <span class="label">⊙ Steps</span>
+          <h3>What you can concretely do</h3>
+          <ul class="tip-list">${r.self_help_steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>` : ''}
+        ${r.self_help_tips && r.self_help_tips.length ? `
+        <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+          <span class="label">✎ Tools</span>
+          <h3>To keep at hand</h3>
+          <ul class="tip-list">${r.self_help_tips.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>` : ''}
+        ${r.self_help_exercises && r.self_help_exercises.length ? `
+        <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+          <span class="label">⟳ Exercise</span>
+          <h3>To do now or this week</h3>
+          <ul class="tip-list">${r.self_help_exercises.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        </div>` : ''}
+        <div class="doc-section" style="border-bottom:none">
+          ${r.self_help_closing ? `<p style="font-weight:600">${esc(r.self_help_closing)}</p>` : ''}
+          ${r.self_help_quote ? `<div class="selfhelp-quote">"${esc(r.self_help_quote)}"</div>` : ''}
+        </div>`;
+    } else if (r.self_help_status === 'bezig') {
+      selfHelpSectionHTML = `
+        <div class="doc-section" id="actieplanSection" style="border-bottom:none">
+          <span class="premium-badge">Reflection+</span>
+          <span class="label" style="display:block;margin-bottom:12px">Your action plan is being prepared</span>
+          <div class="skeleton skeleton-line" style="height:20px;width:60%;margin-bottom:14px"></div>
+          <div class="skeleton skeleton-block"></div>
+          <div class="skeleton skeleton-block"></div>
+          <p style="color:var(--ink-soft);font-size:.85rem;margin-top:12px">This takes about a minute. This page refreshes itself as soon as it is ready, you do not have to do anything.</p>
+        </div>`;
+      setTimeout(() => pollResult(token), 3000);
+    } else {
+      selfHelpSectionHTML = `
+        <div class="doc-section no-print" style="background:var(--clay-soft);border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+          <span class="label">Reflection+</span>
+          <h3>Want to get concrete?</h3>
+          <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">For €2.99 you get a concrete action plan: steps, tools and a short exercise, made for your situation.</p>
+          <button type="button" class="btn clay" style="padding:12px 28px" onclick="goToSelfHelpPayment('${r.access_token}', '${esc(r.email || '')}')">Get my action plan</button>
+        </div>`;
+    }
+
+    app.innerHTML = `
+      <span class="label">Your reflection</span>
+      <h1>What we see</h1>
+
+      <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+        <button onclick="downloadReflectionPDF()" class="btn outline" style="padding:9px 16px;font-size:.85rem">⬇ Download as PDF</button>
+        <button onclick="shareReflectionEmail()" class="btn outline" style="padding:9px 16px;font-size:.85rem">✉ Send by email</button>
+        <button onclick="shareReflectionWhatsApp()" class="btn whatsapp" style="padding:9px 16px;font-size:.85rem">Send via WhatsApp</button>
+      </div>
+
+      ${r.key_points && r.key_points.length ? `
+      <div class="card" style="background:var(--clay-soft);border:none;margin-bottom:24px;padding:20px">
+        <span class="label" style="display:block;margin-bottom:10px">In brief</span>
+        <ul style="margin:0;padding-left:20px;color:var(--ink);font-weight:500">
+          ${r.key_points.map(k => `<li style="margin-bottom:4px">${esc(k)}</li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <div class="doc-section" style="border-left:4px solid var(--navy);padding-left:16px">
+        <span class="label">⊙ Situation</span>
+        <h3>What happened</h3>
+        <p>${esc(r.situation_summary)}</p>
+      </div>
+
+      <div class="doc-section" style="border-left:4px solid var(--clay);padding-left:16px">
+        <span class="label">◐ Beneath the surface</span>
+        <h3>What is probably really going on</h3>
+        <p>${esc(r.deeper_layer)}</p>
+      </div>
+
+      <div class="doc-section" style="border-left:4px solid var(--sage);padding-left:16px">
+        <span class="label">✎ For yourself</span>
+        <h3>Questions to think about</h3>
+        <ul class="tip-list">${(r.reflection_questions || []).map(q => `<li>${esc(q)}</li>`).join('')}</ul>
+      </div>
+
+      <div class="doc-section">
+        <span class="recommendation-badge ${badgeClass}">${badgeText}</span>
+        <p style="color:var(--ink-soft);max-width:520px">${esc(r.recommendation_text)}</p>
+        ${(() => {
+          const linksArr = [];
+          if (r.self_help_status !== 'klaar' && (r.recommendation === 'zelf' || r.recommendation === 'twijfel')) {
+            linksArr.push('<a href="#selfHelpOffer" style="font-weight:600">↓ See how you can get concrete with this</a>');
+          }
+          if (r.recommendation === 'gesprek' || r.recommendation === 'twijfel') {
+            linksArr.push('<a href="#samenBespreken" style="font-weight:600">↓ Go to starting the conversation</a>');
+          }
+          return linksArr.length ? `<p class="no-print" style="margin-top:16px">${linksArr.join('<br>')}</p>` : '';
+        })()}
+      </div>
+
+      <div id="selfHelpOffer">
+      ${selfHelpSectionHTML}
+      </div>
+
+      <div id="samenBespreken" class="doc-section no-print" style="background:#EFF4ED;border-radius:var(--radius);padding:24px;border-bottom:none;text-align:center">
+        ${r.perspective === 'derde' ? `
+        <span class="label">Discuss together</span>
+        <h3>Do you want to help them clear this up?</h3>
+        <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">You can start a conversation for them: they each fill in an extensive questionnaire separately, and together receive an honest, shared document. This is a full, paid conversation, from €4.99.</p>
+        <a href="/en/new.html?fromReflection=${r.access_token}&thirdParty=1&thirdPartyContext=${encodeURIComponent(r.third_party_context || '')}" class="btn clay" style="padding:12px 28px">Start this conversation</a>
+        ` : `
+        <span class="label">Discuss together</span>
+        <h3>Do you still want to discuss this with the other person?</h3>
+        <p style="color:var(--ink-soft);max-width:480px;margin:0 auto 20px">You each fill in an extensive questionnaire separately, and together receive an honest, shared document. This is a full, paid conversation, from €4.99. Your description above is already filled in automatically.</p>
+        <a href="/en/new.html?fromReflection=${r.access_token}" class="btn clay" style="padding:12px 28px">Start this conversation</a>
+        `}
+      </div>
+    `;
+
+    let justPaidToken = null;
+    try { justPaidToken = localStorage.getItem('mp_justpaid_selfhelp'); } catch (e) {}
+    if (justPaidToken === token) {
+      if (r.self_help_status === 'klaar') {
+        try { localStorage.removeItem('mp_justpaid_selfhelp'); } catch (e) {}
+      }
+      setTimeout(() => {
+        const el = document.getElementById('actieplanSection');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
+  } catch (err) {
+    app.innerHTML = `<div class="error-box">${err.message}</div>`;
+  }
+}
+
+(async () => {
+  if (selfhelpReturn) {
+    let pendingLang = null;
+    try { pendingLang = localStorage.getItem('mp_pending_selfhelp_lang'); } catch (e) {}
+    if (pendingLang && pendingLang !== PAGE_LANG) {
+      window.location.replace((pendingLang === 'en' ? '/en' : '') + '/reflectie.html' + window.location.search);
+      return;
+    }
+    let pendingToken = null;
+    try { pendingToken = localStorage.getItem('mp_pending_selfhelp'); } catch (e) {}
+    if (pendingToken) {
+      try { localStorage.removeItem('mp_pending_selfhelp'); } catch (e) {}
+      window.history.replaceState({}, '', `/en/reflectie.html?token=${pendingToken}`);
+      renderSelfHelpForm(pendingToken);
+    } else {
+      app.innerHTML = `<div class="error-box">We could not find your reflection automatically. Use the link from your confirmation email, or contact us at middlepoint@zohomail.eu.</div>`;
+    }
+  } else if (existingToken) {
+    // Viewing an existing reflection via a link does NOT require logging in,
+    // so shared links (e.g. via WhatsApp) keep working for everyone.
+    pollResult(existingToken);
+  } else {
+// Only STARTING a new reflection requires logging in.
+    await checkAuth();
+    if (currentUser) {
+      renderForm();
+    } else {
+      try { localStorage.setItem('mp_return_to', '/en/reflectie.html'); } catch (e) {}
+      renderAuthGate();
+    }
+  }
+})();
+</script>
+
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+  <a href="/en/voor-professionals.html" class="hint-chip" style="text-decoration:none">For business</a>
+</footer>
+</body>
+</html>

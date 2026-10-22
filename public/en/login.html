@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="robots" content="noindex, nofollow">
+<title>Log in | Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/login.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/login.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/login.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/login.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+<a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+
+<div class="app-wrap" style="max-width:480px">
+  <a href="/en/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Back to home page</a>
+  <span class="label">My conversations</span>
+  <h1 id="pageTitle">Log in</h1>
+
+  <div style="display:flex;margin-bottom:28px;border-bottom:1px solid var(--line)">
+    <button type="button" id="loginTabBtn" style="padding:10px 4px;margin-right:24px;background:none;border:none;border-bottom:2px solid var(--clay);color:var(--clay);font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em">Log in</button>
+    <button type="button" id="registerTabBtn" style="padding:10px 4px;background:none;border:none;border-bottom:2px solid transparent;color:var(--ink-soft);font-weight:600;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:.85rem;text-transform:uppercase;letter-spacing:.04em">Sign up</button>
+  </div>
+
+  <div id="error" class="error-box" style="display:none"></div>
+  <div id="success" style="display:none" class="status-box"></div>
+
+  <form id="loginForm">
+    <div class="field">
+      <label for="loginEmail">Email address</label>
+      <input type="email" id="loginEmail" required placeholder="you@email.com" autocomplete="email">
+    </div>
+<div class="field" style="position:relative">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" required placeholder="Your password" autocomplete="current-password" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="loginPassword" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="rememberMeCheckbox">
+      <label for="rememberMeCheckbox">Keep me logged in on this device</label>
+    </div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="loginSubmitBtn">Log in</button>
+    <button type="button" id="forgotPasswordBtn" style="background:none;border:none;color:var(--ink-soft);font-size:.82rem;margin-top:12px;cursor:pointer;text-decoration:underline;padding:0">Forgot your password?</button>
+  </form>
+
+  <form id="registerForm" style="display:none">
+    <div class="field">
+      <label for="regUsername">Username</label>
+      <input type="text" id="regUsername" required placeholder="How you would like to be called" maxlength="40" autocomplete="nickname">
+    </div>
+    <div class="field">
+      <label for="regEmail">Email address</label>
+      <input type="email" id="regEmail" required placeholder="you@email.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label for="regEmailConfirm">Repeat email address</label>
+      <input type="email" id="regEmailConfirm" required placeholder="you@email.com" autocomplete="email">
+    </div>
+<div class="field" style="position:relative">
+      <label for="regPassword">Password</label>
+      <input type="password" id="regPassword" required placeholder="At least 6 characters" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="regPassword" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+    <div class="field" style="position:relative">
+      <label for="regPasswordConfirm">Repeat password</label>
+      <input type="password" id="regPasswordConfirm" required placeholder="Repeat your password" autocomplete="new-password" minlength="6" style="width:100% !important;box-sizing:border-box !important;padding:13px 40px 13px 14px !important">
+      <button type="button" class="password-toggle" data-target="regPasswordConfirm" style="position:absolute;right:10px;top:38px;background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0">👁</button>
+    </div>
+ <button type="submit" class="btn clay" style="width:100%;padding:14px" id="registerSubmitBtn">Create account</button>
+    <p style="font-size:.78rem;color:var(--ink-soft);margin-top:10px;text-align:center">Did you use this email address before for a reflection or conversation? You will find them again automatically, you lose nothing.</p>
+  </form>
+
+  <p style="margin-top:24px;font-size:.85rem;color:var(--ink-soft)">Have you not started a conversation yet? <a href="/en/new.html">Start here</a>.</p>
+</div>
+
+<script>
+// TODO: vul deze twee waarden in — Supabase-dashboard → Settings → API
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+function rememberModeIsPersistent() {
+  return localStorage.getItem('mp_remember_me') === 'true';
+}
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(rememberModeIsPersistent());
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig (SUPABASE_URL/SUPABASE_ANON_KEY nog niet ingevuld?):', e);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('error').textContent = 'Logging in is currently unavailable. Please contact us if this continues.';
+    document.getElementById('error').style.display = 'block';
+  });
+}
+if (supabaseClient) {
+  (async () => {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        redirectAfterAuth();
+      }
+    } catch (e) { /* stil falen, gewoon het inlogformulier tonen */ }
+  })();
+}
+const loginTabBtn = document.getElementById('loginTabBtn');
+const registerTabBtn = document.getElementById('registerTabBtn');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const errorBox = document.getElementById('error');
+const successBox = document.getElementById('success');
+const pageTitle = document.getElementById('pageTitle');
+function showLoginTab() {
+  loginTabBtn.style.borderBottomColor = 'var(--clay)';
+  loginTabBtn.style.color = 'var(--clay)';
+  registerTabBtn.style.borderBottomColor = 'transparent';
+  registerTabBtn.style.color = 'var(--ink-soft)';
+  loginForm.style.display = 'block';
+  registerForm.style.display = 'none';
+  successBox.style.display = 'none';
+  pageTitle.textContent = 'Log in';
+  errorBox.style.display = 'none';
+}
+function showRegisterTab() {
+  registerTabBtn.style.borderBottomColor = 'var(--clay)';
+  registerTabBtn.style.color = 'var(--clay)';
+  loginTabBtn.style.borderBottomColor = 'transparent';
+  loginTabBtn.style.color = 'var(--ink-soft)';
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'block';
+  successBox.style.display = 'none';
+  pageTitle.textContent = 'Create account';
+  errorBox.style.display = 'none';
+}
+loginTabBtn.addEventListener('click', showLoginTab);
+registerTabBtn.addEventListener('click', showRegisterTab);
+function redirectAfterAuth() {
+  let returnTo = null;
+  try { returnTo = localStorage.getItem('mp_return_to'); } catch (e) {}
+  try { localStorage.removeItem('mp_return_to'); } catch (e) {}
+  window.location.href = returnTo || '/en/mijn-gesprekken.html';
+}
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.style.display = 'none';
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const rememberMe = document.getElementById('rememberMeCheckbox').checked;
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'One moment...';
+  try {
+localStorage.setItem('mp_remember_me', rememberMe ? 'true' : 'false');
+    const client = makeSupabaseClient(rememberMe);
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    redirectAfterAuth();
+  } catch (err) {
+if (err.message === 'Invalid login credentials') {
+      errorBox.textContent = 'We do not recognise this email address and password. Check that you typed them correctly, or sign up for a new account if you do not have one yet.';
+    } else if (err.message === 'Email not confirmed') {
+      errorBox.textContent = 'Please confirm your email address first using the link we sent you, before you can log in.';
+    } else {
+      console.error('Inlogfout (technische details):', err.message);
+      errorBox.textContent = 'Something went wrong while logging in. Please try again, or contact us at middlepoint@zohomail.eu if this keeps happening.';
+    }
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Log in';
+  }
+});
+
+document.getElementById('forgotPasswordBtn').addEventListener('click', async () => {
+  errorBox.style.display = 'none';
+  successBox.style.display = 'none';
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) {
+    errorBox.textContent = 'Please enter your email address in the field above first, then we will send you a reset link.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('forgotPasswordBtn');
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Sending...';
+  try {
+    if (!supabaseClient) throw new Error('supabaseUrl');
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/en/wachtwoord-herstellen.html',
+    });
+    if (error) throw error;
+    successBox.innerHTML = '<p style="margin:0;color:var(--sage)">If this email address is known to us, you will receive a link within a few minutes to set a new password.</p>';
+    successBox.style.display = 'block';
+  } catch (err) {
+    errorBox.textContent = 'Something went wrong while sending the reset link. Please try again, or contact us at middlepoint@zohomail.eu.';
+    errorBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errorBox.style.display = 'none';
+  successBox.style.display = 'none';
+  const username = document.getElementById('regUsername').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const emailConfirm = document.getElementById('regEmailConfirm').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+  const btn = document.getElementById('registerSubmitBtn');
+
+  if (!username) {
+    errorBox.textContent = 'Please enter a username.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (email.toLowerCase() !== emailConfirm.toLowerCase()) {
+    errorBox.textContent = 'The two email addresses do not match.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (password !== passwordConfirm) {
+    errorBox.textContent = 'The two passwords do not match.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errorBox.textContent = 'Your password must be at least 6 characters long.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'One moment...';
+  try {
+ localStorage.setItem('mp_remember_me', 'true');
+    const client = makeSupabaseClient(true);
+    const { data, error } = await client.auth.signUp({ email, password, options: { data: { name: username } } });
+    if (error) throw error;
+    if (data.session) {
+      window.location.href = '/en/mijn-gesprekken.html';
+      return;
+    }
+    registerForm.style.display = 'none';
+    successBox.style.display = 'block';
+    successBox.innerHTML = '<p style="margin:0;color:var(--sage)">Almost done! We sent a confirmation email to your email address. Click the link in it, and then come back to log in.</p>';
+} catch (err) {
+    if (err.message && err.message.includes('already registered')) {
+      errorBox.textContent = 'An account with this email address already exists. Try logging in.';
+    } else if (err.message && err.message.includes('supabaseUrl')) {
+      errorBox.textContent = 'Signing up is currently unavailable. Please contact us at middlepoint@zohomail.eu.';
+    } else {
+      errorBox.textContent = 'Something went wrong while signing up. Please try again, or contact us at middlepoint@zohomail.eu if this keeps happening.';
+    }
+    errorBox.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Create account';
+  }
+});
+  document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+  });
+});
+</script>
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/faq.html">Frequently asked questions</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+</footer>
+</body>
+</html>

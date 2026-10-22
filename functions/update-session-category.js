@@ -1,13 +1,15 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, reqLang, tr } = require('./_lang');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { token, category } = JSON.parse(event.body || '{}');
+    const { token, category, lang } = JSON.parse(event.body || '{}');
+    let L = reqLang(event, lang);
     if (!token || !category) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'token en category zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'token en category zijn verplicht.', 'token and category are required.') }) };
     }
     const supabase = getSupabase();
     const { data: participant } = await supabase
@@ -16,13 +18,14 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (!participant) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Ongeldige link.', 'Invalid link.') }) };
     }
+    L = normLang(participant.sessions.lang);
     // Enkel aanpasbaar zolang het document nog niet gegenereerd wordt
     const status = participant.sessions.status || '';
     const locked = status === 'document_genereren' || status === 'klaar' || status.startsWith('nieuwe_ronde_');
     if (locked) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'De categorie kan niet meer aangepast worden op dit moment.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'De categorie kan niet meer aangepast worden op dit moment.', 'The category can no longer be changed at this moment.') }) };
     }
     // NIEUW: ook blokkeren zodra een ANDERE deelnemer al zijn antwoorden indiende,
     // ook al staat de sessiestatus zelf nog op 'wachten_op_verhalen'. Anders zou
@@ -36,7 +39,7 @@ exports.handler = async (event) => {
       .neq('participant_id', participant.id)
       .limit(1);
     if (otherEntries && otherEntries.length > 0) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'De andere deelnemer heeft al ingediend, de categorie kan nu niet meer aangepast worden.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'De andere deelnemer heeft al ingediend, de categorie kan nu niet meer aangepast worden.', 'The other participant has already submitted, the category can no longer be changed.') }) };
     }
     await supabase
       .from('sessions')

@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Start a new conversation | Middlepoint</title>
+<meta name="description" content="Start a conversation on Middlepoint. Fill in your details and receive personal links to invite participants.">
+<meta property="og:title" content="Start a new conversation | Middlepoint">
+<meta property="og:description" content="Start a conversation on Middlepoint and receive personal links to invite participants.">
+<meta property="og:image" content="https://middlepoint.net/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://middlepoint.net/en/new.html">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://middlepoint.net/en/new.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/new.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/new.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/new.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="/pricing-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+.form-section{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+.form-section-title{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--clay); margin-bottom:16px; display:block; }
+.limit-box{ border:1px solid var(--clay); background:var(--clay-soft); border-radius:var(--radius); padding:20px; margin-bottom:20px; }
+.customer-info{ background:#EFF4ED; border:1px solid var(--sage); border-radius:var(--radius); padding:16px; margin-top:12px; font-size:.88rem; }
+.price-notice{ background:var(--clay-soft); border:1.5px solid var(--clay); border-radius:var(--radius); padding:20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+.price-notice .name{ font-weight:600; }
+.price-notice .price{ font-family:'IBM Plex Mono',monospace; font-size:1.1rem; color:var(--clay); font-weight:700; }
+.reflection-notice{ background:#EFF4ED; border:1px solid var(--sage); border-radius:var(--radius); padding:16px; margin-bottom:20px; font-size:.88rem; }
+
+.participant-row{ display:flex; gap:10px; margin-bottom:8px; }
+.participant-row input[type=text],
+.participant-row input[type=email]{
+  flex:1;
+  min-width:0;
+  padding:13px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  font-family:'Karla', sans-serif;
+  font-size:16px;
+  background:var(--white);
+  color:var(--ink);
+  transition:border-color .15s ease;
+}
+.participant-row input:focus{ border-color:var(--clay); outline:none; }
+@media (max-width:480px){
+  .participant-row{ flex-direction:column; }
+}
+.participant-message{ width:100%; margin-top:6px; padding:11px 13px; border:1px solid var(--line); border-radius:8px; font-family:'Karla',sans-serif; font-size:15px; resize:vertical; min-height:60px; }
+.participant-message-label{ font-size:.78rem; color:var(--ink-soft); margin-top:6px; display:block; }
+
+.chooser-header{ text-align:center; max-width:600px; margin:0 auto 36px; }
+.chooser-intro{ background:var(--white); border:1px solid var(--line); border-radius:var(--radius); padding:18px 22px; margin-bottom:32px; max-width:640px; margin-left:auto; margin-right:auto; text-align:center; }
+.chooser-grid{ display:grid; gap:24px; max-width:820px; margin:0 auto; }
+@media(min-width:700px){ .chooser-grid{ grid-template-columns:1fr 1fr; align-items:stretch; } }
+.chooser-card{
+  position:relative;
+  background:var(--white);
+  border:2px solid var(--line);
+  border-radius:20px;
+  padding:36px 30px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.chooser-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(43,38,32,.08); }
+.chooser-card.featured{ border-color:var(--clay); background:linear-gradient(180deg, var(--clay-soft) 0%, var(--white) 60%); box-shadow:0 12px 32px rgba(201,113,75,.16); }
+.chooser-icon{ font-size:2.4rem; margin-bottom:16px; display:block; }
+.chooser-badge{ display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; padding:4px 12px; border-radius:999px; margin-bottom:14px; }
+.chooser-badge.free{ background:#EFF4ED; color:var(--sage); }
+.chooser-badge.paid{ background:var(--clay-soft); color:var(--clay); }
+.chooser-card h3{ margin-bottom:12px; font-size:1.3rem; }
+.chooser-card p{ color:var(--ink-soft); font-size:.92rem; margin-bottom:24px; flex-grow:1; line-height:1.6; }
+.chooser-card .btn{ width:100%; text-align:center; padding:13px; box-sizing:border-box; pointer-events:none; }
+
+.pro-question-row{ margin-bottom:8px; }
+</style>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/new.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+
+<div class="app-wrap">
+  <a href="/en/" class="btn ghost" style="margin-bottom:16px;display:inline-block">← Back to home page</a>
+
+  <div id="chooserView">
+    <div class="chooser-header">
+      <span class="label" style="display:block;margin-bottom:8px">Get started</span>
+      <h1 style="margin-bottom:10px">How would you like to continue?</h1>
+      <p style="color:var(--ink-soft)">Choose what fits your situation best.</p>
+    </div>
+
+    <div class="chooser-intro">
+      <p style="margin:0;color:var(--ink-soft);font-size:.92rem">Not sure yet? Most people begin with a free reflection, and only decide afterwards whether a conversation with the other person is needed. Already sure? Then start a conversation right away on the right.</p>
+    </div>
+
+    <div class="chooser-grid">
+      <div class="chooser-card" id="chooseSoloCard">
+        <span class="chooser-badge free">Free</span>
+        <span class="chooser-icon" aria-hidden="true">✎</span>
+        <h3>On my own, for myself</h3>
+        <p>Tell us what is going on and get an honest, free reflection: what lies beneath the surface, and whether a conversation with the other person is actually needed. Want to go deeper afterwards, with a concrete action plan full of steps and tools? You can do that right after your reflection, for €2.99.</p>
+        <span class="btn outline">Start a free reflection</span>
+      </div>
+
+      <div class="chooser-card" id="chooseTogetherBtn">
+        <span class="chooser-badge paid">€4.99</span>
+        <span class="chooser-icon" aria-hidden="true">⊙</span>
+        <h3>Together with the other person</h3>
+        <p>You each fill in an extensive questionnaire separately. We place both sides next to each other in one honest, shared document, with tips and a follow-up document afterwards.</p>
+        <span class="btn clay">Start a conversation</span>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:28px;font-size:.88rem;color:var(--ink-soft)">Are you a therapist, teacher, HR or lawyer, and want to use this professionally? <a href="/en/voor-professionals.html" style="font-weight:600">See Middlepoint for professionals</a></p>
+  </div>
+
+  <div id="formView" style="display:none">
+  <button type="button" class="btn ghost" id="backToChooserBtn" style="margin-bottom:16px">← Choose another option</button>
+  <h1>Start a conversation</h1>
+  <p style="color:var(--ink-soft);margin-bottom:8px">Fill this in. Afterwards you get personal links to send to everyone taking part.</p>
+  <p style="color:var(--ink-soft);font-size:.82rem;margin-bottom:16px"><span style="color:var(--clay)">*</span> = required field</p>
+  <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+    <a href="#stepGegevens" class="hint-chip" style="text-decoration:none">1. Details</a>
+    <a href="#stepDeelnemers" class="hint-chip" style="text-decoration:none">2. Participants</a>
+  </div>
+
+  <div id="reflectionNotice" class="reflection-notice" style="display:none">
+    <p style="margin:0">You are coming from your free reflection. Your name, situation and category are already filled in, and later you will find your own description in the questionnaire. Because you are now starting a real, shared conversation, this continues as a full, paid conversation.</p>
+  </div>
+
+  <div id="processingMsg" style="display:none">
+    <div class="status-box">
+      <p style="margin:0">Payment received, your session is being created. One moment...</p>
+    </div>
+  </div>
+
+  <div id="limitBox" class="limit-box" style="display:none">
+    <p style="margin:0 0 12px;font-weight:600" id="limitMsg"></p>
+    <a href="/en/pricing.html" class="btn clay" style="padding:10px 20px;font-size:.9rem">View plans</a>
+  </div>
+
+  <div id="postPurchaseInfo" style="display:none;margin-bottom:24px">
+    <div class="card" style="border-color:var(--sage);padding:24px">
+      <span class="label" style="color:var(--sage)">Payment received</span>
+      <h3 style="margin-top:8px">How does it work from now on?</h3>
+      <p style="color:var(--ink-soft);margin-bottom:12px">Your subscription is active. Every time you want to start a new conversation, simply do the same as now: enter your email address on this page. We recognise you right away and you can start immediately, without paying again.</p>
+      <p style="color:var(--ink-soft);margin:0;font-size:.88rem">You can also always find all your conversations and documents via <a href="/en/login.html" style="font-weight:600">My conversations</a>.</p>
+    </div>
+  </div>
+
+  <div id="paidNotice" class="price-notice">
+    <span class="name">One conversation</span>
+    <span class="price">€4.99 one time</span>
+  </div>
+<div id="activeSubNotice" style="display:none;margin-bottom:20px">
+    <div class="customer-info">
+      <div id="customerInfoText"></div>
+    </div>
+  </div>
+
+  <div id="authGate" style="display:none;text-align:center;padding:32px" class="card">
+    <span class="label" style="display:block;margin-bottom:10px">Quick log in</span>
+    <h3 style="margin-bottom:12px">Log in or sign up to start</h3>
+<p style="color:var(--ink-soft);margin-bottom:20px">That way you can always find this conversation later via My conversations, and you only have to fill in your details once. Did you already do a reflection with this email address? You will simply find it again after logging in.</p>
+    <a href="/en/login.html" id="authGateLink" class="btn clay" style="padding:12px 28px">Log in or sign up</a>
+  </div>
+
+  <form id="newSessionForm" style="display:none">
+
+    <div class="form-section" id="stepGegevens">
+      <span class="form-section-title">1. Your details</span>
+      <div class="field">
+        <label for="category">Type of situation <span style="color:var(--clay)">*</span></label>
+        <select id="category" required>
+          <option value="koppel">Couple / relationship</option>
+          <option value="familie">Family</option>
+          <option value="vrienden">Friends</option>
+          <option value="buren">Neighbors</option>
+          <option value="werk">Work / coworkers</option>
+          <option value="school">School</option>
+          <option value="andere">Something else, namely...</option>
+        </select>
+      </div>
+      <div class="field" id="categoryOtherField" style="display:none">
+        <label for="categoryOther">Briefly describe your situation</label>
+        <input type="text" id="categoryOther" placeholder="e.g. a conflict with my landlord">
+      </div>
+<div class="card" style="background:#EFF4ED;border:none;padding:16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <p style="margin:0;font-size:.9rem">Logged in as <strong id="loggedInEmailDisplay"></strong></p>
+        <a href="#" id="newPageLogoutLink" style="color:var(--clay);font-size:.85rem;text-decoration:none">Log out</a>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="isThirdParty">
+        <label for="isThirdParty">I am not taking part myself (e.g. I am HR, a teacher or a therapist)</label>
+      </div>
+   <div id="organizerRoleField" style="display:none">
+        <div class="field">
+          <label for="organizerRole">Your role</label>
+          <select id="organizerRole">
+            <option value="hr">HR</option>
+            <option value="leerkracht">Teacher</option>
+            <option value="therapeut">Therapist</option>
+            <option value="advocaat">Lawyer</option>
+            <option value="anders">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Who gets to see the document?</label>
+          <div class="checkbox-row">
+            <input type="checkbox" id="organizerSeesDocument" checked>
+            <label for="organizerSeesDocument">Myself</label>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="participantsReceiveDocument" checked>
+            <label for="participantsReceiveDocument">The participants themselves too</label>
+          </div>
+          <div class="help" style="margin-top:2px">The participants always receive the invitation to fill in their part. Can be changed later via My conversations.</div>
+        </div>
+
+        <div id="proConfigField" style="display:none;margin-top:16px">
+          <details>
+            <summary style="cursor:pointer;font-weight:600;color:var(--clay)">+ Add your own questions to the questionnaire (optional)</summary>
+            <div class="card" style="background:var(--clay-soft);border:none;padding:20px;margin-top:10px">
+              <div id="proQuestionsList"></div>
+              <button type="button" id="addProQuestion" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:8px">+ Add your own question</button>
+              <p style="color:var(--ink-soft);font-size:.82rem;margin-top:10px">These questions are asked to the participants and their answers are included in the document.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section" id="stepDeelnemers">
+      <span class="form-section-title">2. The other participant(s)</span>
+      <p style="font-size:.85rem;color:var(--ink-soft);margin-bottom:10px">Enter name and email address for each participant.</p>
+      <ul style="font-size:.85rem;color:var(--ink-soft);margin:0 0 16px;padding-left:18px;line-height:1.7">
+        <li>Email address is required, so everyone can find their own document later</li>
+        <li>The invitation is sent automatically, and can afterwards be forwarded again via WhatsApp or email</li>
+        <li>Optionally add a personal message, which is automatically included in the invitation</li>
+      </ul>
+      <div id="participantInputs"></div>
+      <button type="button" id="addParticipant" class="btn outline" style="padding:8px 16px;font-size:.85rem;margin-top:4px">+ Add another participant</button>
+      <div class="checkbox-row" style="margin-top:16px">
+        <input type="checkbox" id="sendInvites" checked>
+        <label for="sendInvites">Automatically send an invitation email to the participants</label>
+      </div>
+    </div>
+
+    <div id="error" class="error-box" style="display:none;margin-bottom:16px"></div>
+    <button type="submit" class="btn clay" style="width:100%;padding:14px" id="submitBtn">Continue to payment</button>
+    <p style="text-align:center;font-size:.78rem;color:var(--ink-soft);margin-top:10px">🔒 Secure payment via Stripe</p>
+  </form>
+  </div>
+
+  <div id="result" style="display:none;margin-top:32px">
+    <a href="/en/" class="btn ghost" style="margin-bottom:12px;display:inline-block">← Back to home page</a>
+    <div class="card" style="background:#EFF4ED;border:none;margin-bottom:20px;padding:18px">
+      <p style="margin:0 0 8px;font-weight:600">What happens now?</p>
+      <p style="margin:0;color:var(--ink-soft);font-size:.9rem">Everyone fills in the questionnaire separately, at their own moment, via the link below. As soon as everyone is done, we automatically prepare your document, and everyone gets an email about it. So you do not have to wait or come back, you can also always find this conversation via <a href="/en/login.html" style="font-weight:600">My conversations</a>.</p>
+    </div>
+    <h3>Your personal links are below</h3>
+    <div id="linksList"></div>
+    <div id="inviteStatus" style="margin-top:8px;font-size:.85rem;color:var(--ink-soft)"></div>
+    <div id="followupHint" style="margin-top:20px;padding:16px;background:#EFF4ED;border-radius:var(--radius);font-size:.88rem;display:none">
+  As soon as your document is ready, you can also fill in a follow-up document once via <a href="/en/login.html" style="font-weight:600">My conversations</a>, at a moment that suits you, you do not have to wait for that.
+</div>
+    <div style="margin-top:24px">
+      <a href="/en/" class="btn outline">Back to home page</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== Login required to start a conversation ===== */
+const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+function makeSupabaseClient(persistent) {
+  return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+  });
+}
+let supabaseClient = null;
+try {
+  supabaseClient = makeSupabaseClient(localStorage.getItem('mp_remember_me') === 'true');
+} catch (e) {
+  console.error('Supabase-configuratie ontbreekt of is ongeldig (SUPABASE_URL/SUPABASE_ANON_KEY nog niet ingevuld?):', e);
+}
+
+let currentUser = null;
+
+async function checkAuth() {
+  if (!supabaseClient) return false;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    currentUser = {
+      email: session.user.email,
+      name: (session.user.user_metadata && session.user.user_metadata.name) || session.user.email.split('@')[0],
+    };
+    return true;
+  }
+  currentUser = null;
+  return false;
+}
+
+function firstName(name) { return (name || '').trim().split(/\s+/)[0] || name || ''; }
+
+function updateAuthUI() {
+  const loggedIn = !!currentUser;
+  document.getElementById('authGate').style.display = loggedIn ? 'none' : 'block';
+  document.getElementById('newSessionForm').style.display = loggedIn ? 'block' : 'none';
+  if (loggedIn) {
+    document.getElementById('loggedInEmailDisplay').textContent = firstName(currentUser.name);
+    document.getElementById('newPageLogoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (supabaseClient) await supabaseClient.auth.signOut();
+      window.location.href = '/';
+    });
+    checkEmail(currentUser.email);
+  }
+}
+
+/* ===== Chooser logic ===== */
+function showFormView(pushHistory) {
+  document.getElementById('chooserView').style.display = 'none';
+  document.getElementById('formView').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pushHistory !== false) {
+    history.pushState({ mpView: 'form' }, '', '#conversation');
+  }
+}
+function showChooserView(pushHistory) {
+  document.getElementById('chooserView').style.display = 'block';
+  document.getElementById('formView').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pushHistory !== false) {
+    history.pushState({ mpView: 'chooser' }, '', window.location.pathname);
+  }
+}
+
+history.replaceState({ mpView: 'chooser' }, '', window.location.pathname + window.location.search);
+
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.mpView === 'form') {
+    showFormView(false);
+  } else {
+    showChooserView(false);
+  }
+});
+
+const chooseSoloCard = document.getElementById('chooseSoloCard');
+const chooseTogetherCard = document.getElementById('chooseTogetherBtn');
+function setFeaturedCard(card) {
+  chooseSoloCard.classList.remove('featured');
+  chooseTogetherCard.classList.remove('featured');
+  card.classList.add('featured');
+}
+setFeaturedCard(chooseSoloCard);
+chooseSoloCard.addEventListener('mouseenter', () => setFeaturedCard(chooseSoloCard));
+chooseSoloCard.addEventListener('touchstart', () => setFeaturedCard(chooseSoloCard), { passive: true });
+chooseTogetherCard.addEventListener('mouseenter', () => setFeaturedCard(chooseTogetherCard));
+chooseTogetherCard.addEventListener('touchstart', () => setFeaturedCard(chooseTogetherCard), { passive: true });
+
+chooseSoloCard.addEventListener('click', () => {
+  window.location.href = '/en/reflectie.html';
+});
+chooseTogetherCard.addEventListener('click', () => {
+  showFormView();
+});
+document.getElementById('backToChooserBtn').addEventListener('click', () => {
+  history.back();
+});
+
+/* ===== Saved draft at payment ===== */
+const STORAGE_KEY = 'mp_pending_session';
+function savePending(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {} }
+function loadPending() { try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+function clearPending() { try { localStorage.removeItem(STORAGE_KEY); } catch(e) {} }
+
+const selectedPlanId = 'los';
+let activeSubscription = null;
+let reflectionPrefillText = '';
+let reflectionConfidentialPrefillText = '';
+let isProCustomer = false;
+
+/* ===== Pro: vragenconfiguratie, gebruikt de gedeelde rolkeuze ===== */
+const PRO_SUGGESTED_QUESTIONS = {
+  hr: [
+    'Has this been discussed with a manager or HR before?',
+    'Does this affect collaboration within the team?',
+  ],
+  leerkracht: [
+    'Is this the first time this has happened?',
+    'Has there already been contact with the parents about this?',
+  ],
+  therapeut: [
+    'Has this been going on for a while, and if so, roughly how long?',
+    'Has professional help been sought for this situation before?',
+  ],
+  advocaat: [
+    'Have any steps been taken before to resolve this?',
+    'Are there practical or legal elements that play a role here?',
+  ],
+  anders: [
+    'Has this been discussed with someone else before?',
+  ],
+};
+
+function renderProQuestions(role) {
+  const wrap = document.getElementById('proQuestionsList');
+  const suggestions = PRO_SUGGESTED_QUESTIONS[role] || PRO_SUGGESTED_QUESTIONS.anders;
+  wrap.innerHTML = suggestions.map((q) => `
+    <label class="mc-option pro-question-row" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--white);margin-bottom:8px">
+      <input type="checkbox" class="pro-question-cb" value="${q.replace(/"/g,'&quot;')}" checked>
+      <span>${q}</span>
+    </label>`).join('');
+}
+
+function addProQuestionRow() {
+  const wrap = document.getElementById('proQuestionsList');
+  const div = document.createElement('div');
+  div.className = 'pro-question-row';
+  div.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" class="pro-custom-question" placeholder="Your own question" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:15px;font-family:'Karla',sans-serif">
+      <button type="button" class="icon-btn remove-pro-q" title="Remove">✕</button>
+    </div>`;
+  wrap.appendChild(div);
+  div.querySelector('.remove-pro-q').addEventListener('click', () => div.remove());
+}
+
+function updateProConfigVisibility() {
+  const thirdPartyChecked = document.getElementById('isThirdParty').checked;
+  const show = isProCustomer && thirdPartyChecked;
+  document.getElementById('proConfigField').style.display = show ? 'block' : 'none';
+  if (show) renderProQuestions(document.getElementById('organizerRole').value);
+}
+
+document.getElementById('addProQuestion').addEventListener('click', addProQuestionRow);
+document.getElementById('organizerRole').addEventListener('change', (e) => {
+  if (isProCustomer) renderProQuestions(e.target.value);
+});
+
+/* ===== Plan-melding boven het formulier ===== */
+function updatePlanUI() {
+  const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+
+  document.getElementById('paidNotice').style.display = hasActiveSub ? 'none' : 'flex';
+  document.getElementById('activeSubNotice').style.display = hasActiveSub ? 'block' : 'none';
+  document.getElementById('submitBtn').textContent = hasActiveSub ? 'Create session' : 'Continue to payment';
+}
+
+/* ===== E-mailadres herkennen ===== */
+async function checkEmail(email) {
+  if (!email || !email.includes('@')) return;
+  try {
+    const res = await fetch(`/.netlify/functions/check-customer?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+
+    if (!data.known) {
+      activeSubscription = null;
+      isProCustomer = false;
+      updateProConfigVisibility();
+      document.getElementById('limitBox').style.display = 'none';
+      document.getElementById('submitBtn').disabled = false;
+      document.getElementById('submitBtn').style.opacity = '1';
+      updatePlanUI();
+      return;
+    }
+
+    activeSubscription = data;
+    isProCustomer = data.plan === 'pro';
+    updateProConfigVisibility();
+    const isSubscriptionPlan = ['starter', 'plus', 'pro'].includes(data.plan);
+
+    document.getElementById('limitBox').style.display = 'none';
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').style.opacity = '1';
+
+    if (isSubscriptionPlan && data.planStatus !== 'cancelled') {
+      const periodEnd = data.periodEnd
+        ? new Date(data.periodEnd).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+        : null;
+      document.getElementById('customerInfoText').innerHTML = `
+        <strong>Active plan: ${data.planLabel}</strong><br>
+        Conversations remaining: <strong>${data.sessionsRemaining} of ${data.sessionsLimit}</strong>
+        ${periodEnd ? `<br>Period ends on: <strong>${periodEnd}</strong>` : ''}
+        <br><span style="color:var(--ink-soft);font-size:.85rem">No payment needed, this conversation is automatically deducted from your subscription.</span>`;
+
+      if (data.sessionsRemaining <= 0) {
+        document.getElementById('limitMsg').textContent = `You have reached your limit for the ${data.planLabel} plan (${data.sessionsLimit} conversations per month). Your limit is automatically reset next month.`;
+        document.getElementById('limitBox').style.display = 'block';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').style.opacity = '0.5';
+      }
+    }
+
+    updatePlanUI();
+  } catch (err) {
+    console.error('Email check failed:', err);
+  }
+}
+
+/* ===== Deelnemersvelden ===== */
+function addParticipantRow() {
+  const wrap = document.getElementById('participantInputs');
+  const div = document.createElement('div');
+  div.style.marginBottom = '14px';
+  div.innerHTML = `
+    <div class="participant-row">
+      <input type="text" class="participant-name" placeholder="Name of the participant">
+      <input type="email" class="participant-email" placeholder="Email address (required)" required>
+    </div>
+    <div class="participant-warning" style="display:none;font-size:.82rem;color:var(--clay)">Email address is required for this participant.</div>
+    <span class="participant-message-label">Personal message (optional, included in the email and the WhatsApp message)</span>
+    <textarea class="participant-message" placeholder="e.g. Hey, I notice we are not understanding each other well on this at the moment, and I thought Middlepoint could help us with it."></textarea>`;
+  wrap.appendChild(div);
+
+  div.querySelector('.participant-name').addEventListener('input', () => {
+    if (div.querySelector('.participant-name').value.trim()) {
+      div.querySelector('.participant-warning').style.display = div.querySelector('.participant-email').value.trim() ? 'none' : 'block';
+    }
+  });
+  div.querySelector('.participant-email').addEventListener('blur', e => {
+    const nameFilled = div.querySelector('.participant-name').value.trim();
+    div.querySelector('.participant-warning').style.display = (nameFilled && !e.target.value.trim()) ? 'block' : 'none';
+  });
+}
+
+addParticipantRow();
+document.getElementById('addParticipant').addEventListener('click', addParticipantRow);
+
+document.getElementById('category').addEventListener('change', e => {
+  document.getElementById('categoryOtherField').style.display = e.target.value === 'andere' ? 'block' : 'none';
+});
+
+document.getElementById('isThirdParty').addEventListener('change', e => {
+  document.getElementById('organizerRoleField').style.display = e.target.checked ? 'block' : 'none';
+  updateProConfigVisibility();
+});
+
+/* ===== Links, invitations ===== */
+function copyLink(btn, link) {
+  navigator.clipboard.writeText(link).then(() => {
+    const old = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = old; }, 1500);
+  });
+}
+
+function buildInviteText(name, fromName, link, customMessage) {
+  const intro = customMessage
+    ? `Hi ${name}, ${customMessage}`
+    : `Hi ${name}, ${fromName} has started a conversation via Middlepoint.`;
+  const explanation = 'Middlepoint is a tool that lets us each share our side of the situation separately and anonymously via a short questionnaire, so that an honest, neutral overview is created afterwards. Nobody reads your answers directly.';
+  return `${intro}\n\n${explanation}\n\nYou can find it here: ${link}`;
+}
+
+function whatsappLink(name, fromName, link, customMessage) {
+  const text = buildInviteText(name, fromName, link, customMessage);
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+function mailLink(name, fromName, link, toEmail, customMessage) {
+  const subject = encodeURIComponent(`${fromName} invites you via Middlepoint`);
+  const body = encodeURIComponent(buildInviteText(name, fromName, link, customMessage));
+  return `mailto:${toEmail || ''}?subject=${subject}&body=${body}`;
+}
+
+/* ===== Submit ===== */
+document.getElementById('newSessionForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errorBox = document.getElementById('error');
+  const limitBox = document.getElementById('limitBox');
+  errorBox.style.display = 'none';
+  limitBox.style.display = 'none';
+
+  try {
+
+  let category = document.getElementById('category').value;
+  if (category === 'andere') {
+    const custom = document.getElementById('categoryOther').value.trim();
+    if (!custom) { errorBox.textContent = 'Please briefly describe your situation.'; errorBox.style.display = 'block'; return; }
+    category = custom;
+  }
+
+if (!currentUser) {
+    errorBox.textContent = 'Please log in first to start a conversation.';
+    errorBox.style.display = 'block';
+    return;
+  }
+  const organizerName = currentUser.name;
+  const organizerEmail = currentUser.email;
+  const isThirdParty = document.getElementById('isThirdParty').checked;
+  const organizerRole = isThirdParty ? document.getElementById('organizerRole').value : null;
+  const organizerSeesDocument = isThirdParty ? document.getElementById('organizerSeesDocument').checked : true;
+  const participantsReceiveDocument = isThirdParty ? document.getElementById('participantsReceiveDocument').checked : true;
+  const sendInvites = document.getElementById('sendInvites').checked;
+
+  let proExtraQuestions = [];
+  if (isProCustomer && isThirdParty) {
+    proExtraQuestions = Array.from(document.querySelectorAll('.pro-question-cb:checked')).map(cb => cb.value);
+    Array.from(document.querySelectorAll('.pro-custom-question')).forEach(input => {
+      const val = input.value.trim();
+      if (val) proExtraQuestions.push(val);
+    });
+  }
+
+await checkEmail(organizerEmail);
+
+  const nameInputs = Array.from(document.querySelectorAll('.participant-name'));
+  const emailInputs = Array.from(document.querySelectorAll('.participant-email'));
+  const messageInputs = Array.from(document.querySelectorAll('.participant-message'));
+  const participantRows = nameInputs
+    .map((input, i) => ({
+      name: input.value.trim(),
+      email: emailInputs[i] ? emailInputs[i].value.trim() : '',
+      message: messageInputs[i] ? messageInputs[i].value.trim() : '',
+    }))
+    .filter(row => row.name || row.email);
+  const participantNames = participantRows.map(r => r.name);
+  const participantEmails = participantRows.map(r => r.email);
+  const participantMessages = participantRows.map(r => r.message);
+
+  if (!organizerName || participantRows.length === 0) {
+    errorBox.textContent = 'Please enter your name and at least one participant.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  if (isThirdParty && participantRows.length < 2) {
+    errorBox.textContent = 'Because you are not taking part yourself, at least 2 participants are needed for a conversation.';
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const missingNameIndex = participantRows.findIndex(r => !r.name);
+  if (missingNameIndex !== -1) {
+    errorBox.textContent = `Please enter a name for the participant with email address "${participantRows[missingNameIndex].email}".`;
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const missingEmailIndex = participantRows.findIndex(r => !r.email);
+  if (missingEmailIndex !== -1) {
+    errorBox.textContent = `Please enter an email address for "${participantRows[missingEmailIndex].name}". This is required for every participant.`;
+    errorBox.style.display = 'block';
+    return;
+  }
+
+  const hasActiveSub = activeSubscription && ['starter','plus','pro'].includes(activeSubscription.plan) && activeSubscription.planStatus !== 'cancelled' && activeSubscription.sessionsRemaining > 0;
+
+  if (!hasActiveSub) {
+    const selectedPlan = PRICING_CONFIG.plans.find(p => p.id === selectedPlanId);
+    if (!selectedPlan || !selectedPlan.ctaLink) {
+      errorBox.textContent = 'This plan is not available yet.';
+      errorBox.style.display = 'block';
+      return;
+    }
+    savePending({
+      category, organizerName, organizerEmail, organizerRole,
+      organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages,
+      plan: selectedPlanId, lang: 'en', isThirdParty, reflectionPrefillText, reflectionConfidentialPrefillText, proExtraQuestions
+    });
+    const separator = selectedPlan.ctaLink.includes('?') ? '&' : '?';
+    window.location.href = `${selectedPlan.ctaLink}${separator}prefilled_email=${encodeURIComponent(organizerEmail)}`;
+    return;
+  }
+
+await createSession({ category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan: activeSubscription.plan, proExtraQuestions, organizationId: activeSubscription.organizationId });
+  } catch (unexpectedErr) {
+    console.error('Unexpected error on submit:', unexpectedErr);
+    errorBox.textContent = 'Something unexpected went wrong. Please try again, or contact us at middlepoint@zohomail.eu if this keeps happening.';
+    errorBox.style.display = 'block';
+  }
+});
+
+async function createSession({ lang, category, organizerName, organizerEmail, organizerRole, organizerSeesDocument, participantsReceiveDocument, sendInvites, participantNames, participantEmails, participantMessages, isThirdParty, plan, proExtraQuestions, organizationId }) {
+  const errorBox = document.getElementById('error');
+  const limitBox = document.getElementById('limitBox');
+  try {
+    const res = await fetch('/.netlify/functions/create-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lang: 'en', category, organizerName, participantNames, participantEmails, organizerRole, organizerEmail,
+      organizerSeesDocument, plan,
+        organizerParticipates: !isThirdParty,
+        participantsReceiveDocument,
+        proExtraQuestions: proExtraQuestions || [],
+        organizationId: organizationId || null,
+      }),
+    });
+    const data = await res.json();
+
+    if (res.status === 403 && data.limitReached) {
+      document.getElementById('limitMsg').textContent = data.error;
+      limitBox.style.display = 'block';
+      limitBox.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+
+    document.getElementById('formView').style.display = 'none';
+    document.getElementById('postPurchaseInfo').style.display = 'none';
+    const list = document.getElementById('linksList');
+    list.innerHTML = '';
+    const inviteMessages = [];
+    const organizerForInvite = data.participants.find(p => p.isOrganizer);
+    const organizerTokenForInvite = organizerForInvite ? new URLSearchParams(organizerForInvite.accessLink.split('?')[1]).get('token') : null;
+
+    if (reflectionPrefillText) {
+      const organizer = data.participants.find(p => p.isOrganizer);
+      if (organizer) {
+        try {
+          const orgToken = new URLSearchParams(organizer.accessLink.split('?')[1]).get('token');
+          localStorage.setItem(`mp_prefill_kern_${orgToken}`, reflectionPrefillText);
+          if (reflectionConfidentialPrefillText) localStorage.setItem(`mp_prefill_confidential_${orgToken}`, reflectionConfidentialPrefillText);
+        } catch (e) {}
+      }
+    }
+
+    for (let i = 0; i < data.participants.length; i++) {
+      const p = data.participants[i];
+      const block = document.createElement('div');
+      block.className = 'person-block';
+      const fullLink = window.location.origin + p.accessLink;
+      const mainButtonLabel = isThirdParty && p.isOrganizer ? 'View status' : 'Fill in my document';
+      const matchIndex = participantNames.indexOf(p.name);
+      const matchedEmail = matchIndex !== -1 ? participantEmails[matchIndex] : '';
+      const matchedMessage = matchIndex !== -1 ? participantMessages[matchIndex] : '';
+      const waLink = whatsappLink(p.name, organizerName, fullLink, matchedMessage);
+      const mailtoLink = mailLink(p.name, organizerName, fullLink, matchedEmail, matchedMessage);
+      block.innerHTML = `
+        <div class="who">Personal link for ${p.name}${p.isOrganizer ? ' (you)' : ''}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+          <input type="text" readonly value="${fullLink}" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:.8rem">
+          <button type="button" class="icon-btn" title="Copy link">📋</button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${p.isOrganizer ? `<a href="${p.accessLink}" class="btn clay">${mainButtonLabel}</a>` : ''}
+          <a href="${waLink}" target="_blank" class="btn whatsapp">Send via WhatsApp</a>
+          <a href="${mailtoLink}" class="btn outline">Send by email</a>
+        </div>`;
+      list.appendChild(block);
+      block.querySelector('button').addEventListener('click', ev => copyLink(ev.currentTarget, fullLink));
+
+      if (sendInvites && !p.isOrganizer) {
+        const customMessage = matchedMessage;
+        if (matchedEmail && organizerTokenForInvite) {
+          try {
+            const inviteRes = await fetch('/.netlify/functions/send-invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ organizerToken: organizerTokenForInvite, participantId: p.id, category, customMessage, lang: 'en' }),
+            });
+            const inviteData = await inviteRes.json();
+            inviteMessages.push(inviteRes.ok ? `Email sent to ${p.name}.` : `Email to ${p.name} failed: ${inviteData.error}`);
+          } catch (err) {
+            inviteMessages.push(`Email to ${p.name} failed: ${err.message}`);
+          }
+        }
+      }
+    }
+
+    document.getElementById('inviteStatus').innerHTML = inviteMessages.join('<br>');
+    document.getElementById('followupHint').style.display = 'block';
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    errorBox.textContent = err.message;
+    errorBox.style.display = 'block';
+  }
+}
+
+/* ===== On page load ===== */
+window.addEventListener('DOMContentLoaded', async () => {
+  await checkAuth();
+  updateAuthUI();
+  if (!currentUser) {
+    try { localStorage.setItem('mp_return_to', '/en/new.html' + window.location.search); } catch (e) {}
+  }
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPaid = urlParams.get('paid') === 'true';
+  const fromReflectionParam = urlParams.get('fromReflection');
+  const planParam = urlParams.get('plan');
+  const pending = loadPending();
+
+  // Back from Stripe on the Dutch URL while the draft was started in English: continue on the English page.
+  if (isPaid && pending && pending.lang === 'en' && window.location.pathname.indexOf('/en/') !== 0) {
+    window.location.replace('/en/new.html' + window.location.search);
+    return;
+  }
+
+  if (isPaid || fromReflectionParam || planParam || pending) {
+    showFormView(false);
+  }
+
+  if (isPaid) {
+    document.getElementById('postPurchaseInfo').style.display = 'block';
+  }
+
+  if (fromReflectionParam && !isPaid) {
+    try {
+      const res = await fetch(`/.netlify/functions/get-reflection?token=${fromReflectionParam}`);
+      const data = await res.json();
+      if (res.ok && data.reflection) {
+   const r = data.reflection;
+        document.getElementById('reflectionNotice').style.display = 'block';
+        reflectionPrefillText = r.situation_summary || '';
+        reflectionConfidentialPrefillText = r.deeper_layer || '';
+
+        const catSelect = document.getElementById('category');
+        const knownCats = Array.from(catSelect.options).map(o => o.value);
+        if (r.category && knownCats.includes(r.category)) {
+          catSelect.value = r.category;
+        } else if (r.category) {
+          catSelect.value = 'andere';
+          document.getElementById('categoryOtherField').style.display = 'block';
+          document.getElementById('categoryOther').value = r.category;
+        }
+
+        const thirdPartyParam = urlParams.get('thirdParty') === '1';
+        if (thirdPartyParam) {
+          const checkbox = document.getElementById('isThirdParty');
+          checkbox.checked = true;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+          const context = urlParams.get('thirdPartyContext');
+          if (context) {
+            const hint = document.createElement('div');
+            hint.className = 'reflection-notice';
+            hint.style.marginBottom = '16px';
+            hint.innerHTML = `<p style="margin:0">You indicated earlier that this is about: <strong>${context}</strong>. Fill in their names and email addresses below as participants.</p>`;
+            document.getElementById('stepDeelnemers').insertAdjacentElement('afterbegin', hint);
+          }
+        }
+      }
+    } catch (e) { /* fail silently, just carry on normally */ }
+  }
+
+  if (isPaid && pending) {
+    document.getElementById('formView').style.display = 'block';
+    document.getElementById('newSessionForm').style.display = 'none';
+    document.getElementById('processingMsg').style.display = 'block';
+    if (pending.reflectionPrefillText) reflectionPrefillText = pending.reflectionPrefillText;
+    if (pending.reflectionConfidentialPrefillText) reflectionConfidentialPrefillText = pending.reflectionConfidentialPrefillText;
+    clearPending();
+    try {
+      await createSession(pending);
+    } catch (err) {
+      document.getElementById('processingMsg').style.display = 'none';
+      document.getElementById('newSessionForm').style.display = 'block';
+      document.getElementById('error').textContent = 'Something went wrong while creating your session. Please try again or contact us.';
+      document.getElementById('error').style.display = 'block';
+    }
+  }
+});
+</script>
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+    &nbsp;·&nbsp; <a href="/en/privacy.html">Privacy policy</a>
+  </p>
+</footer>
+</body>
+</html>

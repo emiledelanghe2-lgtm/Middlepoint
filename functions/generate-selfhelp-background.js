@@ -1,4 +1,6 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, pre, tr, categoryLabel, greeting } = require('./_lang');
+const { selfhelpSystemEn } = require('./_prompts-en');
 const { emailButtonHtml } = require('./_email-button');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
@@ -24,7 +26,7 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-async function sendSelfHelpReadyEmail(toEmail, toName, link) {
+async function sendSelfHelpReadyEmail(toEmail, toName, link, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     await fetch('https://api.resend.com/emails', {
@@ -36,8 +38,13 @@ async function sendSelfHelpReadyEmail(toEmail, toName, link) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: 'Jouw persoonlijke handvaten staan klaar',
-        html: `
+        subject: tr(L, 'Jouw persoonlijke handvaten staan klaar', 'Your personal tools are ready'),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', toName)}</h2>
+            <p>Your concrete steps and tools are ready.</p>
+            ${emailButtonHtml(link, 'View my tools')}
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${toName ? ' ' + toName : ''},</h2>
             <p>Je concrete stappen en handvaten staan klaar.</p>
@@ -78,8 +85,9 @@ exports.handler = async (event) => {
     const supabase = getSupabase();
     const { data: reflection } = await supabase.from('reflections').select('*').eq('id', reflectionId).single();
     if (!reflection) return { statusCode: 404, body: JSON.stringify({ error: 'Reflectie niet gevonden.' }) };
+    const L = normLang(reflection.lang);
 
-    const systemPrompt = `Je bent een warme, motiverende coach die concrete, uitvoerbare handvaten geeft. Je kreeg al eerder een reflectie geschreven over deze situatie (categorie: "${reflection.category}"), en de persoon heeft nu betaald voor extra, concrete hulp om er zelf mee aan de slag te gaan.
+    const systemPrompt = L === 'en' ? selfhelpSystemEn(categoryLabel(L, reflection.category)) : `Je bent een warme, motiverende coach die concrete, uitvoerbare handvaten geeft. Je kreeg al eerder een reflectie geschreven over deze situatie (categorie: "${reflection.category}"), en de persoon heeft nu betaald voor extra, concrete hulp om er zelf mee aan de slag te gaan.
 
 BELANGRIJK: dit gaat NIET over een gesprek met de andere persoon, dat blijft apart. Dit gaat puur over wat de persoon zelf, alleen, kan doen.
 
@@ -113,7 +121,9 @@ Antwoord alleen met geldige JSON, geen andere tekst:
   "quote": "..."
 }`;
 
-    const userPrompt = `Oorspronkelijke antwoorden:\n${reflection.raw_content}\n\nEerdere reflectie, situatie: ${reflection.situation_summary}\n\nEerdere reflectie, onderliggende laag: ${reflection.deeper_layer}\n\nExtra antwoorden na betaling:\n${reflection.self_help_answers}\n\nGeef je antwoord in het gevraagde JSON-formaat, in het Nederlands.`;
+    const userPrompt = L === 'en'
+      ? `Original answers:\n${reflection.raw_content}\n\nEarlier reflection, situation: ${reflection.situation_summary}\n\nEarlier reflection, underlying layer: ${reflection.deeper_layer}\n\nExtra answers after payment:\n${reflection.self_help_answers}\n\nGive your answer in the requested JSON format, in English.`
+      : `Oorspronkelijke antwoorden:\n${reflection.raw_content}\n\nEerdere reflectie, situatie: ${reflection.situation_summary}\n\nEerdere reflectie, onderliggende laag: ${reflection.deeper_layer}\n\nExtra antwoorden na betaling:\n${reflection.self_help_answers}\n\nGeef je antwoord in het gevraagde JSON-formaat, in het Nederlands.`;
 
 const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();
@@ -121,7 +131,7 @@ const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
 
     const selfHelpTips = parsed.tips || [];
     if (reflection.recommendation === 'gesprek' || reflection.recommendation === 'twijfel') {
-      selfHelpTips.push('Tip: overweeg ook een gesprek met de ander, zie onderaan deze pagina.');
+      selfHelpTips.push(tr(L, 'Tip: overweeg ook een gesprek met de ander, zie onderaan deze pagina.', 'Tip: also consider a conversation with the other person, see the bottom of this page.'));
     }
 
     await supabase.from('reflections').update({
@@ -136,7 +146,7 @@ const aiResponse = await callClaude(systemPrompt, userPrompt, 2500);
     }).eq('id', reflectionId);
 
     const siteUrl = process.env.URL || process.env.DEPLOY_URL || '';
-    await sendSelfHelpReadyEmail(reflection.email, reflection.name, `${siteUrl}/reflectie.html?token=${reflection.access_token}`);
+    await sendSelfHelpReadyEmail(reflection.email, reflection.name, `${siteUrl}${pre(L)}/reflectie.html?token=${reflection.access_token}`, L);
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };
   } catch (err) {

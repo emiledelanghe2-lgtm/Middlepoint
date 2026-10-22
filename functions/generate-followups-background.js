@@ -1,4 +1,6 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, tr, categoryLabel } = require('./_lang');
+const { SAFETY_CONFLICT_EN, followupQuestionsSystemEn } = require('./_prompts-en');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -23,8 +25,8 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-async function checkSafety(storiesText) {
-  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest verhalen van mensen over een conflict. Je taak: enkel signaleren bij ONDUBBELZINNIGE, ACUTE ernst -- niet bij gewone relationele/fysieke conflicten.
+async function checkSafety(storiesText, L) {
+  const systemPrompt = L === 'en' ? SAFETY_CONFLICT_EN : `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest verhalen van mensen over een conflict. Je taak: enkel signaleren bij ONDUBBELZINNIGE, ACUTE ernst -- niet bij gewone relationele/fysieke conflicten.
 
 STOP enkel bij: actieve suïcidale gedachten of plannen, kindermisbruik, seksueel geweld/verkrachting, een poging tot doodslag/moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
 
@@ -69,6 +71,7 @@ exports.handler = async (event) => {
     const supabase = getSupabase();
 
     const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single();
+    const L = normLang(session.lang);
     const { data: participants } = await supabase
       .from('participants')
       .select('id, display_name, is_organizer')
@@ -85,12 +88,12 @@ exports.handler = async (event) => {
     const storiesText = realParticipants
       .map(p => {
         const entry = entries.find(e => e.participant_id === p.id);
-        return `### Verhaal van ${p.display_name}:\n${entry ? entry.content : '(geen verhaal)'}`;
+        return tr(L, `### Verhaal van ${p.display_name}:\n${entry ? entry.content : '(geen verhaal)'}`, `### Story of ${p.display_name}:\n${entry ? entry.content : '(no story)'}`);
       })
       .join('\n\n');
 
     // Veiligheidscheck eerst
-    const safety = await checkSafety(storiesText);
+    const safety = await checkSafety(storiesText, L);
     if (safety.stop) {
       await supabase
         .from('sessions')
@@ -127,9 +130,9 @@ exports.handler = async (event) => {
     }
 
     // Betaald plan met vervolgvragen
-    const systemPrompt = `Je bent een neutrale, empathische conflictbemiddelaar. Je leest het verhaal van meerdere mensen over hetzelfde conflict (categorie: ${session.category}). Je taak: per persoon 2-4 scherpe, niet-beschuldigende vervolgvragen formuleren die helpen om dieper te graven naar de werkelijke kern van het probleem, vaak is wat iemand eerst vertelt slechts het topje van de ijsberg. Gebruik vooral tegenstellingen, onduidelijkheden, of dingen die in het verhaal van de ANDERE persoon staan maar niet in dat van deze persoon, om gerichte vragen te stellen. Toon: warm, nieuwsgierig, niet rechterlijk. Gebruik in je tekst nooit het lange streepje (—); schrijf in volledige zinnen met punten en komma's. Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit formaat: {"vragen_per_persoon": [{"naam": "...", "vragen": ["...", "..."]}]}`;
+    const systemPrompt = L === 'en' ? followupQuestionsSystemEn(categoryLabel(L, session.category)) : `Je bent een neutrale, empathische conflictbemiddelaar. Je leest het verhaal van meerdere mensen over hetzelfde conflict (categorie: ${session.category}). Je taak: per persoon 2-4 scherpe, niet-beschuldigende vervolgvragen formuleren die helpen om dieper te graven naar de werkelijke kern van het probleem, vaak is wat iemand eerst vertelt slechts het topje van de ijsberg. Gebruik vooral tegenstellingen, onduidelijkheden, of dingen die in het verhaal van de ANDERE persoon staan maar niet in dat van deze persoon, om gerichte vragen te stellen. Toon: warm, nieuwsgierig, niet rechterlijk. Gebruik in je tekst nooit het lange streepje (—); schrijf in volledige zinnen met punten en komma's. Antwoord ALLEEN met geldige JSON, geen andere tekst, in dit formaat: {"vragen_per_persoon": [{"naam": "...", "vragen": ["...", "..."]}]}`;
 
-    const userPrompt = `Hier zijn de verhalen:\n\n${storiesText}\n\nGeef per persoon hun vervolgvragen.`;
+    const userPrompt = tr(L, `Hier zijn de verhalen:\n\n${storiesText}\n\nGeef per persoon hun vervolgvragen.`, `Here are the stories:\n\n${storiesText}\n\nGive the follow-up questions per person.`);
 
     const aiResponse = await callClaude(systemPrompt, userPrompt);
     const cleaned = aiResponse.replace(/```json|```/g, '').trim();

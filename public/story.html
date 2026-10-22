@@ -18,7 +18,11 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="robots" content="noindex, nofollow">
 <title>Jouw verhaal, Middlepoint</title>
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/story.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/story.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/story.html">
 <link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
 <style>
 .q-block{ margin-bottom:26px; }
 .q-label{ display:block; font-weight:600; margin-bottom:10px; color:var(--ink); }
@@ -58,6 +62,7 @@ const viewMode = new URLSearchParams(window.location.search).get('view');
 const backLink = '/';
 const backLabel = 'Terug naar startpagina';
 const app = document.getElementById('app');
+const PAGE_LANG = 'nl';
 let currentPlan = 'gratis';
 let pendingSubmitContent = '';
 
@@ -908,6 +913,10 @@ async function load() {
   const res = await fetch(`/.netlify/functions/get-session?token=${token}`);
   const data = await res.json();
   if (!res.ok) { app.innerHTML = `<div class="error-box">${data.error}</div>`; return; }
+  if (data.session && data.session.lang && data.session.lang !== PAGE_LANG) {
+    window.location.replace((data.session.lang === 'en' ? '/en' : '') + '/story.html' + window.location.search);
+    return;
+  }
   render(data);
 }
 

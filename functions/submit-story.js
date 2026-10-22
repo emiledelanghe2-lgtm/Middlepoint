@@ -1,4 +1,6 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, reqLang, pre, tr, greeting } = require('./_lang');
+const { SAFETY_CONFLICT_EN } = require('./_prompts-en');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -23,8 +25,8 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-async function checkSafety(text) {
-  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van iemand over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
+async function checkSafety(text, L) {
+  const systemPrompt = L === 'en' ? SAFETY_CONFLICT_EN : `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van iemand over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
 
 Stop enkel bij: actieve suicidale gedachten of plannen, kindermisbruik, seksueel geweld of verkrachting, een poging tot doodslag of moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
 
@@ -45,7 +47,7 @@ function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink) {
+async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, accessLink, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     const safeToName = escHtml(toName);
@@ -59,8 +61,16 @@ async function sendStorySubmittedEmail(toEmail, toName, fromName, siteUrl, acces
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: `${fromName} heeft zijn verhaal ingediend`,
-        html: `
+        subject: tr(L, `${fromName} heeft zijn verhaal ingediend`, `${fromName} has submitted their story`),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', safeToName)}</h2>
+            <p><strong>${safeFromName}</strong> has just submitted their side of the story to Middlepoint.</p>
+            <p>As soon as everyone has submitted their story, we continue with the next step.</p>
+            <p style="margin:28px 0">
+              <a href="${siteUrl}${accessLink}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">View my status</a>
+            </p>
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
             <p><strong>${safeFromName}</strong> heeft zojuist zijn kant van het verhaal ingediend bij Middlepoint.</p>
@@ -81,9 +91,10 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' };
   }
   try {
-    const { token, content, isAnonymous } = JSON.parse(event.body || '{}');
+    const { token, content, isAnonymous, lang } = JSON.parse(event.body || '{}');
+    let L = reqLang(event, lang);
     if (!token || !content) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'token en content zijn verplicht.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'token en content zijn verplicht.', 'token and content are required.') }) };
     }
     const supabase = getSupabase();
     const { data: participant, error: pError } = await supabase
@@ -92,17 +103,18 @@ exports.handler = async (event) => {
       .eq('access_token', token)
       .single();
     if (pError || !participant) {
-      return { statusCode: 404, body: JSON.stringify({ error: 'Ongeldige link.' }) };
+      return { statusCode: 404, body: JSON.stringify({ error: tr(L, 'Ongeldige link.', 'Invalid link.') }) };
     }
+    L = normLang(participant.sessions.lang);
     const isPureThirdParty = participant.is_organizer && participant.sessions.organizer_participates === false;
     if (isPureThirdParty) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'De organisator vult zelf geen verhaal in.' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: tr(L, 'De organisator vult zelf geen verhaal in.', 'The organizer does not fill in a story themselves.') }) };
     }
 
     // NIEUW: veiligheidscheck meteen bij elke individuele indiening, niet pas wachten
     // tot ook de andere deelnemer klaar is. Zo krijgt iemand in nood meteen de juiste
     // hulplijnen te zien, in plaats van dagen te moeten wachten op de ander.
-    const safety = await checkSafety(content);
+    const safety = await checkSafety(content, L);
     if (safety.stop) {
       await supabase.from('entries').insert({
         session_id: participant.session_id,
@@ -154,7 +166,7 @@ exports.handler = async (event) => {
       const others = allParticipants.filter(p => p.id !== participant.id && p.email);
       await Promise.all(
         others.map(p =>
-          sendStorySubmittedEmail(p.email, p.display_name, participant.display_name, siteUrl, `/story.html?token=${p.access_token}`)
+          sendStorySubmittedEmail(p.email, p.display_name, participant.display_name, siteUrl, `${pre(L)}/story.html?token=${p.access_token}`, L)
         )
       );
     }

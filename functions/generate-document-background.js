@@ -1,4 +1,6 @@
 const { getSupabase } = require('./_supabase');
+const { normLang, pre, tr, categoryLabel, greeting } = require('./_lang');
+const { SAFETY_CONFLICT_EN, documentSystemEn, ADVISOR_CONTEXT_EN, followupContextEn } = require('./_prompts-en');
 
 async function callClaude(systemPrompt, userPrompt, maxTokens) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -23,8 +25,8 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content.map(b => b.text || '').join('\n');
 }
 
-async function checkSafety(fullText) {
-  const systemPrompt = `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van mensen over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
+async function checkSafety(fullText, L) {
+  const systemPrompt = L === 'en' ? SAFETY_CONFLICT_EN : `Je bent een strenge maar terughoudende veiligheidsfilter voor een conflictbemiddelings-app. Je leest antwoorden van mensen over een conflict. Je taak: enkel signaleren bij ondubbelzinnige, acute ernst, niet bij gewone relationele of fysieke conflicten.
 
 Stop enkel bij: actieve suicidale gedachten of plannen, kindermisbruik, seksueel geweld of verkrachting, een poging tot doodslag of moord, of beschrijvingen van acuut, ernstig fysiek gevaar voor het leven.
 
@@ -45,7 +47,7 @@ function escHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
+async function sendDocumentReadyEmail(toEmail, toName, link, isPaid, L) {
   if (!process.env.RESEND_API_KEY || !toEmail) return;
   try {
     const safeToName = escHtml(toName);
@@ -58,8 +60,17 @@ async function sendDocumentReadyEmail(toEmail, toName, link, isPaid) {
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL || 'Middlepoint <onboarding@resend.dev>',
         to: toEmail,
-        subject: 'Jullie document staat klaar',
-        html: `
+        subject: tr(L, 'Jullie document staat klaar', 'Your document is ready'),
+        html: L === 'en' ? `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
+            <h2 style="color:#3A4A5C">${greeting('en', safeToName)}</h2>
+            <p>The document is ready. You can now look at it together in peace.</p>
+            <p style="margin:28px 0">
+              <a href="${link}" style="background:#C9714B;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">View the document</a>
+            </p>
+            ${isPaid ? '<p style="color:#666;font-size:.9rem">Whenever it suits you, you can fill in one follow-up document via My conversations to see how things are going and what has changed. You do not have to wait for that, you can already do it from now on, but this can only be done once per conversation.</p>' : ''}
+            <p style="color:#888;font-size:.85rem">Keep this link, it is your personal access to the conversation.</p>
+          </div>` : `
           <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
             <h2 style="color:#3A4A5C">Hey${safeToName ? ' ' + safeToName : ''},</h2>
             <p>Het document is klaar. Je kan het nu rustig samen bekijken.</p>
@@ -107,6 +118,7 @@ exports.handler = async (event) => {
     supabase = getSupabase();
 
     const { data: session } = await supabase.from('sessions').select('*').eq('id', sessionId).single();
+    const L = normLang(session.lang);
     const { data: participants } = await supabase
       .from('participants')
       .select('id, display_name, is_organizer, email, access_token')
@@ -137,19 +149,19 @@ exports.handler = async (event) => {
         return myEntries
           .map(e => {
             const label = e.round === 1
-              ? 'Antwoorden op de vragenlijst'
-              : `Opvolging (ronde ${e.round})`;
-            const anonTag = e.is_anonymous ? ' (deze persoon wil hier anoniem blijven, vermeld nooit de naam bij dit specifieke punt in het document)' : '';
+              ? tr(L, 'Antwoorden op de vragenlijst', 'Answers to the questionnaire')
+              : tr(L, `Opvolging (ronde ${e.round})`, `Follow-up (round ${e.round})`);
+            const anonTag = e.is_anonymous ? tr(L, ' (deze persoon wil hier anoniem blijven, vermeld nooit de naam bij dit specifieke punt in het document)', ' (this person wants to stay anonymous here, never mention the name for this specific point in the document)') : '';
             return `### ${naam}, ${label}${anonTag}:\n${e.content}`;
           })
           .join('\n\n');
       })
       .join('\n\n---\n\n');
 
-    const participantNames = realParticipants.map(p => p.display_name).join(' en ');
+    const participantNames = realParticipants.map(p => p.display_name).join(tr(L, ' en ', ' and '));
     const participantCount = realParticipants.length;
 
-    const safety = await checkSafety(fullText);
+    const safety = await checkSafety(fullText, L);
     if (safety.stop) {
       await supabase
         .from('sessions')
@@ -184,7 +196,17 @@ shared_actions herwerk je op basis van welke vorige afspraken gebruikt zijn: bev
 Vorig shared_summary (enkel ter achtergrond): ${previousDoc.shared_summary}\n\nVorige gedeelde afspraken (enkel ter achtergrond): ${JSON.stringify(previousDoc.shared_actions || [])}`
       : '';
 
-    const systemPrompt = `Je bent een volledig neutrale, warme conflictbemiddelaar die een gestructureerd rapport schrijft voor een conflict in de categorie "${session.category}".
+    const advisorContextUse = L === 'en' ? (session.plan === 'pro' ? ADVISOR_CONTEXT_EN : '') : advisorContext;
+    const followupContextUse = L === 'en' ? (isFollowup && previousDoc ? followupContextEn(previousDoc) : '') : followupContext;
+
+    const systemPrompt = L === 'en' ? documentSystemEn({
+      categoryLabel: categoryLabel(L, session.category),
+      participantCount,
+      participantNames,
+      followupContext: followupContextUse,
+      advisorContext: advisorContextUse,
+      isPro: session.plan === 'pro',
+    }) : `Je bent een volledig neutrale, warme conflictbemiddelaar die een gestructureerd rapport schrijft voor een conflict in de categorie "${session.category}".
 
 BELANGRIJK OVER HET AANTAL DEELNEMERS: er zijn in dit gesprek ${participantCount} deelnemers: ${participantNames}. Dit kunnen er 2, 3 of meer zijn. Voor ELK van de onderdelen perspectives, tips, questions_to_ask en suggested_phrases moet je een apart item toevoegen voor IEDERE deelnemer bij naam, niet enkel voor twee, ongeacht hoeveel mensen er zijn. (Bij een opvolgdocument geldt dit niet voor perspectives en questions_to_ask, zie de aparte instructie hieronder.)
 
@@ -249,7 +271,9 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat${sess
   "shared_actions": ["...", "...", "..."]${session.plan === 'pro' ? ',\n  "advisor_insight": "..."' : ''}
 }`;
 
-    const userPrompt = `Conflict tussen: ${participantNames}\n\n${fullText}\n\nGeef het volledige rapport in het gevraagde JSON-formaat, in het Nederlands.`;
+    const userPrompt = L === 'en'
+      ? `Conflict between: ${participantNames}\n\n${fullText}\n\nGive the complete report in the requested JSON format, in English.`
+      : `Conflict tussen: ${participantNames}\n\n${fullText}\n\nGeef het volledige rapport in het gevraagde JSON-formaat, in het Nederlands.`;
 
     const maxTokens = Math.min(4000 + Math.max(0, participantCount - 2) * 1600, 16000);
 
@@ -299,7 +323,7 @@ Antwoord alleen met geldige JSON, geen andere tekst, in dit exacte formaat${sess
     await Promise.all(
       participantsForEmail
         .filter(p => p.email)
-        .map(p => sendDocumentReadyEmail(p.email, p.display_name, `${siteUrl}/document.html?token=${p.access_token}`, isPaidPlan))
+        .map(p => sendDocumentReadyEmail(p.email, p.display_name, `${siteUrl}${pre(L)}/document.html?token=${p.access_token}`, isPaidPlan, L))
     );
 
     return { statusCode: 200, body: JSON.stringify({ ok: true }) };

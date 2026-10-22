@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-79QY4HGN40"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-79QY4HGN40');
+</script>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<title>Privacy policy | Middlepoint</title>
+<meta name="description" content="Read how Middlepoint handles your personal data and privacy.">
+<link rel="canonical" href="https://middlepoint.net/en/privacy.html">
+<link rel="alternate" hreflang="nl" href="https://middlepoint.net/privacy.html">
+<link rel="alternate" hreflang="en" href="https://middlepoint.net/en/privacy.html">
+<link rel="alternate" hreflang="x-default" href="https://middlepoint.net/privacy.html">
+<link rel="stylesheet" href="/style.css">
+<script src="/lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="nav-bar">
+<nav class="nav" aria-label="Main navigation">
+  <a href="/en/" class="brand">middle<span>point</span></a>
+  <div class="nav-links" id="navLinks">
+    <a href="/en/">Home</a>
+    <a href="/en/why.html">Why Middlepoint</a>
+    <a href="/en/pricing.html">Pricing</a>
+    <a href="/en/testimonials.html">Testimonials</a>
+    <a href="/en/voor-professionals.html">For business</a>
+    <a href="/en/login.html">My conversations</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/privacy.html" class="lang-switch" data-lang="nl" hreflang="nl" lang="nl" title="Nederlands">NL</a>
+    <a href="/en/mijn-gesprekken.html" id="authStatus" class="avatar-badge" title="My conversations"><span id="authInitial"></span></a>
+<a href="/en/new.html" class="btn">Start a conversation</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+  </div>
+</nav>
+</header>
+<script>
+  (function() {
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      const isOpen = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      toggle.textContent = isOpen ? '✕' : '☰';
+    });
+    links.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        links.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.textContent = '☰';
+      });
+    });
+  })();
+</script>
+<script>
+(async () => {
+  try {
+    const SUPABASE_URL = 'https://uhpafymwenrmqgyunpuy.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVocGFmeW13ZW5ybXFneXVucHV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMzMyMjcsImV4cCI6MjA5NzkwOTIyN30.fYPvz1deMeIG4W-JY6BPTmzOZt6FXUgqpH1FIjcHGEw';
+    const persistent = localStorage.getItem('mp_remember_me') === 'true';
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { storage: persistent ? window.localStorage : window.sessionStorage },
+    });
+    const { data: { session } } = await client.auth.getSession();
+    if (session && session.user) {
+      const storedName = session.user.user_metadata && session.user.user_metadata.name;
+      const displayName = (storedName && storedName.trim()) || session.user.email.split('@')[0];
+      const badge = document.getElementById('authStatus');
+      if (badge) {
+        badge.style.display = 'flex';
+        document.getElementById('authInitial').textContent = displayName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) { /* stil falen, rondje blijft gewoon verborgen */ }
+})();
+</script>
+<section class="section" style="max-width:720px">
+  <span class="label">Privacy policy</span>
+  <h1 style="font-size:2rem;margin-bottom:24px">How we handle your data</h1>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>What data do we collect?</h3>
+    <p style="color:var(--ink-soft)">Your name, your email address, and your answers to the questionnaire, including any later check-ins. This is needed to prepare the document and give you access via your personal link.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>Who can read this?</h3>
+    <p style="color:var(--ink-soft)">Nobody reads your individual answers. They are only processed to prepare the joint document. That final document is visible to all participants of the conversation via their own personal link.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>How do we process this?</h3>
+<p style="color:var(--ink-soft)">Your answers are processed via the Anthropic Claude API to prepare the document. Anthropic is a US company, which means this processing partly takes place outside the European Union. Your data is otherwise stored with Supabase, with servers within the European Union. Payments are processed securely by Stripe, and emails are sent via Resend. We never sell or share your data with third parties for commercial purposes.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>How long do we keep this?</h3>
+    <p style="color:var(--ink-soft)">Your session and document are kept for as long as you wish, so that you can add check-ins later. You can ask for your data to be deleted at any time.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <h3>Your rights</h3>
+    <p style="color:var(--ink-soft)">You have the right to access your data, have it corrected, or have it deleted entirely. To do so, send an email to <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>.</p>
+  </div>
+
+<div class="card" style="margin-bottom:40px">
+    <h3>Cookies</h3>
+    <p style="color:var(--ink-soft)">We use Google Analytics to anonymously track how the website is used, so that we can improve it. This is done via cookies. We do not use advertising cookies and do not sell this data.</p>
+  </div>
+
+  <a href="/en/" class="btn outline">Back to home page</a>
+</section>
+<footer class="footer">
+  <p style="margin:0 0 8px;font-size:1rem;color:var(--ink)">The place to find each other again.</p>
+  <p style="margin:0 0 16px;font-size:.82rem">
+    Questions? <a href="mailto:middlepoint@zohomail.eu">middlepoint@zohomail.eu</a>
+    &nbsp;·&nbsp; <a href="/en/login.html">My conversations</a>
+  </p>
+  <a href="/en/faq.html" class="hint-chip" style="text-decoration:none">Frequently asked questions</a>
+  <a href="/en/voor-professionals.html" class="hint-chip" style="text-decoration:none">For business</a>
+</footer>
+</body>
+</html>
